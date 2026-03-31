@@ -4,7 +4,7 @@ import '../models/action_model.dart';
 import 'dart:io';
 
 class AnalyticsService {
-  static const String baseUrl = 'http://127.0.0.1:8000';
+  static const String baseUrl = 'http://127.0.0.1:8001';
 
   Future<String> startAnalysis(String videoPath) async {
     final response = await http.post(
