@@ -5,3 +5,8 @@ tylko_akcje_PRO.mp4
 rozpiska_PRO_v3.csv
 ATJSW_Volley_Concept_Katowice_MlodzikSet2_VID20260110123022.mp4
 .gitignore
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
