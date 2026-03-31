@@ -1,0 +1,67 @@
+# Volleyball Action Analytics Platform
+
+A seamless, real-time desktop application built with a **Flutter** frontend and **Python/FastAPI** backend for automated volleyball video analysis. The system detects the ball, players, and key actions (Bump, Set, Attack) to enrich videos with metadata and specialized interfaces like "Focus Mode."
+
+## 🚀 How to Run the Application
+
+The project is split into two independent runtimes that communicate locally on your machine. You must run both the **Backend** and the **Frontend** simultaneously.
+
+### 1. Prerequisites
+- **Python 3.10+** (Ensure you have `pip` installed)
+- **Flutter SDK** (Channel stable, specifically checked for Windows Desktop)
+- **Developer Mode (Windows):** For Flutter Windows compilation plugins to build via symlinks, please ensure Developer Mode is enabled in Windows Settings -> Privacy & security -> For developers -> Developer Mode.
+
+---
+
+### Step 1: Start the Python Backend API
+The backend handles the heavyweight Computer Vision models (YOLO, MediaPipe, Scikit-learn Random Forests).
+
+1. Open a new Terminal (PowerShell or CMD).
+2. Navigate to the `backend` folder:
+   ```bash
+   cd C:\Users\kusoj\Desktop\Projekty\GoGoShawk\VideoMobile4Sport\ML_CV_Video\VolleyballApp\backend
+   ```
+3. Create and activate a virtual environment (recommended):
+   ```bash
+   python -m venv venv
+   .\venv\Scripts\activate
+   ```
+4. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+5. Run the FastAPI server using `uvicorn`:
+   ```bash
+   uvicorn main:app --reload --host 127.0.0.1 --port 8000
+   ```
+*You should see output indicating that `Uvicorn running on http://127.0.0.1:8000` is active.* Let this window stay open in the background.
+
+---
+
+### Step 2: Start the Flutter Desktop Frontend
+The frontend presents a project manager interface where you can browse and play annotated video data.
+
+1. Open a **second**, separate Terminal.
+2. Navigate to the `frontend` directory:
+   ```bash
+   cd C:\Users\kusoj\Desktop\Projekty\GoGoShawk\VideoMobile4Sport\ML_CV_Video\VolleyballApp\frontend
+   ```
+3. Fetch the plugins and build the desktop app natively:
+   ```bash
+   flutter run -d windows
+   ```
+*This command will launch the compiled standalone `.exe` GUI window on your Windows machine.*
+
+---
+
+## 🛠 Features
+
+- **Project Manager:** Click `Import Video` to add `.mp4` or `.mov` files from your disk. Files stay cached natively via `shared_preferences`.
+- **Automated AI Run:** Open an imported video and select "Analyze Video." The Flutter app will quietly ping the continuous python daemon instance, awaiting results without freezing your CPU.
+- **Dynamic Bounding Boxes & Triggers:** The Python engine automatically runs YOLO tracking, and whenever the ball changes sudden directional speed, it queries MediaPipe to recognize pose joints and determines the Action Event.
+- **Player Focus Mode:** Once analysis finishes, simply clicking on an event like **'Set'** will engage a 200x200 crop overlay specifically fixed onto that individual player utilizing dynamic scale transformation over the base video player.
+- **Corrections Toolkit:** Filter by player jersey (auto-inferred or tracked) or action type to clean false positives, simply hit edit to fix a tag!
+
+<br>
+
+*Built referencing the 5VREAL Project research methodology.*
