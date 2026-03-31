@@ -13,7 +13,7 @@ def extract_volleyball_actions(video_path, output_video, output_csv):
     
     ret, prev_frame = cap.read()
     if not ret:
-        print("Błąd odczytu wideo.")
+        print("Błąd odczytu wideo. Sprawdź ścieżkę do pliku.")
         return
         
     # Konwersja do skali szarości i rozmycie (redukcja szumu)
@@ -26,8 +26,8 @@ def extract_volleyball_actions(video_path, output_video, output_csv):
         if not ret:
             break
             
-        # Opcjonalnie: Wykluczenie trybun (ROI). Dla Twojego wideo trybuny są na dole po prawej.
-        # Odkomentuj poniższą linię, aby skrypt analizował tylko górne 80% ekranu (tam gdzie lata piłka i skaczą gracze)
+        # Opcjonalnie: Wykluczenie trybun (ROI). 
+        # Odkomentuj poniższą linię, aby ignorować dolne 20% ekranu:
         # frame = frame[:int(frame.shape[0]*0.8), :] 
             
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -49,12 +49,13 @@ def extract_volleyball_actions(video_path, output_video, output_csv):
     cap.release()
     
     print("KROK 2: Przetwarzanie danych i szukanie akcji...")
-    # 1. Wygładzenie sygnału (okno 3 sekundy). Zapobiega dzieleniu akcji, gdy piłka jest wysoko w górze.
-    window_size = int(fps * 3)
+    
+    # 1. Wygładzenie sygnału (okno 1.5 sekundy - ZMIENIONE)
+    window_size = int(fps * 1.5)
     smoothed_scores = pd.Series(motion_scores).rolling(window=window_size, center=True).mean().fillna(0)
     
-    # 2. Ustalenie progu (Threshold). Wszystko powyżej progu to akcja.
-    threshold = smoothed_scores.mean() + 0.2 * smoothed_scores.std()
+    # 2. Ustalenie progu (Threshold - ZMIENIONE na 0.5)
+    threshold = smoothed_scores.mean() + 0.5 * smoothed_scores.std()
     is_action = smoothed_scores > threshold
     
     # 3. Wyciąganie przedziałów czasowych
@@ -76,12 +77,14 @@ def extract_volleyball_actions(video_path, output_video, output_csv):
     if in_action: 
         actions.append((start_frame, len(is_action)))
         
-    # 4. Dodanie marginesu (Padding) na zagrywkę i radość po punkcie
-    padding_sec = 1.0 # 2 sekundy przed i po
+    # 4. Dodanie asymetrycznego marginesu (Padding - ZMIENIONE)
+    padding_sec_przed = 4.0 # 4 sekundy przed wykryciem ruchu (żeby złapać serw)
+    padding_sec_po = 1.0    # 1 sekunda po opadnięciu emocji (odcięcie zmiany pozycji)
+    
     timestamps = []
     for start_f, end_f in actions:
-        start_sec = max(0, (start_f / fps) - padding_sec)
-        end_sec = (end_f / fps) + padding_sec
+        start_sec = max(0, (start_f / fps) - padding_sec_przed)
+        end_sec = (end_f / fps) + padding_sec_po
         timestamps.append({"Poczatek_s": round(start_sec, 2), "Koniec_s": round(end_sec, 2)})
         
     # Łączenie akcji, jeśli przerwa między nimi jest krótsza niż 3 sekundy
@@ -91,7 +94,7 @@ def extract_volleyball_actions(video_path, output_video, output_csv):
             merged.append(t)
         else:
             last = merged[-1]
-            if t['Poczatek_s'] <= last['Koniec_s'] + 2.5:
+            if t['Poczatek_s'] <= last['Koniec_s'] + 3.0:
                 last['Koniec_s'] = max(last['Koniec_s'], t['Koniec_s'])
             else:
                 merged.append(t)
@@ -116,8 +119,9 @@ def extract_volleyball_actions(video_path, output_video, output_csv):
 
 # === URUCHOMIENIE SKRYPTU ===
 if __name__ == "__main__":
-    nazwa_pliku_wejsciowego = r"C:\Users\kusoj\Desktop\Projekty\GoGoShawk\VideoMobile4Sport\ML_CV_Video\ATJSW_Volley_Concept_Katowice_MlodzikSet2_VID20260110123022.mp4" # <--- Wpisz tutaj ścieżkę do swojego pobranego filmu
-    plik_wyjsciowy_wideo = "tylko_akcje.mp4"
-    plik_wyjsciowy_csv = "rozpiska_akcji.csv"
+    # Używamy pliku, który został przez Ciebie wgrany
+    nazwa_pliku_wejsciowego = "ATJSW_Volley_Concept_Katowice_MlodzikSet2_VID20260110123022.mp4" 
+    plik_wyjsciowy_wideo = "tylko_akcje_v2.mp4"
+    plik_wyjsciowy_csv = "rozpiska_akcji_v2.csv"
     
-    extract_volleyball_actions(nazwa_pliku_wejsciowego, plik_wyjsciowy_wideo, plik_wyjsciowy_csv) 
+    extract_volleyball_actions(nazwa_pliku_wejsciowego, plik_wyjsciowy_wideo, plik_wyjsciowy_csv)
