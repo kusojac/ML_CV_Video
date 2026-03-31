@@ -1,127 +1,117 @@
 import cv2
 import pandas as pd
 import numpy as np
+import os
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 
-def extract_volleyball_actions(video_path, output_video, output_csv):
-    print("KROK 1: Rozpoczynam analizę wideo (detekcja energii ruchu)...")
+def extract_volleyball_ultra_sensitive(video_path, output_video, output_csv):
+    print("KROK 1: Analiza wysokiej czułości (Raw Motion Detection)...")
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     
-    motion_scores = []
-    
+    motion_data = []
     ret, prev_frame = cap.read()
-    if not ret:
-        print("Błąd odczytu wideo. Sprawdź ścieżkę do pliku.")
-        return
-        
-    # Konwersja do skali szarości i rozmycie (redukcja szumu)
-    prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
-    prev_gray = cv2.GaussianBlur(prev_gray, (21, 21), 0)
+    
+    # --- DEFINE ROI (Region of Interest) ---
+    # Wycinamy górę (sufit) i dół (kibice/ławki), zostawiamy środek gdzie jest boisko
+    # To drastycznie poprawia wykrywanie małych ruchów piłki
+    roi_top = int(height * 0.15)
+    roi_bottom = int(height * 0.85)
+
+    prev_gray = cv2.cvtColor(prev_frame[roi_top:roi_bottom, :], cv2.COLOR_BGR2GRAY)
+    prev_gray = cv2.GaussianBlur(prev_gray, (15, 15), 0)
     
     frame_count = 0
     while True:
         ret, frame = cap.read()
-        if not ret:
-            break
+        if not ret: break
             
-        # Opcjonalnie: Wykluczenie trybun (ROI). 
-        # Odkomentuj poniższą linię, aby ignorować dolne 20% ekranu:
-        # frame = frame[:int(frame.shape[0]*0.8), :] 
-            
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (21, 21), 0)
+        # Analizujemy tylko obszar boiska
+        roi_frame = frame[roi_top:roi_bottom, :]
+        gray = cv2.cvtColor(roi_frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (15, 15), 0)
         
-        # Obliczenie różnicy między klatką obecną a poprzednią
-        frame_diff = cv2.absdiff(prev_gray, gray)
-        _, thresh = cv2.threshold(frame_diff, 25, 255, cv2.THRESH_BINARY)
+        # Bardzo niski próg różnicy (15), żeby złapać piłkę na jasnym tle
+        diff = cv2.absdiff(prev_gray, gray)
+        _, thresh = cv2.threshold(diff, 15, 255, cv2.THRESH_BINARY)
         
-        # Suma białych pikseli (intensywność ruchu)
-        motion_score = np.sum(thresh) / 255
-        motion_scores.append(motion_score)
+        # Liczymy po prostu ilość ruchu (procent klatki)
+        motion_count = np.sum(thresh) / 255
+        motion_data.append(motion_count)
         
         prev_gray = gray
         frame_count += 1
         if frame_count % 1000 == 0:
-            print(f" Przeanalizowano {frame_count}/{total_frames} klatek...")
+            print(f" Analiza: {frame_count} klatek...")
 
     cap.release()
+
+    print("KROK 2: Algorytm progu adaptacyjnego...")
+    series = pd.Series(motion_data)
     
-    print("KROK 2: Przetwarzanie danych i szukanie akcji...")
+    # Bardzo krótkie wygładzanie (0.5s), żeby nie zgubić szybkich akcji (serw w siatkę)
+    smoothed = series.rolling(window=int(fps*0.5), center=True).mean().fillna(0)
     
-    # 1. Wygładzenie sygnału (okno 1.5 sekundy - ZMIENIONE)
-    window_size = int(fps * 1.5)
-    smoothed_scores = pd.Series(motion_scores).rolling(window=window_size, center=True).mean().fillna(0)
+    # Próg ustawiony na poziomie średniej + mały margines. 
+    # To jest znacznie czulsze niż 85. percentyl.
+    threshold = smoothed.mean() * 1.2 
+    is_action = smoothed > threshold
     
-    # 2. Ustalenie progu (Threshold - ZMIENIONE na 0.5)
-    threshold = smoothed_scores.mean() + 0.5 * smoothed_scores.std()
-    is_action = smoothed_scores > threshold
-    
-    # 3. Wyciąganie przedziałów czasowych
     actions = []
     in_action = False
-    start_frame = 0
+    start_f = 0
     
     for i, val in enumerate(is_action):
         if val and not in_action:
-            start_frame = i
+            start_f = i
             in_action = True
         elif not val and in_action:
-            end_frame = i
+            end_f = i
             in_action = False
-            # Zapisujemy tylko akcje trwające dłużej niż 3 sekundy
-            if (end_frame - start_frame) > (fps * 3):
-                actions.append((start_frame, end_frame))
-                
-    if in_action: 
-        actions.append((start_frame, len(is_action)))
-        
-    # 4. Dodanie asymetrycznego marginesu (Padding - ZMIENIONE)
-    padding_sec_przed = 4.0 # 4 sekundy przed wykryciem ruchu (żeby złapać serw)
-    padding_sec_po = 1.0    # 1 sekunda po opadnięciu emocji (odcięcie zmiany pozycji)
-    
-    timestamps = []
-    for start_f, end_f in actions:
-        start_sec = max(0, (start_f / fps) - padding_sec_przed)
-        end_sec = (end_f / fps) + padding_sec_po
-        timestamps.append({"Poczatek_s": round(start_sec, 2), "Koniec_s": round(end_sec, 2)})
-        
-    # Łączenie akcji, jeśli przerwa między nimi jest krótsza niż 3 sekundy
+            # Akceptujemy nawet krótkie akcje (min 1.5 sekundy), żeby złapać błędy serwisu
+            if (end_f - start_f) > (fps * 1.5):
+                actions.append((start_f, end_f))
+
+    # --- PADDING I ŁĄCZENIE ---
+    # Bardzo duży padding z przodu (6 sekund), żeby na pewno złapać kozłowanie piłki przed serwem
+    final_periods = []
+    for s, e in actions:
+        start_s = max(0, (s / fps) - 6.0) 
+        end_s = (e / fps) + 1.5 # zostawiamy 1.5s na reakcję sędziego
+        final_periods.append({"Poczatek_s": round(start_s, 2), "Koniec_s": round(end_s, 2)})
+
+    # Łączymy fragmenty, jeśli przerwa między nimi jest mniejsza niż 4 sekundy
+    # (To uratuje akcje, gdzie piłka leci wysoko i ruch na moment zamiera)
     merged = []
-    for t in timestamps:
-        if not merged:
-            merged.append(t)
-        else:
-            last = merged[-1]
-            if t['Poczatek_s'] <= last['Koniec_s'] + 3.0:
-                last['Koniec_s'] = max(last['Koniec_s'], t['Koniec_s'])
+    if final_periods:
+        curr = final_periods[0]
+        for next_p in final_periods[1:]:
+            if next_p['Poczatek_s'] < curr['Koniec_s'] + 4.0:
+                curr['Koniec_s'] = max(curr['Koniec_s'], next_p['Koniec_s'])
             else:
-                merged.append(t)
-                
-    # 5. Zapis do CSV
-    print(f" Znaleziono {len(merged)} wymian! Zapisuję do pliku {output_csv}...")
+                merged.append(curr)
+                curr = next_p
+        merged.append(curr)
+
+    # Zapis CSV
     df = pd.DataFrame(merged)
     df.to_csv(output_csv, index=False)
     
-    # 6. Tworzenie wideo wynikowego
-    print(f"KROK 3: Wycinanie klipów i generowanie pliku {output_video}. To może chwilę potrwać...")
-    video = VideoFileClip(video_path)
-    clips = []
-    for t in merged:
-        start = t['Poczatek_s']
-        end = min(t['Koniec_s'], video.duration)
-        clips.append(video.subclip(start, end))
-        
-    final_video = concatenate_videoclips(clips)
-    final_video.write_videofile(output_video, codec="libx264", audio_codec="aac")
-    print(" GOTOWE! ")
+    # KROK 3: Generowanie Wideo
+    print(f" Wykryto {len(merged)} potencjalnych akcji. Renderowanie...")
+    try:
+        with VideoFileClip(video_path) as video:
+            clips = [video.subclip(m['Poczatek_s'], min(m['Koniec_s'], video.duration)) for m in merged]
+            if clips:
+                final_video = concatenate_videoclips(clips)
+                final_video.write_videofile(output_video, codec="libx264", audio_codec="aac", fps=fps)
+                final_video.close()
+                for c in clips: c.close()
+    except Exception as e:
+        print(f"Błąd renderowania: {e}")
 
-# === URUCHOMIENIE SKRYPTU ===
 if __name__ == "__main__":
-    # Używamy pliku, który został przez Ciebie wgrany
-    nazwa_pliku_wejsciowego = "ATJSW_Volley_Concept_Katowice_MlodzikSet2_VID20260110123022.mp4" 
-    plik_wyjsciowy_wideo = "tylko_akcje_v2.mp4"
-    plik_wyjsciowy_csv = "rozpiska_akcji_v2.csv"
-    
-    extract_volleyball_actions(nazwa_pliku_wejsciowego, plik_wyjsciowy_wideo, plik_wyjsciowy_csv)
+    INPUT = "ATJSW_Volley_Concept_Katowice_MlodzikSet2_VID20260110123022.mp4"
+    extract_volleyball_ultra_sensitive(INPUT, "akcje_v4_czule.mp4", "rozpiska_v4.csv")
