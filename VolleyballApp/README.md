@@ -21,20 +21,27 @@ The backend handles the heavyweight Computer Vision models (YOLO, MediaPipe, Sci
    ```bash
    cd C:\Users\kusoj\Desktop\Projekty\GoGoShawk\VideoMobile4Sport\ML_CV_Video\VolleyballApp\backend
    ```
-3. Create and activate a virtual environment (recommended):
-   ```bash
-   python -m venv venv
-   .\venv\Scripts\activate
+3. Activate the **backend** virtual environment (located inside `backend\venv\`):
+   ```powershell
+   .\venv\Scripts\Activate.ps1
    ```
-4. Install dependencies:
+   > **⚠️ Important:** Run this from inside the `backend\` folder. `uvicorn` and all CV dependencies are installed in `backend\venv\`, not the root `.venv`. If PowerShell shows an *"untrusted publisher"* prompt, type `R` to run once or `A` to always allow.
+4. Install dependencies (first time only):
    ```bash
    pip install -r requirements.txt
    ```
 5. Run the FastAPI server using `uvicorn`:
    ```bash
-   uvicorn main:app --reload --host 127.0.0.1 --port 8000
+   uvicorn main:app --reload --host 127.0.0.1 --port 8001
    ```
-*You should see output indicating that `Uvicorn running on http://127.0.0.1:8000` is active.* Let this window stay open in the background.
+*You should see output indicating that `Uvicorn running on http://127.0.0.1:8001` is active.* Startup takes ~10–15 seconds while ONNX, TFLite, and sklearn models load. Let this window stay open in the background.
+
+> **Troubleshooting — `uvicorn: not recognized`:** This means the venv is not activated. Make sure you ran `.\venv\Scripts\Activate.ps1` from **inside the `backend\` folder** first. The root `.venv` does not contain `uvicorn`.
+>
+> If `Activate.ps1` doesn't work in your terminal (e.g. non-interactive PowerShell), use this alternative that calls the venv's Python directly — **no activation needed**:
+> ```powershell
+> .\venv\Scripts\python.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8001
+> ```
 
 ---
 

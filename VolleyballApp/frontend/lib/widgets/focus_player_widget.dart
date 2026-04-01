@@ -1,16 +1,15 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 import '../models/action_model.dart';
 
 class FocusPlayerWidget extends StatefulWidget {
-  final File videoFile;
+  final VideoController controller;
   final ActionModel action;
   final Duration mainPosition;
 
   const FocusPlayerWidget({
     super.key,
-    required this.videoFile,
+    required this.controller,
     required this.action,
     required this.mainPosition,
   });
@@ -20,65 +19,70 @@ class FocusPlayerWidget extends StatefulWidget {
 }
 
 class _FocusPlayerWidgetState extends State<FocusPlayerWidget> {
-  late VideoPlayerController _controller;
+  Size _videoSize = Size.zero;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.file(widget.videoFile)
-      ..initialize().then((_) {
-        // Sync to main position
-        _controller.seekTo(widget.mainPosition);
-        _controller.play();
-        _controller.setVolume(0.0); // Mute the PIP
-        setState(() {});
-      });
+    _initSizeListener();
+  }
+
+  void _initSizeListener() {
+    final w = widget.controller.player.state.width;
+    final h = widget.controller.player.state.height;
+    if (w != null && h != null) {
+      _videoSize = Size(w.toDouble(), h.toDouble());
+    }
+
+    widget.controller.player.stream.width.listen((w) {
+      if (!mounted) return;
+      if (w != null && w > 0) {
+        setState(() {
+          _videoSize = Size(w.toDouble(), _videoSize.height);
+        });
+      }
+    });
+
+    widget.controller.player.stream.height.listen((h) {
+      if (!mounted) return;
+      if (h != null && h > 0) {
+        setState(() {
+          _videoSize = Size(_videoSize.width, h.toDouble());
+        });
+      }
+    });
   }
 
   @override
   void didUpdateWidget(covariant FocusPlayerWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.action.id != widget.action.id || oldWidget.videoFile.path != widget.videoFile.path) {
-      _controller.dispose();
-      _controller = VideoPlayerController.file(widget.videoFile)
-        ..initialize().then((_) {
-          _controller.seekTo(widget.mainPosition);
-          _controller.play();
-          _controller.setVolume(0.0);
-          setState(() {});
-        });
-    } else {
-      // Soft sync
-      final diff = _controller.value.position.inMilliseconds - widget.mainPosition.inMilliseconds;
-      if (diff.abs() > 300) {
-         _controller.seekTo(widget.mainPosition);
-      }
+    if (oldWidget.controller != widget.controller) {
+      _initSizeListener();
     }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_controller.value.isInitialized) {
-      return Container(
-        color: Colors.black54,
-        child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: Colors.purpleAccent)),
-      );
+    if (_videoSize.width == 0 || _videoSize.height == 0) {
+       final w = widget.controller.player.state.width;
+       final h = widget.controller.player.state.height;
+       if (w != null && h != null && w > 0 && h > 0) {
+         _videoSize = Size(w.toDouble(), h.toDouble());
+       } else {
+         return Container(
+           color: Colors.black54,
+           child: const Center(
+             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.purpleAccent),
+           ),
+         );
+       }
     }
-    
+
     // playerBox is [x_min, y_min, x_max, y_max].
-    // Note: The python API `engine.py` gives `[x_min, y_min, x_max, y_max]`.
     if (widget.action.playerBox.length != 4) return const SizedBox.shrink();
-    
-    final vw = _controller.value.size.width;
-    final vh = _controller.value.size.height;
-    
-    if (vw == 0 || vh == 0) return const SizedBox.shrink();
+
+    final vw = _videoSize.width;
+    final vh = _videoSize.height;
 
     final bxMin = widget.action.playerBox[0];
     final byMin = widget.action.playerBox[1];
@@ -89,18 +93,15 @@ class _FocusPlayerWidgetState extends State<FocusPlayerWidget> {
     final bw = (bxMax - bxMin).clamp(1.0, vw);
     final bh = (byMax - byMin).clamp(1.0, vh);
 
-    // To crop, we scale up the video by vw/bw and vh/bh.
+    // Scale up the video so the bounding box fills the widget
     final scaleX = vw / bw;
     final scaleY = vh / bh;
-    
-    // Choose the max scale to maintain aspect ratio, or scale proportionally
-    final scale = scaleX > scaleY ? scaleY : scaleX;
+    final scale = scaleX < scaleY ? scaleX : scaleY;
+    final safeScale = (scale * 1.5).clamp(1.0, 20.0);
 
-    // Center of the bounding box
+    // Center of the bounding box as fractional offset (0..1)
     final centerX = bxMin + bw / 2;
     final centerY = byMin + bh / 2;
-
-    // Fractional offset for alignment (0.0 to 1.0)
     final fractionalX = (centerX / vw).clamp(0.0, 1.0);
     final fractionalY = (centerY / vh).clamp(0.0, 1.0);
 
@@ -117,15 +118,15 @@ class _FocusPlayerWidgetState extends State<FocusPlayerWidget> {
           fit: StackFit.expand,
           children: [
             ClipRect(
-              child: OverflowBox(
-                maxWidth: double.infinity,
-                maxHeight: double.infinity,
+              child: Transform.scale(
+                scale: safeScale,
                 alignment: FractionalOffset(fractionalX, fractionalY),
-                child: Transform.scale(
-                  scale: scale * 1.5, // 1.5 zoom margin
-                  child: AspectRatio(
-                    aspectRatio: _controller.value.aspectRatio,
-                    child: VideoPlayer(_controller),
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: vw,
+                    height: vh,
+                    child: Video(controller: widget.controller),
                   ),
                 ),
               ),
@@ -145,8 +146,14 @@ class _FocusPlayerWidgetState extends State<FocusPlayerWidget> {
                     const Icon(Icons.person, color: Colors.purpleAccent, size: 14),
                     const SizedBox(width: 4),
                     Text(
-                      widget.action.playerId == 'Unknown' ? 'Player Focus' : 'Player ${widget.action.playerId}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      widget.action.playerId == 'Unknown'
+                          ? 'Player Focus'
+                          : 'Player ${widget.action.playerId}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),

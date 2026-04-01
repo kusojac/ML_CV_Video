@@ -4,6 +4,8 @@ import '../models/action_model.dart';
 class ActionSidebar extends StatefulWidget {
   final List<ActionModel> actions;
   final ActionModel? selectedAction;
+  final bool isEditMode;
+  final ValueChanged<bool> onEditModeChanged;
   final ValueChanged<ActionModel> onActionSelected;
   final ValueChanged<ActionModel> onActionUpdated;
 
@@ -11,6 +13,8 @@ class ActionSidebar extends StatefulWidget {
     super.key,
     required this.actions,
     required this.selectedAction,
+    required this.isEditMode,
+    required this.onEditModeChanged,
     required this.onActionSelected,
     required this.onActionUpdated,
   });
@@ -42,7 +46,22 @@ class _ActionSidebarState extends State<ActionSidebar> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Actions List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Actions List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Row(
+                    children: [
+                      const Text('Edit Mode', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      Switch(
+                        value: widget.isEditMode,
+                        onChanged: widget.onEditModeChanged,
+                        activeThumbColor: Colors.purpleAccent,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: actionTypes.contains(_filterType) ? _filterType : 'All',

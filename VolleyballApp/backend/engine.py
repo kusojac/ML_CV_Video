@@ -28,7 +28,7 @@ class VolleyballAnalyticsEngine:
         # MediaPipe pose
         self.mp_pose = mp.solutions.pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
         
-    def process_video(self, video_path):
+    def process_video(self, video_path, progress_callback=None):
         cap = cv2.VideoCapture(video_path)
         fps = cap.get(cv2.CAP_PROP_FPS)
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -158,6 +158,11 @@ class VolleyballAnalyticsEngine:
                     current_action_boxes = []
                     
             frame_idx += 1
+            # Fire callback every 5 % of total frames
+            if progress_callback and total_frames > 0:
+                step = max(1, int(total_frames * 0.05))
+                if frame_idx % step == 0:
+                    progress_callback(frame_idx, total_frames)
 
         cap.release()
         

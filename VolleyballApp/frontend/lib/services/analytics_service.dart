@@ -11,7 +11,7 @@ class AnalyticsService {
       Uri.parse('$baseUrl/analyze'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'video_path': videoPath}),
-    );
+    ).timeout(const Duration(seconds: 30));
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
       if (jsonResponse['status'] == 'completed') {
@@ -23,11 +23,16 @@ class AnalyticsService {
     }
   }
 
-  Future<String> checkJobStatus(String jobId) async {
-    final response = await http.get(Uri.parse('$baseUrl/job/$jobId'));
+  Future<Map<String, dynamic>> checkJobStatus(String jobId) async {
+    final response = await http.get(Uri.parse('$baseUrl/job/$jobId'))
+        .timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
-      return jsonResponse['status'];
+      return {
+        'status': jsonResponse['status'],
+        'progress': jsonResponse['progress'] ?? 0.0,
+        'eta_seconds': jsonResponse['eta_seconds'],
+      };
     }
     throw Exception('Failed to check status');
   }
@@ -35,7 +40,9 @@ class AnalyticsService {
   Future<List<ActionModel>> getResults(String videoPath) async {
     // We can just try reading the local json file directly instead of HTTP if it's the same machine
     // But let's use the API for correctness
-    final response = await http.get(Uri.parse('$baseUrl/results?video_path=$videoPath'));
+    final response = await http
+        .get(Uri.parse('$baseUrl/results?video_path=${Uri.encodeComponent(videoPath)}'))
+        .timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
       final actions = jsonResponse['actions'] as List;

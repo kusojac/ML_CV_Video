@@ -1,4 +1,8 @@
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="google.protobuf")
 import json
+import time
+
 import os
 import uuid
 from typing import Dict, Any
@@ -41,7 +45,21 @@ def get_json_path(video_path: str) -> str:
 def process_video_task(job_id: str, video_path: str):
     try:
         analysis_jobs[job_id]["status"] = "processing"
-        result = engine.process_video(video_path)
+        analysis_jobs[job_id]["progress"] = 0.0
+        analysis_jobs[job_id]["eta_seconds"] = None
+        start_time = time.time()
+
+        def update_progress(current_frame, total_frames):
+            if total_frames > 0:
+                progress = current_frame / total_frames
+                analysis_jobs[job_id]["progress"] = round(progress, 3)
+                elapsed = time.time() - start_time
+                if progress > 0:
+                    total_estimated = elapsed / progress
+                    eta = max(0.0, total_estimated - elapsed)
+                    analysis_jobs[job_id]["eta_seconds"] = round(eta)
+
+        result = engine.process_video(video_path, progress_callback=update_progress)
         
         # Save exact path relative to video 
         json_path = get_json_path(video_path)
@@ -49,6 +67,7 @@ def process_video_task(job_id: str, video_path: str):
             json.dump(result, f, indent=4)
             
         analysis_jobs[job_id]["status"] = "completed"
+        analysis_jobs[job_id]["progress"] = 1.0
         analysis_jobs[job_id]["result"] = result
         analysis_jobs[job_id]["json_path"] = json_path
     except Exception as e:
@@ -70,6 +89,7 @@ async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTas
     job_id = str(uuid.uuid4())
     analysis_jobs[job_id] = {
         "status": "pending",
+        "progress": 0.0,
         "video_path": request.video_path
     }
     background_tasks.add_task(process_video_task, job_id, request.video_path)
