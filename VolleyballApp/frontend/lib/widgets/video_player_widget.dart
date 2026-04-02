@@ -7,6 +7,7 @@ import '../models/action_model.dart';
 class VideoPlayerWidget extends StatefulWidget {
   final File videoFile;
   final List<ActionModel> actions;
+  final ActionModel? selectedAction;
   final bool isEditMode;
   final Function(Duration) onPositionChanged;
   final Function(VideoController) onControllerReady;
@@ -17,6 +18,7 @@ class VideoPlayerWidget extends StatefulWidget {
     super.key,
     required this.videoFile,
     required this.actions,
+    this.selectedAction,
     this.isEditMode = false,
     required this.onPositionChanged,
     required this.onControllerReady,
@@ -35,6 +37,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   bool _isPlaying = false;
   Duration _currentPos = Duration.zero;
   Duration _totalDuration = Duration.zero;
+  Offset? _dragStart;
+  Offset? _dragCurrent;
 
   @override
   void initState() {
@@ -136,7 +140,13 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
               widget.onActionUpdated?.call(updated);
             } : null,
             onTap: () => _seekToMs(action.startMs),
-            child: Container(color: color.withValues(alpha: widget.isEditMode ? 0.9 : 0.6)),
+            child: Container(
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: widget.isEditMode ? 0.9 : 0.7),
+                borderRadius: BorderRadius.circular(widget.isEditMode ? 6 : 4),
+                border: widget.isEditMode ? Border.all(color: Colors.white54, width: 1.5) : null,
+              ),
+            ),
           ),
         );
       }).toList(),
@@ -158,15 +168,18 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             return Stack(
               children: [
                 // Background track
-                Container(height: 10, color: Colors.white24),
+                Container(
+                  height: 24,
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(12)),
+                ),
                 // Buffered / played
                 Container(
-                  height: 10,
+                  height: 24,
                   width: constraints.maxWidth * progress.clamp(0.0, 1.0),
-                  color: Colors.deepPurpleAccent,
+                  decoration: BoxDecoration(color: Colors.deepPurpleAccent, borderRadius: BorderRadius.circular(12)),
                 ),
                 // Action markers
-                SizedBox(height: 10, child: _buildTimelineMarkers(constraints)),
+                SizedBox(height: 24, child: _buildTimelineMarkers(constraints)),
                 // Scrub gesture
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -200,7 +213,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                       _seekToMs(targetMs);
                     }
                   },
-                  child: const SizedBox(height: 10, width: double.infinity),
+                  child: const SizedBox(height: 24, width: double.infinity),
                 ),
               ],
             );
@@ -227,7 +240,90 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
     return Column(
       children: [
-        Expanded(child: Video(controller: _controller)),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final videoW = _controller.player.state.width?.toDouble() ?? 1920.0;
+              final videoH = _controller.player.state.height?.toDouble() ?? 1080.0;
+              final bool drawing = widget.isEditMode && widget.selectedAction != null;
+
+              return Center(
+                child: AspectRatio(
+                  aspectRatio: videoW / videoH,
+                  child: LayoutBuilder(
+                    builder: (context, boxConstraints) {
+                      final size = Size(boxConstraints.maxWidth, boxConstraints.maxHeight);
+                      return Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Video(controller: _controller),
+                          if (drawing)
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onPanStart: (details) {
+                                setState(() {
+                                  _dragStart = details.localPosition;
+                                  _dragCurrent = details.localPosition;
+                                });
+                              },
+                              onPanUpdate: (details) {
+                                setState(() {
+                                  _dragCurrent = details.localPosition;
+                                });
+                              },
+                              onPanEnd: (details) {
+                                if (_dragStart != null && _dragCurrent != null) {
+                                  final x1 = _dragStart!.dx / size.width * videoW;
+                                  final y1 = _dragStart!.dy / size.height * videoH;
+                                  final x2 = _dragCurrent!.dx / size.width * videoW;
+                                  final y2 = _dragCurrent!.dy / size.height * videoH;
+
+                                  final bxMin = x1 < x2 ? x1 : x2;
+                                  final bxMax = x1 > x2 ? x1 : x2;
+                                  final byMin = y1 < y2 ? y1 : y2;
+                                  final byMax = y1 > y2 ? y1 : y2;
+
+                                  if (bxMax - bxMin > 10 && byMax - byMin > 10) {
+                                    final updated = ActionModel(
+                                      id: widget.selectedAction!.id,
+                                      type: widget.selectedAction!.type,
+                                      startMs: widget.selectedAction!.startMs,
+                                      endMs: widget.selectedAction!.endMs,
+                                      playerBox: [bxMin, byMin, bxMax, byMax],
+                                      playerId: widget.selectedAction!.playerId,
+                                      confidence: widget.selectedAction!.confidence,
+                                    );
+                                    widget.onActionUpdated?.call(updated);
+                                  }
+                                }
+                                setState(() {
+                                  _dragStart = null;
+                                  _dragCurrent = null;
+                                });
+                              },
+                            ),
+                          if (drawing && _dragStart != null && _dragCurrent != null)
+                            Positioned(
+                              left: _dragStart!.dx < _dragCurrent!.dx ? _dragStart!.dx : _dragCurrent!.dx,
+                              top: _dragStart!.dy < _dragCurrent!.dy ? _dragStart!.dy : _dragCurrent!.dy,
+                              width: (_dragCurrent!.dx - _dragStart!.dx).abs(),
+                              height: (_dragCurrent!.dy - _dragStart!.dy).abs(),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.redAccent, width: 2),
+                                  color: Colors.redAccent.withValues(alpha: 0.2),
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
         Container(
           color: const Color(0xFF1E1E1E),
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),

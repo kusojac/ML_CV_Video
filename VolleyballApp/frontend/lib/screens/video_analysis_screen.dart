@@ -160,19 +160,67 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     }
   }
 
+  Future<void> _deleteAnalysis() async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E24),
+        title: const Text('Usuń analizę', style: TextStyle(color: Colors.white)),
+        content: const Text('Czy na pewno chcesz usunąć wszystkie wyniki analizy? Tej operacji nie można prościej cofnąć.', style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Usuń', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final base = widget.videoPath.substring(0, widget.videoPath.lastIndexOf('.'));
+    final file = File('${base}_analysis.json');
+    try {
+      if (file.existsSync()) {
+        file.deleteSync();
+      }
+      if (mounted) {
+        setState(() {
+          _actions.clear();
+          _selectedAction = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Analiza została usunięta.')));
+      }
+    } catch(e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd podczas usuwania: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Video Analytics Dashboard'),
         actions: [
-          if (_actions.isNotEmpty)
+          if (_actions.isNotEmpty) ...[
             TextButton.icon(
               icon: const Icon(Icons.save, color: Colors.greenAccent, size: 20),
               label: const Text('Zapisz analizę', style: TextStyle(color: Colors.white)),
               onPressed: _saveAnalysis,
             ),
-          const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent, size: 22),
+              tooltip: 'Usuń analizę',
+              onPressed: _deleteAnalysis,
+            ),
+            const SizedBox(width: 8),
+          ],
           if (_isAnalyzing)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -241,6 +289,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                 ? VideoPlayerWidget(
                                     videoFile: File(widget.videoPath),
                                     actions: _actions,
+                                    selectedAction: _selectedAction,
                                     isEditMode: _isEditMode,
                                     onPositionChanged: (pos) => _currentPosition = pos,
                                     onControllerReady: (controller) => _videoController = controller,

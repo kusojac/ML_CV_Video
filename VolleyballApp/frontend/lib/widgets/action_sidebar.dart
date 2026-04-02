@@ -101,27 +101,90 @@ class _ActionSidebarState extends State<ActionSidebar> {
         ),
         Expanded(
           child: ListView.separated(
+            padding: const EdgeInsets.only(top: 8, bottom: 20),
             itemCount: filteredActions.length,
-            separatorBuilder: (context, index) => const Divider(height: 1, color: Colors.white12),
+            separatorBuilder: (context, index) => const SizedBox(height: 4),
             itemBuilder: (context, index) {
               final action = filteredActions[index];
               final isSelected = widget.selectedAction?.id == action.id;
               
               Color accentColor = Colors.purpleAccent;
-              if (action.type.toUpperCase() == 'BUMP') accentColor = Colors.blueAccent;
+              if (action.type.toUpperCase() == 'BUMP') accentColor = const Color(0xFF00FFCC);
               if (action.type.toUpperCase() == 'SET') accentColor = Colors.greenAccent;
-              if (action.type.toUpperCase().contains('SPIKE') || action.type.toUpperCase() == 'ATTACK') accentColor = Colors.redAccent;
-              
-              return ListTile(
-                selected: isSelected,
-                selectedTileColor: accentColor.withValues(alpha: 0.2),
-                title: Text(action.type, style: TextStyle(color: isSelected ? accentColor : Colors.white, fontWeight: FontWeight.bold)),
-                subtitle: Text('Player: ${action.playerId} | At: ${Duration(milliseconds: action.startMs.round()).toString().split('.').first}', style: const TextStyle(color: Colors.white70)),
-                trailing: IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.white54, size: 18),
-                  onPressed: () => _editAction(context, action),
+              if (action.type.toUpperCase().contains('SPIKE') || action.type.toUpperCase() == 'ATTACK') accentColor = const Color(0xFFFF0055);
+
+              final timestamp = Duration(milliseconds: action.startMs.round()).toString().split('.').first;
+
+              return Card(
+                color: isSelected ? const Color(0xFF2A2A35) : const Color(0xFF1E1E24),
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                elevation: isSelected ? 4 : 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: isSelected ? accentColor.withValues(alpha: 0.8) : Colors.transparent,
+                    width: 1.5,
+                  ),
                 ),
-                onTap: () => widget.onActionSelected(action),
+                child: InkWell(
+                  onTap: () => widget.onActionSelected(action),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: accentColor,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                action.type.toUpperCase(),
+                                style: TextStyle(color: isSelected ? accentColor : Colors.white, fontWeight: FontWeight.bold, fontSize: 15, letterSpacing: 1.1),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Player: ${action.playerId}',
+                                style: const TextStyle(color: Colors.white54, fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              timestamp,
+                              style: const TextStyle(color: Colors.white70, fontFamily: 'monospace', fontWeight: FontWeight.w600, fontSize: 14),
+                            ),
+                            if (widget.isEditMode)
+                              InkWell(
+                                onTap: () => _editAction(context, action),
+                                child: const Padding(
+                                  padding: EdgeInsets.only(top: 8.0),
+                                  child: Row(
+                                    children: [
+                                      Text('EDIT', style: TextStyle(color: Colors.white30, fontSize: 10, fontWeight: FontWeight.bold)),
+                                      SizedBox(width: 4),
+                                      Icon(Icons.edit, color: Colors.white30, size: 14),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               );
             },
           ),
