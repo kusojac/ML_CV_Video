@@ -61,6 +61,23 @@ The frontend presents a project manager interface where you can browse and play 
 
 ---
 
+### Nowość R&D: Zsynchronizowany Notatnik Jupyter
+Dla celów badawczych i poprawy analityki (krok po kroku), backend posiada wbudowany skrypt synchronizujący serce analityki (`engine.py`) prosto do interaktywnego środowiska Jupyter.
+
+Aby "na żądanie" wygenerować najnowszą zsynchronizowaną wersję notatnika z logiki działającej w backendzie:
+1. Będąc wewnątrz folderu `backend` (z włączonym `venv`), wywołaj:
+   ```bash
+   python sync_notebook.py --tag moja_wersja_testowa
+   ```
+2. Skrypt przeparsuje `engine.py` wyodrębniając mechanizmy uczenia maszynowego na poszczególne komórki do analizy klatka-po-klatce i zapisze je do: `backend/notebooks/versions`.
+3. Uruchom serwer na tym samym wirtualnym środowisku:
+   ```bash
+   jupyter notebook
+   ```
+4. Otwórz stworzony notatnik w przeglądarce i edytuj każdy krok analityki algorytmu niezależnie od aplikacji!
+
+---
+
 ## 🛠 Features
 
 - **Project Manager:** Click `Import Video` to add `.mp4` or `.mov` files from your disk. Files stay cached natively via `shared_preferences`.

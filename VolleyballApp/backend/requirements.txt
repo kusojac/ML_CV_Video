@@ -7,3 +7,5 @@ scikit-learn
 Pillow
 numpy
 pydantic
+jupyter
+matplotlib
