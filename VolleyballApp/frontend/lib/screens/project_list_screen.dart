@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/analysis_file_service.dart';
 import 'video_analysis_screen.dart';
 
 class ProjectListScreen extends StatefulWidget {
@@ -91,22 +92,70 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
               itemBuilder: (context, index) {
                 final path = _videoPaths[index];
                 final fileName = path.split(Platform.pathSeparator).last;
+                final hasAnalysis = AnalysisFileService.defaultJsonExists(path);
                 return Card(
                   color: const Color(0xFF2A2A2A),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
-                    leading: const Icon(Icons.videocam, color: Colors.tealAccent, size: 40),
-                    title: Text(fileName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(path, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                    leading: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Icon(Icons.videocam, color: Colors.tealAccent, size: 40),
+                        if (hasAnalysis)
+                          Positioned(
+                            right: -4,
+                            bottom: -2,
+                            child: Tooltip(
+                              message: 'Analiza dostępna',
+                              child: Container(
+                                width: 14,
+                                height: 14,
+                                decoration: BoxDecoration(
+                                  color: Colors.greenAccent,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(0xFF2A2A2A),
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    title: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            fileName,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        if (hasAnalysis)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 6),
+                            child: Tooltip(
+                              message: 'Analiza zapisana',
+                              child: Icon(Icons.analytics,
+                                  color: Colors.greenAccent, size: 16),
+                            ),
+                          ),
+                      ],
+                    ),
+                    subtitle: Text(path,
+                        style: const TextStyle(
+                            color: Colors.white54, fontSize: 12)),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.purpleAccent),
+                          icon: const Icon(Icons.delete,
+                              color: Colors.purpleAccent),
                           onPressed: () => _removeProject(path),
                         ),
-                        const Icon(Icons.arrow_forward_ios, color: Colors.white54),
+                        const Icon(Icons.arrow_forward_ios,
+                            color: Colors.white54),
                       ],
                     ),
                     onTap: () => _openProject(path),
