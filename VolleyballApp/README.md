@@ -61,22 +61,62 @@ The frontend presents a project manager interface where you can browse and play 
 
 ---
 
-### Nowość R&D: Zsynchronizowany Notatnik Jupyter
-Dla celów badawczych i poprawy analityki (krok po kroku), backend posiada wbudowany skrypt synchronizujący serce analityki (`engine.py`) prosto do interaktywnego środowiska Jupyter.
+## 📓 R&D: Analiza Klatka po Klatce — Jupyter Notebook
 
-Aby "na żądanie" wygenerować najnowszą zsynchronizowaną wersję notatnika z logiki działającej w backendzie:
-1. Będąc wewnątrz folderu `backend` (z włączonym `venv`), wywołaj:
-   ```bash
-   python sync_notebook.py --tag moja_wersja_testowa
-   ```
-2. Skrypt przeparsuje `engine.py` wyodrębniając mechanizmy uczenia maszynowego na poszczególne komórki do analizy klatka-po-klatce i zapisze je do: `backend/notebooks/versions`.
-3. Uruchom serwer na tym samym wirtualnym środowisku:
-   ```bash
-   jupyter notebook
-   ```
-4. Otwórz stworzony notatnik w przeglądarce i edytuj każdy krok analityki algorytmu niezależnie od aplikacji!
+Backend posiada gotowy notatnik Jupyter (`notebooks/analytics_sandbox.ipynb`) do interaktywnego testowania i ulepszania silnika analitycznego **niezależnie** od aplikacji Flutter/FastAPI.
+
+### Czym jest notatnik?
+Notatnik rozkłada logikę `engine.py` na **10 oddzielnych kroków**, które możesz wykonywać jeden po drugim:
+
+| Krok | Co robi |
+|------|---------|
+| 1 | Importy bibliotek i konfiguracja ścieżek |
+| 2 | Inicjalizacja modeli (YOLO, MediaPipe, RandomForest) |
+| 3 | Wybór pliku wideo i ustawienie progów detekcji |
+| 4 | Wczytanie i podgląd wybranej klatki |
+| 5 | Detekcja piłki (YOLO VB) z wizualizacją |
+| 6 | Detekcja zawodników (YOLO COCO) z wizualizacją |
+| 7 | Wybór najbliższego zawodnika do piłki |
+| 8 | Estymacja pozy (MediaPipe) na wyciętym ROI |
+| 9 | Ekstrakcja 31 cech i klasyfikacja akcji (RandomForest) |
+| 10 | Pełna wizualizacja wyników na klatce |
+
+Bonus: komórka do **masowego testowania** N klatek z tabela wyników.
+
+### Jak uruchomić?
+
+```powershell
+# 1. Przejdź do folderu backend (z aktywnym venv)
+cd VolleyballApp\backend
+.\venv\Scripts\Activate.ps1
+
+# 2. Zainstaluj zależności (jeśli jeszcze nie)
+pip install -r requirements.txt
+
+# 3. Uruchom Jupyter
+jupyter notebook
+```
+Otwórz w przeglądarce: `notebooks/analytics_sandbox.ipynb`
+
+> **Zmień ścieżkę wideo** w Kroku 3 na własny plik `.mp4` przed uruchomieniem kolejnych komórek.
 
 ---
+
+### Wersjonowanie i synchronizacja
+
+Chcesz zapisać wersję roboczą notatnika lub zsynchronizować go z najnowszym `engine.py`? Użyj skryptu:
+
+```powershell
+# Generuje nową wersję notatnika z tagiem (np. "test_nowy_prog")
+python sync_notebook.py --tag test_nowy_prog
+```
+
+Wygenerowany plik trafi do: `notebooks/versions/analytics_test_nowy_prog_YYYYMMDD_HHMMSS.ipynb`
+
+Możesz mieć wiele wersji roboczych:
+- `analytics_sandbox.ipynb` — bieżące pole robocze (edytuj do woli)
+- `notebooks/versions/` — archiwum historycznych wersji ze znacznikiem daty
+
 
 ## 🛠 Features
 
