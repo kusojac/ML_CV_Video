@@ -330,8 +330,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             },
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onHorizontalDragUpdate: widget.isEditMode
-                  ? (details) {
+              onHorizontalDragUpdate: (details) {
                       final msDelta =
                           (details.primaryDelta ?? 0) / constraints.maxWidth * totalMs;
                       final newStart =
@@ -350,8 +349,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         playerId: action.playerId,
                         confidence: action.confidence,
                       ));
-                    }
-                  : null,
+                    },
               onTap: () {
                 _seekToMs(action.startMs);
                 widget.onActionSelected?.call(action);
@@ -391,70 +389,78 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                       ),
                     ),
                   ),
-                // Uchwyt lewej krawędzi (edit mode)
-                if (widget.isEditMode)
+                // Uchwyt lewej krawędzi
+                if (true) // Zawsze pokazuj uchwyty (lub tylko po zaznaczeniu/najeździe)
                   Positioned(
                     left: 0,
                     top: 0,
                     bottom: 0,
-                    width: 8,
-                    child: GestureDetector(
-                      onHorizontalDragUpdate: (details) {
-                        final msDelta =
-                            (details.primaryDelta ?? 0) / constraints.maxWidth * totalMs;
-                        final newStart =
-                            (action.startMs + msDelta).clamp(0.0, action.endMs - 100);
-                        
-                        _seekToMs(newStart); // Podgląd
-                        
-                        widget.onActionUpdated?.call(ActionModel(
-                          id: action.id,
-                          type: action.type,
-                          startMs: newStart,
-                          endMs: action.endMs,
-                          playerBox: action.playerBox,
-                          playerId: action.playerId,
-                          confidence: action.confidence,
-                        ));
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white54,
-                          borderRadius: BorderRadius.circular(2),
+                    width: 12,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.resizeLeftRight,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onHorizontalDragUpdate: (details) {
+                          final msDelta =
+                              (details.primaryDelta ?? 0) / constraints.maxWidth * totalMs;
+                          final newStart =
+                              (action.startMs + msDelta).clamp(0.0, action.endMs - 100);
+                          
+                          _seekToMs(newStart); // Podgląd
+                          
+                          widget.onActionUpdated?.call(ActionModel(
+                            id: action.id,
+                            type: action.type,
+                            startMs: newStart,
+                            endMs: action.endMs,
+                            playerBox: action.playerBox,
+                            playerId: action.playerId,
+                            confidence: action.confidence,
+                          ));
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.white : Colors.white54,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                // Uchwyt prawej krawędzi (edit mode)
-                if (widget.isEditMode)
+                // Uchwyt prawej krawędzi
+                if (true)
                   Positioned(
                     right: 0,
                     top: 0,
                     bottom: 0,
-                    width: 8,
-                    child: GestureDetector(
-                      onHorizontalDragUpdate: (details) {
-                        final msDelta =
-                            (details.primaryDelta ?? 0) / constraints.maxWidth * totalMs;
-                        final newEnd =
-                            (action.endMs + msDelta).clamp(action.startMs + 100, totalMs);
-                        
-                        _seekToMs(newEnd); // Podgląd
-                        
-                        widget.onActionUpdated?.call(ActionModel(
-                          id: action.id,
-                          type: action.type,
-                          startMs: action.startMs,
-                          endMs: newEnd,
-                          playerBox: action.playerBox,
-                          playerId: action.playerId,
-                          confidence: action.confidence,
-                        ));
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white54,
-                          borderRadius: BorderRadius.circular(2),
+                    width: 12,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.resizeLeftRight,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onHorizontalDragUpdate: (details) {
+                          final msDelta =
+                              (details.primaryDelta ?? 0) / constraints.maxWidth * totalMs;
+                          final newEnd =
+                              (action.endMs + msDelta).clamp(action.startMs + 100, totalMs);
+                          
+                          _seekToMs(newEnd); // Podgląd
+                          
+                          widget.onActionUpdated?.call(ActionModel(
+                            id: action.id,
+                            type: action.type,
+                            startMs: action.startMs,
+                            endMs: newEnd,
+                            playerBox: action.playerBox,
+                            playerId: action.playerId,
+                            confidence: action.confidence,
+                          ));
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.white : Colors.white54,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
                       ),
                     ),

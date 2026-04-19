@@ -36,13 +36,19 @@ The backend handles the heavyweight Computer Vision models (YOLO, MediaPipe, Sci
    ```
 *You should see output indicating that `Uvicorn running on http://127.0.0.1:8001` is active.* Startup takes ~10–15 seconds while ONNX, TFLite, and sklearn models load. Let this window stay open in the background.
 
-> **Troubleshooting — `uvicorn: not recognized`:** This means the venv is not activated. Make sure you ran `.\venv\Scripts\Activate.ps1` from **inside the `backend\` folder** first. The root `.venv` does not contain `uvicorn`.
+> **Troubleshooting 1 — `uvicorn: not recognized`:** This means the venv is not activated. Make sure you ran `.\venv\Scripts\Activate.ps1` from **inside the `backend\` folder** first. The root `.venv` does not contain `uvicorn`.
 >
-> If `Activate.ps1` doesn't work in your terminal (e.g. non-interactive PowerShell), use this alternative that calls the venv's Python directly — **no activation needed**:
+> **Troubleshooting 2 — `Error loading ASGI app. Could not import module "main"`:** 
+> Oznacza to, że znajdujesz się w niewłaściwym folderze (prawdopodobnie wewnątrz `backend\venv\Scripts`). Serwer musi zostać uruchomiony z głównego folderu `backend`. 
+> Zanim uruchomisz uvicorn, wpisz:
+> ```powershell
+> cd C:\Users\kusoj\Desktop\Projekty\GoGoShawk\VideoMobile4Sport\ML_CV_Video\VolleyballApp\backend
+> ```
+>
+> If `Activate.ps1` doesn't work in your terminal (e.g. non-interactive PowerShell), use this alternative that calls the venv's Python directly — **no activation needed** (make sure you are in the `backend` folder):
 > ```powershell
 > .\venv\Scripts\python.exe -m uvicorn main:app --reload --host 127.0.0.1 --port 8001
 > ```
-
 ---
 
 ### Step 2: Start the Flutter Desktop Frontend

@@ -33,6 +33,22 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   // JSON state
   bool _hasUnsavedChanges = false;
   String? _loadedFromPath; // null = default path obok wideo
+
+  // Filtrowanie
+  String _filterType = 'All';
+  String _filterPlayer = 'All';
+  bool _isolateSelected = false;
+
+  List<ActionModel> get _filteredActions {
+    return _actions.where((a) {
+      if (_isEditMode && _isolateSelected && _selectedAction != null) {
+        if (a.id != _selectedAction!.id) return false;
+      }
+      if (_filterType != 'All' && a.type != _filterType) return false;
+      if (_filterPlayer != 'All' && a.playerId != _filterPlayer) return false;
+      return true;
+    }).toList();
+  }
   
   // Pozycja okienka PIP (Player Focus)
   double _focusPlayerTop = 16.0;
@@ -478,7 +494,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                             child: _videoLoaded
                                 ? VideoPlayerWidget(
                                     videoFile: File(widget.videoPath),
-                                    actions: _actions,
+                                    actions: _filteredActions,
                                     selectedAction: _selectedAction,
                                     isEditMode: _isEditMode,
                                     onPositionChanged: (pos) => _currentPosition = pos,
@@ -611,6 +627,12 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               actions: _actions,
               selectedAction: _selectedAction,
               isEditMode: _isEditMode,
+              filterType: _filterType,
+              filterPlayer: _filterPlayer,
+              onFilterTypeChanged: (v) => setState(() => _filterType = v),
+              onFilterPlayerChanged: (v) => setState(() => _filterPlayer = v),
+              isolateSelected: _isolateSelected,
+              onIsolateSelectedChanged: (v) => setState(() => _isolateSelected = v),
               onEditModeChanged: (val) {
                 setState(() => _isEditMode = val);
               },

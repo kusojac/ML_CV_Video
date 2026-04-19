@@ -60,14 +60,10 @@ class AnalysisFileService {
   }) async {
     final Map<String, dynamic> payload = {
       'actions': actions.map((a) => a.toJson()).toList(),
-    }
-      ..addAll({
-        if (totalFrames case final v?) 'total_frames': v,
-        if (fps case final v?) 'fps': v,
-      });
-    await File(path).writeAsString(
-      const JsonEncoder.withIndent('  ').convert(payload),
-    );
+    }..addAll({'total_frames': ?totalFrames, 'fps': ?fps});
+    await File(
+      path,
+    ).writeAsString(const JsonEncoder.withIndent('  ').convert(payload));
   }
 
   // ─── Odczyt ───────────────────────────────────────────────────────────────

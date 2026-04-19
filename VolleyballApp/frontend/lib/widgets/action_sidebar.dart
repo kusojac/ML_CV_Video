@@ -8,6 +8,12 @@ class ActionSidebar extends StatefulWidget {
   final ValueChanged<bool> onEditModeChanged;
   final ValueChanged<ActionModel> onActionSelected;
   final ValueChanged<ActionModel> onActionUpdated;
+  final String filterType;
+  final String filterPlayer;
+  final ValueChanged<String> onFilterTypeChanged;
+  final ValueChanged<String> onFilterPlayerChanged;
+  final bool isolateSelected;
+  final ValueChanged<bool> onIsolateSelectedChanged;
 
   const ActionSidebar({
     super.key,
@@ -17,6 +23,12 @@ class ActionSidebar extends StatefulWidget {
     required this.onEditModeChanged,
     required this.onActionSelected,
     required this.onActionUpdated,
+    required this.filterType,
+    required this.filterPlayer,
+    required this.onFilterTypeChanged,
+    required this.onFilterPlayerChanged,
+    required this.isolateSelected,
+    required this.onIsolateSelectedChanged,
   });
 
   @override
@@ -24,15 +36,13 @@ class ActionSidebar extends StatefulWidget {
 }
 
 class _ActionSidebarState extends State<ActionSidebar> {
-  String _filterType = 'All';
-  String _filterPlayer = 'All';
   final ScrollController _scrollController = ScrollController();
   final Map<String, GlobalKey> _itemKeys = {};
 
   List<ActionModel> get _filteredActions {
     return widget.actions.where((a) {
-      if (_filterType != 'All' && a.type != _filterType) return false;
-      if (_filterPlayer != 'All' && a.playerId != _filterPlayer) return false;
+      if (widget.filterType != 'All' && a.type != widget.filterType) return false;
+      if (widget.filterPlayer != 'All' && a.playerId != widget.filterPlayer) return false;
       return true;
     }).toList();
   }
@@ -93,9 +103,24 @@ class _ActionSidebarState extends State<ActionSidebar> {
                   ),
                 ],
               ),
+              if (widget.isEditMode)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      const Text('Isolate Selected', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      Switch(
+                        value: widget.isolateSelected,
+                        onChanged: widget.onIsolateSelectedChanged,
+                        activeThumbColor: Colors.cyanAccent,
+                      ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                initialValue: actionTypes.contains(_filterType) ? _filterType : 'All',
+                initialValue: actionTypes.contains(widget.filterType) ? widget.filterType : 'All',
                 dropdownColor: const Color(0xFF2E2E2E),
                 decoration: const InputDecoration(
                   labelText: 'Filter by Action',
@@ -107,12 +132,12 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 items: ['All', ...actionTypes.toList()..sort()]
                     .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
                 onChanged: (v) {
-                  setState(() => _filterType = v ?? 'All');
+                  widget.onFilterTypeChanged(v ?? 'All');
                 },
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                initialValue: playerIds.contains(_filterPlayer) ? _filterPlayer : 'All',
+                initialValue: playerIds.contains(widget.filterPlayer) ? widget.filterPlayer : 'All',
                 dropdownColor: const Color(0xFF2E2E2E),
                 decoration: const InputDecoration(
                   labelText: 'Filter by Player #',
@@ -124,7 +149,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 items: ['All', ...playerIds.toList()..sort()]
                     .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
                 onChanged: (v) {
-                  setState(() => _filterPlayer = v ?? 'All');
+                  widget.onFilterPlayerChanged(v ?? 'All');
                 },
               ),
             ],
