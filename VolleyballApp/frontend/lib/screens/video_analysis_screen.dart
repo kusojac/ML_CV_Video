@@ -33,6 +33,13 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   // JSON state
   bool _hasUnsavedChanges = false;
   String? _loadedFromPath; // null = default path obok wideo
+  
+  // Pozycja okienka PIP (Player Focus)
+  double _focusPlayerTop = 16.0;
+  double _focusPlayerRight = 16.0;
+  double _focusPlayerWidth = 200.0;
+  
+  bool _isUpdatingFocus = false;
 
   @override
   void initState() {
@@ -476,13 +483,20 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                     isEditMode: _isEditMode,
                                     onPositionChanged: (pos) => _currentPosition = pos,
                                     onControllerReady: (controller) => _videoController = controller,
+                                    onActionSelected: _onActionSelected,
                                     onActionUpdated: (action) {
                                       final idx = _actions.indexWhere((a) => a.id == action.id);
                                       if (idx != -1) {
                                         setState(() {
                                           _actions[idx] = action;
+                                          if (_selectedAction?.id == action.id) {
+                                            _selectedAction = action;
+                                          }
                                         });
                                       }
+                                      setState(() {
+                                        _isUpdatingFocus = false;
+                                      });
                                     },
                                     onActionAdded: (action) {
                                       setState(() {
@@ -526,14 +540,57 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                         // Focus mode picture-in-picture
                         if (_selectedAction != null)
                           Positioned(
-                            top: 16,
-                            right: 16,
-                            width: 200,
-                            height: 200,
-                            child: FocusPlayerWidget(
-                              controller: _videoController!,
-                              action: _selectedAction!,
-                              mainPosition: _currentPosition,
+                            top: _focusPlayerTop,
+                            right: _focusPlayerRight,
+                            width: _focusPlayerWidth,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                GestureDetector(
+                                  onPanUpdate: (details) {
+                                    setState(() {
+                                      _focusPlayerTop += details.delta.dy;
+                                      _focusPlayerRight -= details.delta.dx;
+                                    });
+                                  },
+                                  child: FocusPlayerWidget(
+                                    controller: _videoController!,
+                                    action: _selectedAction!,
+                                    mainPosition: _currentPosition,
+                                    isUpdatingFocus: _isUpdatingFocus,
+                                    onResetFocus: _isEditMode
+                                        ? () {
+                                            // Start updating focus mode instead of resetting action to 0
+                                            setState(() {
+                                              _isUpdatingFocus = true;
+                                            });
+                                          }
+                                        : null,
+                                  ),
+                                ),
+                                // Uchwyt do zmiany rozmiaru (lewy dolny róg)
+                                Positioned(
+                                  bottom: -10,
+                                  left: -10,
+                                  child: GestureDetector(
+                                    onPanUpdate: (details) {
+                                      setState(() {
+                                        // delta.dx ujemna => ruch w lewo => szerokość rośnie
+                                        _focusPlayerWidth = (_focusPlayerWidth - details.delta.dx).clamp(100.0, 800.0);
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.purpleAccent,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 4)],
+                                      ),
+                                      child: const Icon(Icons.open_in_full, size: 16, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                       ],

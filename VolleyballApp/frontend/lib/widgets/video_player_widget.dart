@@ -44,6 +44,7 @@ class VideoPlayerWidget extends StatefulWidget {
   final Function(VideoController) onControllerReady;
   final ValueChanged<ActionModel>? onActionUpdated;
   final ValueChanged<ActionModel>? onActionAdded;
+  final ValueChanged<ActionModel>? onActionSelected;
 
   const VideoPlayerWidget({
     super.key,
@@ -55,6 +56,7 @@ class VideoPlayerWidget extends StatefulWidget {
     required this.onControllerReady,
     this.onActionUpdated,
     this.onActionAdded,
+    this.onActionSelected,
   });
 
   @override
@@ -72,6 +74,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   // Rysowanie bounding-box na wideo (edit mode)
   Offset? _dragStart;
   Offset? _dragCurrent;
+
+  /// ID najechanego kursorem bloku wydarzenia na timeline
+  String? _hoveredActionId;
 
   // Zaznaczanie zakresu na timeline
   double? _rangeStartMs;   // punkt startowy zaznaczenia (ms)
@@ -316,42 +321,58 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
           top: 0,
           bottom: 0,
           width: w,
-          child: GestureDetector(
-            onHorizontalDragUpdate: widget.isEditMode
-                ? (details) {
-                    final msDelta =
-                        (details.primaryDelta ?? 0) / constraints.maxWidth * totalMs;
-                    final newStart =
-                        (action.startMs + msDelta).clamp(0.0, totalMs);
-                    final newEnd =
-                        (action.endMs + msDelta).clamp(newStart, totalMs);
-                    widget.onActionUpdated?.call(ActionModel(
-                      id: action.id,
-                      type: action.type,
-                      startMs: newStart,
-                      endMs: newEnd,
-                      playerBox: action.playerBox,
-                      playerId: action.playerId,
-                      confidence: action.confidence,
-                    ));
-                  }
-                : null,
-            onTap: () => _seekToMs(action.startMs),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // Blok akcji
-                Container(
-                  decoration: BoxDecoration(
-                    color: color.withAlpha(widget.isEditMode ? 204 : 153),
-                    borderRadius: BorderRadius.circular(widget.isEditMode ? 6 : 3),
-                    border: isSelected
-                        ? Border.all(color: Colors.white, width: 2)
-                        : widget.isEditMode
-                            ? Border.all(color: Colors.white54, width: 1)
-                            : null,
+          child: MouseRegion(
+            onEnter: (_) => setState(() => _hoveredActionId = action.id),
+            onExit: (_) {
+              if (_hoveredActionId == action.id) {
+                setState(() => _hoveredActionId = null);
+              }
+            },
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onHorizontalDragUpdate: widget.isEditMode
+                  ? (details) {
+                      final msDelta =
+                          (details.primaryDelta ?? 0) / constraints.maxWidth * totalMs;
+                      final newStart =
+                          (action.startMs + msDelta).clamp(0.0, totalMs);
+                      final newEnd =
+                          (action.endMs + msDelta).clamp(newStart, totalMs);
+                          
+                      _seekToMs(newStart); // Podgląd
+                      
+                      widget.onActionUpdated?.call(ActionModel(
+                        id: action.id,
+                        type: action.type,
+                        startMs: newStart,
+                        endMs: newEnd,
+                        playerBox: action.playerBox,
+                        playerId: action.playerId,
+                        confidence: action.confidence,
+                      ));
+                    }
+                  : null,
+              onTap: () {
+                _seekToMs(action.startMs);
+                widget.onActionSelected?.call(action);
+              },
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Blok akcji
+                  Container(
+                    decoration: BoxDecoration(
+                      color: color.withAlpha(widget.isEditMode || _hoveredActionId == action.id ? 204 : 153),
+                      borderRadius: BorderRadius.circular(widget.isEditMode ? 6 : 3),
+                      border: isSelected
+                          ? Border.all(color: Colors.white, width: 2)
+                          : (_hoveredActionId == action.id
+                              ? Border.all(color: Colors.white70, width: 2)
+                              : (widget.isEditMode
+                                  ? Border.all(color: Colors.white54, width: 1)
+                                  : null)),
+                    ),
                   ),
-                ),
                 // Nazwa akcji (jeśli wystarczająco szeroka)
                 if (w > 30)
                   Center(
@@ -383,6 +404,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                             (details.primaryDelta ?? 0) / constraints.maxWidth * totalMs;
                         final newStart =
                             (action.startMs + msDelta).clamp(0.0, action.endMs - 100);
+                        
+                        _seekToMs(newStart); // Podgląd
+                        
                         widget.onActionUpdated?.call(ActionModel(
                           id: action.id,
                           type: action.type,
@@ -414,6 +438,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                             (details.primaryDelta ?? 0) / constraints.maxWidth * totalMs;
                         final newEnd =
                             (action.endMs + msDelta).clamp(action.startMs + 100, totalMs);
+                        
+                        _seekToMs(newEnd); // Podgląd
+                        
                         widget.onActionUpdated?.call(ActionModel(
                           id: action.id,
                           type: action.type,
@@ -436,7 +463,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             ),
           ),
         ),
-      );
+      ));
     }
 
     // Podgląd zaznaczanego zakresu (podczas drag)
@@ -585,6 +612,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                             _rangeEndMs = ms;
                             _isDraggingRange = true;
                           });
+                          _seekToMs(ms);
                         }
                       : null,
                   onPanUpdate: widget.isEditMode
@@ -594,6 +622,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                                       .clamp(0.0, 1.0) *
                                   totalMs;
                           setState(() => _rangeEndMs = ms);
+                          _seekToMs(ms);
                         }
                       : null,
                   onPanEnd: widget.isEditMode
@@ -676,6 +705,18 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
       children: [
         GestureDetector(
           behavior: HitTestBehavior.opaque,
+          onTap: () {
+            // Czyszczenie fokusu po kliknięciu
+            widget.onActionUpdated?.call(ActionModel(
+              id: widget.selectedAction!.id,
+              type: widget.selectedAction!.type,
+              startMs: widget.selectedAction!.startMs,
+              endMs: widget.selectedAction!.endMs,
+              playerBox: [0.0, 0.0, 0.0, 0.0],
+              playerId: widget.selectedAction!.playerId,
+              confidence: widget.selectedAction!.confidence,
+            ));
+          },
           onPanStart: (d) => setState(() {
             _dragStart = d.localPosition;
             _dragCurrent = d.localPosition;
@@ -720,10 +761,52 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                 : _dragCurrent!.dy,
             width: (_dragCurrent!.dx - _dragStart!.dx).abs(),
             height: (_dragCurrent!.dy - _dragStart!.dy).abs(),
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.redAccent, width: 2),
-                color: Colors.redAccent.withAlpha(51),
+            child: IgnorePointer(
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.redAccent, width: 2),
+                  color: Colors.redAccent.withAlpha(51),
+                ),
+              ),
+            ),
+          )
+        else if (widget.selectedAction != null &&
+            widget.selectedAction!.playerBox.length == 4 &&
+            widget.selectedAction!.playerBox.any((v) => v != 0.0))
+          Positioned(
+            left: widget.selectedAction!.playerBox[0] / videoW * size.width,
+            top: widget.selectedAction!.playerBox[1] / videoH * size.height,
+            width: ((widget.selectedAction!.playerBox[2] -
+                        widget.selectedAction!.playerBox[0]) /
+                    videoW *
+                    size.width)
+                .abs(),
+            height: ((widget.selectedAction!.playerBox[3] -
+                        widget.selectedAction!.playerBox[1]) /
+                    videoH *
+                    size.height)
+                .abs(),
+            child: IgnorePointer(
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.greenAccent, width: 2),
+                  color: Colors.greenAccent.withAlpha(51),
+                ),
+                child: const Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: EdgeInsets.all(2.0),
+                    child: Text(
+                      'Fokus',
+                      style: TextStyle(
+                        color: Colors.greenAccent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        backgroundColor: Colors.black54,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

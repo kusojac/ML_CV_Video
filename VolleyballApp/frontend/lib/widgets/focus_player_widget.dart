@@ -6,12 +6,16 @@ class FocusPlayerWidget extends StatefulWidget {
   final VideoController controller;
   final ActionModel action;
   final Duration mainPosition;
+  final VoidCallback? onResetFocus;
+  final bool isUpdatingFocus;
 
   const FocusPlayerWidget({
     super.key,
     required this.controller,
     required this.action,
     required this.mainPosition,
+    this.onResetFocus,
+    this.isUpdatingFocus = false,
   });
 
   @override
@@ -93,73 +97,91 @@ class _FocusPlayerWidgetState extends State<FocusPlayerWidget> {
     final bw = (bxMax - bxMin).clamp(1.0, vw);
     final bh = (byMax - byMin).clamp(1.0, vh);
 
-    // Scale up the video so the bounding box fills the widget
-    final scaleX = vw / bw;
-    final scaleY = vh / bh;
-    final scale = scaleX < scaleY ? scaleX : scaleY;
-    final safeScale = (scale * 1.5).clamp(1.0, 20.0);
-
-    // Center of the bounding box as fractional offset (0..1)
-    final centerX = bxMin + bw / 2;
-    final centerY = byMin + bh / 2;
-    final fractionalX = (centerX / vw).clamp(0.0, 1.0);
-    final fractionalY = (centerY / vh).clamp(0.0, 1.0);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black,
-        border: Border.all(color: Colors.purpleAccent, width: 2),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 10, offset: Offset(0, 4))],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            ClipRect(
-              child: Transform.scale(
-                scale: safeScale,
-                alignment: FractionalOffset(fractionalX, fractionalY),
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: vw,
-                    height: vh,
-                    child: Video(controller: widget.controller),
-                  ),
-                ),
-              ),
-            ),
-            // Floating label
-            Positioned(
-              left: 8,
-              top: 8,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
+    return GestureDetector(
+      onDoubleTap: widget.onResetFocus,
+      child: AspectRatio(
+        aspectRatio: bw / bh,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.black,
+            border: Border.all(
+                color: widget.isUpdatingFocus ? Colors.amberAccent : Colors.purpleAccent,
+                width: widget.isUpdatingFocus ? 3 : 2),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 10, offset: Offset(0, 4))],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final W = constraints.maxWidth;
+                final H = constraints.maxHeight;
+                return Stack(
+                  fit: StackFit.expand,
                   children: [
-                    const Icon(Icons.person, color: Colors.purpleAccent, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      widget.action.playerId == 'Unknown'
-                          ? 'Player Focus'
-                          : 'Player ${widget.action.playerId}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                    Stack(
+                      children: [
+                        Positioned(
+                          left: -(bxMin / bw) * W,
+                          top: -(byMin / bh) * H,
+                          width: (vw / bw) * W,
+                          height: (vh / bh) * H,
+                          child: Video(controller: widget.controller),
+                        ),
+                      ],
+                    ),
+                    if (widget.isUpdatingFocus)
+                      Container(
+                        color: Colors.black.withAlpha(100),
+                        child: const Center(
+                          child: Text(
+                            'Narysuj nowy\nobszar na wideo',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.amberAccent,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Floating label
+                    Positioned(
+                      left: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: widget.isUpdatingFocus ? Colors.amber.withAlpha(200) : Colors.black.withAlpha(180),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.person, color: Colors.white, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              widget.isUpdatingFocus
+                                  ? 'Edycja obszaru...'
+                                  : (widget.action.playerId == 'Unknown'
+                                      ? 'Player Focus'
+                                      : 'Player ${widget.action.playerId}'),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
-                ),
-              ),
+                );
+              },
             ),
-          ],
+          ),
         ),
       ),
     );

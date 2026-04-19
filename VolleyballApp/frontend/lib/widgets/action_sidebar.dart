@@ -26,17 +26,48 @@ class ActionSidebar extends StatefulWidget {
 class _ActionSidebarState extends State<ActionSidebar> {
   String _filterType = 'All';
   String _filterPlayer = 'All';
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _itemKeys = {};
+
+  List<ActionModel> get _filteredActions {
+    return widget.actions.where((a) {
+      if (_filterType != 'All' && a.type != _filterType) return false;
+      if (_filterPlayer != 'All' && a.playerId != _filterPlayer) return false;
+      return true;
+    }).toList();
+  }
+
+  @override
+  void didUpdateWidget(ActionSidebar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedAction?.id != oldWidget.selectedAction?.id && widget.selectedAction != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final key = _itemKeys[widget.selectedAction!.id];
+        if (key != null && key.currentContext != null) {
+          Scrollable.ensureVisible(
+            key.currentContext!,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            alignment: 0.3, // Przewija tak, by element był w 30% wysokości widoku
+          );
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     Set<String> actionTypes = widget.actions.map((e) => e.type).toSet();
     Set<String> playerIds = widget.actions.map((e) => e.playerId).toSet();
     
-    List<ActionModel> filteredActions = widget.actions.where((a) {
-      if (_filterType != 'All' && a.type != _filterType) return false;
-      if (_filterPlayer != 'All' && a.playerId != _filterPlayer) return false;
-      return true;
-    }).toList();
+    List<ActionModel> filteredActions = _filteredActions;
 
     return Column(
       children: [
@@ -100,32 +131,35 @@ class _ActionSidebarState extends State<ActionSidebar> {
           ),
         ),
         Expanded(
-          child: ListView.separated(
+          child: SingleChildScrollView(
+            controller: _scrollController,
             padding: const EdgeInsets.only(top: 8, bottom: 20),
-            itemCount: filteredActions.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 4),
-            itemBuilder: (context, index) {
-              final action = filteredActions[index];
-              final isSelected = widget.selectedAction?.id == action.id;
-              
-              Color accentColor = Colors.purpleAccent;
-              if (action.type.toUpperCase() == 'BUMP') accentColor = const Color(0xFF00FFCC);
-              if (action.type.toUpperCase() == 'SET') accentColor = Colors.greenAccent;
-              if (action.type.toUpperCase().contains('SPIKE') || action.type.toUpperCase() == 'ATTACK') accentColor = const Color(0xFFFF0055);
+            child: Column(
+              children: filteredActions.map((action) {
+                final isSelected = widget.selectedAction?.id == action.id;
+                final key = _itemKeys.putIfAbsent(action.id, () => GlobalKey());
+                
+                Color accentColor = Colors.purpleAccent;
+                if (action.type.toUpperCase() == 'BUMP') accentColor = const Color(0xFF00FFCC);
+                if (action.type.toUpperCase() == 'SET') accentColor = Colors.greenAccent;
+                if (action.type.toUpperCase().contains('SPIKE') || action.type.toUpperCase() == 'ATTACK') accentColor = const Color(0xFFFF0055);
 
-              final timestamp = Duration(milliseconds: action.startMs.round()).toString().split('.').first;
+                final timestamp = Duration(milliseconds: action.startMs.round()).toString().split('.').first;
 
-              return Card(
-                color: isSelected ? const Color(0xFF2A2A35) : const Color(0xFF1E1E24),
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                elevation: isSelected ? 4 : 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(
-                    color: isSelected ? accentColor.withValues(alpha: 0.8) : Colors.transparent,
-                    width: 1.5,
-                  ),
-                ),
+                return Padding(
+                  key: key,
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Card(
+                    color: isSelected ? const Color(0xFF2A2A35) : const Color(0xFF1E1E24),
+                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                    elevation: isSelected ? 4 : 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: BorderSide(
+                        color: isSelected ? accentColor.withValues(alpha: 0.8) : Colors.transparent,
+                        width: 1.5,
+                      ),
+                    ),
                 child: InkWell(
                   onTap: () => widget.onActionSelected(action),
                   borderRadius: BorderRadius.circular(8),
@@ -185,8 +219,10 @@ class _ActionSidebarState extends State<ActionSidebar> {
                     ),
                   ),
                 ),
+              ),
               );
-            },
+              }).toList(),
+            ),
           ),
         ),
       ],
