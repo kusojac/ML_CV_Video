@@ -9,29 +9,28 @@ import '../models/action_model.dart';
 Color _actionColor(String type) {
   switch (type.toUpperCase()) {
     case 'BUMP':
+    case 'RECEIVE':
+    case 'DIG':
       return Colors.blueAccent;
     case 'SET':
       return Colors.greenAccent;
     case 'ATTACK':
     case 'RIGHT SPIKE':
     case 'LEFT SPIKE':
+    case 'MIDDLE SPIKE':
       return Colors.redAccent;
     case 'SERVE':
+    case 'JUMP SERVE':
+    case 'FLOAT SERVE':
       return Colors.orangeAccent;
     case 'BLOCK':
       return const Color(0xFFCC88FF);
+    case 'FREEBALL':
+      return Colors.tealAccent;
     default:
       return Colors.purpleAccent;
   }
 }
-
-const List<String> _kActionTypes = [
-  'BUMP',
-  'SET',
-  'ATTACK',
-  'SERVE',
-  'BLOCK',
-];
 
 // ─── Widget ─────────────────────────────────────────────────────────────────
 
@@ -45,6 +44,8 @@ class VideoPlayerWidget extends StatefulWidget {
   final ValueChanged<ActionModel>? onActionUpdated;
   final ValueChanged<ActionModel>? onActionAdded;
   final ValueChanged<ActionModel>? onActionSelected;
+  final List<ActionModel>? playlistActions;
+  final ValueChanged<ActionModel>? onActionPlaylistToggled;
 
   const VideoPlayerWidget({
     super.key,
@@ -57,6 +58,8 @@ class VideoPlayerWidget extends StatefulWidget {
     this.onActionUpdated,
     this.onActionAdded,
     this.onActionSelected,
+    this.playlistActions,
+    this.onActionPlaylistToggled,
   });
 
   @override
@@ -142,7 +145,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     }
     if (endMs - startMs < 100) return; // zbyt krótkie zaznaczenie
 
-    String selectedType = _kActionTypes.first;
+    String selectedType = kVolleyballActions.first;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -220,7 +223,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: _kActionTypes.map((type) {
+                children: kVolleyballActions.map((type) {
                   final isChosen = type == selectedType;
                   final col = _actionColor(type);
                   return GestureDetector(
@@ -317,6 +320,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
           ((endFrac - startFrac) * timelineWidth).clamp(2.0, timelineWidth);
       final color = _actionColor(action.type);
       final isSelected = widget.selectedAction?.id == action.id;
+      final isInPlaylist = widget.playlistActions?.any((a) => a.id == action.id) ?? false;
 
       markers.add(
         Positioned(
@@ -357,6 +361,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                 _seekToMs(action.startMs);
                 widget.onActionSelected?.call(action);
               },
+              onDoubleTap: () {
+                widget.onActionPlaylistToggled?.call(action);
+              },
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -367,11 +374,13 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                       borderRadius: BorderRadius.circular(widget.isEditMode ? 6 : 3),
                       border: isSelected
                           ? Border.all(color: Colors.white, width: 2)
-                          : (_hoveredActionId == action.id
-                              ? Border.all(color: Colors.white70, width: 2)
-                              : (widget.isEditMode
-                                  ? Border.all(color: Colors.white54, width: 1)
-                                  : null)),
+                          : isInPlaylist
+                              ? Border.all(color: Colors.white, width: 1.5)
+                              : (_hoveredActionId == action.id
+                                  ? Border.all(color: Colors.white70, width: 2)
+                                  : (widget.isEditMode
+                                      ? Border.all(color: Colors.white54, width: 1)
+                                      : null)),
                     ),
                   ),
                 // Nazwa akcji (jeśli wystarczająco szeroka)

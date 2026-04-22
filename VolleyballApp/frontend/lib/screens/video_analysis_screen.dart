@@ -34,6 +34,12 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   bool _hasUnsavedChanges = false;
   String? _loadedFromPath; // null = default path obok wideo
 
+  // Playlist state
+  List<ActionModel> _playlist = [];
+  bool _isPlayingPlaylist = false;
+  bool _loopPlaylist = false;
+  int _currentPlaylistIndex = 0;
+
   // Filtrowanie
   String _filterType = 'All';
   String _filterPlayer = 'All';
@@ -62,6 +68,32 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     super.initState();
     // Check existing analysis in background
     Future.microtask(() => _checkExistingAnalysis());
+  }
+
+  void _onPositionChanged(Duration pos) {
+    _currentPosition = pos;
+    if (_isPlayingPlaylist && _playlist.isNotEmpty) {
+      if (_currentPlaylistIndex < _playlist.length) {
+        final currentAction = _playlist[_currentPlaylistIndex];
+        if (pos.inMilliseconds >= currentAction.endMs) {
+          // Move to next action
+          _currentPlaylistIndex++;
+          if (_currentPlaylistIndex < _playlist.length) {
+            _videoController?.player.seek(Duration(milliseconds: _playlist[_currentPlaylistIndex].startMs.round()));
+          } else {
+            // End of playlist
+            if (_loopPlaylist) {
+              _currentPlaylistIndex = 0;
+              _videoController?.player.seek(Duration(milliseconds: _playlist[_currentPlaylistIndex].startMs.round()));
+            } else {
+              _isPlayingPlaylist = false;
+              _videoController?.player.pause();
+              setState(() {});
+            }
+          }
+        }
+      }
+    }
   }
 
   Future<void> _checkExistingAnalysis() async {
@@ -169,6 +201,25 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     }
   }
 
+  void _onActionAdded() {
+    setState(() {
+      final start = _currentPosition.inMilliseconds.toDouble();
+      final end = start + 2000.0; // 2 sekundy domyślnie
+      final newAction = ActionModel(
+        id: 'manual_${DateTime.now().millisecondsSinceEpoch}',
+        type: 'BUMP',
+        startMs: start,
+        endMs: end,
+        playerBox: [0.0, 0.0, 0.0, 0.0],
+        playerId: 'Unknown',
+        confidence: 1.0,
+      );
+      _actions.add(newAction);
+      _selectedAction = newAction;
+      _hasUnsavedChanges = true;
+    });
+  }
+
   // ─── Zapis ─────────────────────────────────────────────────────────────────
 
   /// Zapisuje do domyślnego miejsca (obok wideo)
@@ -259,6 +310,72 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Błąd odczytu: $e')));
+      }
+    }
+  }
+
+  // ─── Playlista IO ──────────────────────────────────────────────────────────
+
+  Future<void> _savePlaylist() async {
+    try {
+      await AnalysisFileService.savePlaylistToDefault(
+        videoPath: widget.videoPath,
+        playlist: _playlist,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Playlista zapisana domyślnie.'),
+          backgroundColor: Color(0xFF1B5E20),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd zapisu playlisty: $e')));
+      }
+    }
+  }
+
+  Future<void> _savePlaylistAs() async {
+    try {
+      final savedPath = await AnalysisFileService.savePlaylistAs(
+        videoPath: widget.videoPath,
+        playlist: _playlist,
+      );
+      if (savedPath == null) return;
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Zapisano playlistę: ${savedPath.split(Platform.pathSeparator).last}'),
+          backgroundColor: const Color(0xFF1B5E20),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd zapisu playlisty: $e')));
+      }
+    }
+  }
+
+  Future<void> _loadPlaylist() async {
+    try {
+      final result = await AnalysisFileService.loadPlaylistFromPicker();
+      if (result == null) return;
+      if (!mounted) return;
+      setState(() {
+        _playlist = result;
+        _isPlayingPlaylist = false;
+        _currentPlaylistIndex = 0;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Wczytano playlistę (${result.length} akcji)'),
+          backgroundColor: const Color(0xFF0D47A1),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd odczytu playlisty: $e')));
       }
     }
   }
@@ -496,9 +613,19 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                     videoFile: File(widget.videoPath),
                                     actions: _filteredActions,
                                     selectedAction: _selectedAction,
+                                    playlistActions: _playlist,
                                     isEditMode: _isEditMode,
-                                    onPositionChanged: (pos) => _currentPosition = pos,
+                                    onPositionChanged: _onPositionChanged,
                                     onControllerReady: (controller) => _videoController = controller,
+                                    onActionPlaylistToggled: (action) {
+                                      setState(() {
+                                        if (_playlist.any((a) => a.id == action.id)) {
+                                          _playlist.removeWhere((a) => a.id == action.id);
+                                        } else {
+                                          _playlist.add(action);
+                                        }
+                                      });
+                                    },
                                     onActionSelected: _onActionSelected,
                                     onActionUpdated: (action) {
                                       final idx = _actions.indexWhere((a) => a.id == action.id);
@@ -626,6 +753,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
             child: ActionSidebar(
               actions: _actions,
               selectedAction: _selectedAction,
+              playlist: _playlist,
+              isPlayingPlaylist: _isPlayingPlaylist,
+              loopPlaylist: _loopPlaylist,
               isEditMode: _isEditMode,
               filterType: _filterType,
               filterPlayer: _filterPlayer,
@@ -633,6 +763,38 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               onFilterPlayerChanged: (v) => setState(() => _filterPlayer = v),
               isolateSelected: _isolateSelected,
               onIsolateSelectedChanged: (v) => setState(() => _isolateSelected = v),
+              onPlaylistChanged: (newPlaylist) => setState(() => _playlist = newPlaylist),
+              onLoopPlaylistChanged: (val) => setState(() => _loopPlaylist = val),
+              onSavePlaylist: _savePlaylist,
+              onSavePlaylistAs: _savePlaylistAs,
+              onLoadPlaylist: _loadPlaylist,
+              onActionAdded: _onActionAdded,
+              onActionDeleted: (action) {
+                setState(() {
+                  _actions.removeWhere((a) => a.id == action.id);
+                  _playlist.removeWhere((a) => a.id == action.id);
+                  if (_selectedAction?.id == action.id) {
+                    _selectedAction = null;
+                  }
+                  _hasUnsavedChanges = true;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Akcja usunięta.')),
+                );
+              },
+              onPlayPlaylistToggle: () {
+                if (_playlist.isEmpty) return;
+                setState(() {
+                  _isPlayingPlaylist = !_isPlayingPlaylist;
+                  if (_isPlayingPlaylist) {
+                    _currentPlaylistIndex = 0;
+                    _videoController?.player.seek(Duration(milliseconds: _playlist[0].startMs.round()));
+                    _videoController?.player.play();
+                  } else {
+                    _videoController?.player.pause();
+                  }
+                });
+              },
               onEditModeChanged: (val) {
                 setState(() => _isEditMode = val);
               },

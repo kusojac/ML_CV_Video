@@ -1,0 +1,46 @@
+{
+  "actions": [
+    {
+      "id": "action_0",
+      "type": "BUMP",
+      "start_ms": 12400.0,
+      "end_ms": 12533.333333333334,
+      "player_box": [
+        36.60000000000001,
+        337.88571428571424,
+        838.8857142857142,
+        961.2
+      ],
+      "player_id": "Unknown",
+      "confidence": 0.8
+    },
+    {
+      "id": "action_2",
+      "type": "BUMP",
+      "start_ms": 23600.0,
+      "end_ms": 23766.666666666664,
+      "player_box": [
+        704.0,
+        430.0,
+        813.0,
+        642.0
+      ],
+      "player_id": "Unknown",
+      "confidence": 0.8
+    },
+    {
+      "id": "action_1",
+      "type": "BUMP",
+      "start_ms": 12566.666666666666,
+      "end_ms": 12700.0,
+      "player_box": [
+        15.0,
+        359.48571428571427,
+        703.1142857142858,
+        856.2857142857143
+      ],
+      "player_id": "Unknown",
+      "confidence": 0.8
+    }
+  ]
+}

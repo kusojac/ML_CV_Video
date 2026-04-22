@@ -41,3 +41,19 @@ class ActionModel {
     };
   }
 }
+
+const List<String> kVolleyballActions = [
+  'SERVE',
+  'JUMP SERVE',
+  'FLOAT SERVE',
+  'RECEIVE',
+  'BUMP',
+  'SET',
+  'ATTACK',
+  'LEFT SPIKE',
+  'RIGHT SPIKE',
+  'MIDDLE SPIKE',
+  'BLOCK',
+  'DIG',
+  'FREEBALL',
+];

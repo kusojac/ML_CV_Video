@@ -18,6 +18,11 @@ class AnalysisFileService {
     return File(defaultJsonPath(videoPath)).existsSync();
   }
 
+  static String defaultPlaylistJsonPath(String videoPath) {
+    final base = p.withoutExtension(videoPath);
+    return '${base}_playlist.json';
+  }
+
   // ─── Zapis ────────────────────────────────────────────────────────────────
 
   /// Zapisuje listę akcji do domyślnego pliku JSON obok wideo.
@@ -49,6 +54,32 @@ class AnalysisFileService {
     );
     if (savePath == null) return null;
     await _writeJson(savePath, actions, totalFrames: totalFrames, fps: fps);
+    return savePath;
+  }
+
+  /// Zapisuje playlistę do domyślnego pliku
+  static Future<void> savePlaylistToDefault({
+    required String videoPath,
+    required List<ActionModel> playlist,
+  }) async {
+    final path = defaultPlaylistJsonPath(videoPath);
+    await _writeJson(path, playlist);
+  }
+
+  /// Zapisuje playlistę ze ścieżką z okna dialogowego
+  static Future<String?> savePlaylistAs({
+    required String videoPath,
+    required List<ActionModel> playlist,
+  }) async {
+    final defaultName = '${p.basenameWithoutExtension(videoPath)}_playlist.json';
+    final savePath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Zapisz playlistę',
+      fileName: defaultName,
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+    if (savePath == null) return null;
+    await _writeJson(savePath, playlist);
     return savePath;
   }
 
@@ -87,6 +118,20 @@ class AnalysisFileService {
     );
     if (result == null || result.files.single.path == null) return null;
     return _parseFile(File(result.files.single.path!));
+  }
+
+  /// Otwiera systemowe okno dialogowe i wczytuje playlistę.
+  static Future<List<ActionModel>?> loadPlaylistFromPicker() async {
+    final result = await FilePicker.platform.pickFiles(
+      dialogTitle: 'Wczytaj playlistę (JSON)',
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+      allowMultiple: false,
+    );
+    if (result == null || result.files.single.path == null) return null;
+    
+    final parsed = await _parseFile(File(result.files.single.path!));
+    return parsed.actions;
   }
 
   static Future<AnalysisLoadResult> _parseFile(File file) async {
