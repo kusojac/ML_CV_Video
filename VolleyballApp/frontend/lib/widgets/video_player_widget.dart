@@ -83,6 +83,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   double? _rangeEndMs;     // punkt końcowy zaznaczenia (ms)
   bool _isDraggingRange = false;
 
+  // Poziom przybliżenia (zoom) osi czasu
+  double _zoomLevel = 1.0;
+
   @override
   void initState() {
     super.initState();
@@ -300,7 +303,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
   // ─── Markery na timeline ──────────────────────────────────────────────────
 
-  Widget _buildTimelineMarkers(BoxConstraints constraints) {
+  Widget _buildTimelineMarkers(double timelineWidth) {
     final totalMs = _totalDuration.inMilliseconds.toDouble();
     if (totalMs == 0) return const SizedBox.shrink();
 
@@ -311,13 +314,13 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
       final startFrac = (action.startMs / totalMs).clamp(0.0, 1.0);
       final endFrac = (action.endMs / totalMs).clamp(0.0, 1.0);
       final w =
-          ((endFrac - startFrac) * constraints.maxWidth).clamp(2.0, constraints.maxWidth);
+          ((endFrac - startFrac) * timelineWidth).clamp(2.0, timelineWidth);
       final color = _actionColor(action.type);
       final isSelected = widget.selectedAction?.id == action.id;
 
       markers.add(
         Positioned(
-          left: startFrac * constraints.maxWidth,
+          left: startFrac * timelineWidth,
           top: 0,
           bottom: 0,
           width: w,
@@ -330,9 +333,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             },
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onHorizontalDragUpdate: (details) {
+              onHorizontalDragUpdate: widget.isEditMode ? (details) {
                       final msDelta =
-                          (details.primaryDelta ?? 0) / constraints.maxWidth * totalMs;
+                          (details.primaryDelta ?? 0) / timelineWidth * totalMs;
                       final newStart =
                           (action.startMs + msDelta).clamp(0.0, totalMs);
                       final newEnd =
@@ -349,7 +352,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         playerId: action.playerId,
                         confidence: action.confidence,
                       ));
-                    },
+                    } : null,
               onTap: () {
                 _seekToMs(action.startMs);
                 widget.onActionSelected?.call(action);
@@ -390,7 +393,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                     ),
                   ),
                 // Uchwyt lewej krawędzi
-                if (true) // Zawsze pokazuj uchwyty (lub tylko po zaznaczeniu/najeździe)
+                if (widget.isEditMode) // Pokazuj uchwyty tylko w trybie edycji
                   Positioned(
                     left: 0,
                     top: 0,
@@ -402,7 +405,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         behavior: HitTestBehavior.opaque,
                         onHorizontalDragUpdate: (details) {
                           final msDelta =
-                              (details.primaryDelta ?? 0) / constraints.maxWidth * totalMs;
+                              (details.primaryDelta ?? 0) / timelineWidth * totalMs;
                           final newStart =
                               (action.startMs + msDelta).clamp(0.0, action.endMs - 100);
                           
@@ -428,7 +431,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                     ),
                   ),
                 // Uchwyt prawej krawędzi
-                if (true)
+                if (widget.isEditMode) // Pokazuj uchwyty tylko w trybie edycji
                   Positioned(
                     right: 0,
                     top: 0,
@@ -440,7 +443,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         behavior: HitTestBehavior.opaque,
                         onHorizontalDragUpdate: (details) {
                           final msDelta =
-                              (details.primaryDelta ?? 0) / constraints.maxWidth * totalMs;
+                              (details.primaryDelta ?? 0) / timelineWidth * totalMs;
                           final newEnd =
                               (action.endMs + msDelta).clamp(action.startMs + 100, totalMs);
                           
@@ -479,10 +482,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         _totalDuration.inMilliseconds > 0) {
       final lo = _rangeStartMs!.clamp(0.0, totalMs);
       final hi = _rangeEndMs!.clamp(0.0, totalMs);
-      final left = (lo / totalMs * constraints.maxWidth).clamp(0.0, constraints.maxWidth);
-      final right = (hi / totalMs * constraints.maxWidth).clamp(0.0, constraints.maxWidth);
+      final left = (lo / totalMs * timelineWidth).clamp(0.0, timelineWidth);
+      final right = (hi / totalMs * timelineWidth).clamp(0.0, timelineWidth);
       final selLeft = left < right ? left : right;
-      final selWidth = (left - right).abs().clamp(1.0, constraints.maxWidth);
+      final selWidth = (left - right).abs().clamp(1.0, timelineWidth);
 
       markers.add(
         Positioned(
@@ -543,6 +546,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
         return LayoutBuilder(
           builder: (context, constraints) {
+            final timelineWidth = constraints.maxWidth * _zoomLevel;
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -575,34 +579,59 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                           ),
                         ],
                       ),
-                    Text(
-                      _fmtMs(totalMs),
-                      style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11,
-                          fontFamily: 'monospace'),
+                    Row(
+                      children: [
+                        if (_zoomLevel > 1.0)
+                          Text('Zoom: ${_zoomLevel.toStringAsFixed(1)}x',
+                              style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                        if (_zoomLevel > 1.0) const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.zoom_out, color: Colors.white54, size: 14),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => setState(() => _zoomLevel = (_zoomLevel - 0.5).clamp(1.0, 10.0)),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.zoom_in, color: Colors.white54, size: 14),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => setState(() => _zoomLevel = (_zoomLevel + 0.5).clamp(1.0, 10.0)),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          _fmtMs(totalMs),
+                          style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 11,
+                              fontFamily: 'monospace'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 // Pasek timeline z gesture
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  // ── Ruch / przewijanie (bez edit mode) ───────────────────
-                  onHorizontalDragUpdate: widget.isEditMode
-                      ? null
-                      : (details) {
-                          final rel =
-                              (details.localPosition.dx / constraints.maxWidth)
-                                  .clamp(0.0, 1.0);
-                          _seekToMs(rel * totalMs);
-                        },
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: _isDraggingRange ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    // ── Ruch / przewijanie (bez edit mode) ───────────────────
+                    onHorizontalDragUpdate: widget.isEditMode
+                        ? null
+                        : (details) {
+                            final rel =
+                                (details.localPosition.dx / timelineWidth)
+                                    .clamp(0.0, 1.0);
+                            _seekToMs(rel * totalMs);
+                          },
                   // ── Tap bez edit: seek ─────────────────────────────────
                   onTapUp: widget.isEditMode
                       ? null
                       : (details) {
                           final rel =
-                              (details.localPosition.dx / constraints.maxWidth)
+                              (details.localPosition.dx / timelineWidth)
                                   .clamp(0.0, 1.0);
                           _seekToMs(rel * totalMs);
                         },
@@ -610,7 +639,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                   onPanStart: widget.isEditMode
                       ? (details) {
                           final ms =
-                              (details.localPosition.dx / constraints.maxWidth)
+                              (details.localPosition.dx / timelineWidth)
                                       .clamp(0.0, 1.0) *
                                   totalMs;
                           setState(() {
@@ -624,7 +653,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                   onPanUpdate: widget.isEditMode
                       ? (details) {
                           final ms =
-                              (details.localPosition.dx / constraints.maxWidth)
+                              (details.localPosition.dx / timelineWidth)
                                       .clamp(0.0, 1.0) *
                                   totalMs;
                           setState(() => _rangeEndMs = ms);
@@ -645,50 +674,51 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                           }
                         }
                       : null,
-                  child: SizedBox(
-                    height: 36,
-                    width: double.infinity,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        // Tło (track)
-                        Positioned.fill(
-                          child: Container(
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: Colors.white12,
-                              borderRadius: BorderRadius.circular(14),
+                    child: SizedBox(
+                      height: 36,
+                      width: timelineWidth,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          // Tło (track)
+                          Positioned.fill(
+                            child: Container(
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: Colors.white12,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
                           ),
-                        ),
-                        // Odtworzona część
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: (constraints.maxWidth * progress.clamp(0.0, 1.0))
-                              .clamp(0.0, constraints.maxWidth),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.deepPurpleAccent,
-                              borderRadius: BorderRadius.circular(14),
+                          // Odtworzona część
+                          Positioned(
+                            left: 0,
+                            top: 0,
+                            bottom: 0,
+                            width: (timelineWidth * progress.clamp(0.0, 1.0))
+                                .clamp(0.0, timelineWidth),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.deepPurpleAccent,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
                           ),
-                        ),
-                        // Markery akcji
-                        Positioned.fill(
-                          child: _buildTimelineMarkers(constraints),
-                        ),
-                        // Głowica (playhead) — linia pionowa
-                        Positioned(
-                          left: (constraints.maxWidth * progress.clamp(0.0, 1.0))
-                              .clamp(0.0, constraints.maxWidth - 2),
-                          top: -4,
-                          bottom: -4,
-                          width: 2,
-                          child: Container(color: Colors.white),
-                        ),
-                      ],
+                          // Markery akcji
+                          Positioned.fill(
+                            child: _buildTimelineMarkers(timelineWidth),
+                          ),
+                          // Głowica (playhead) — linia pionowa
+                          Positioned(
+                            left: (timelineWidth * progress.clamp(0.0, 1.0))
+                                .clamp(0.0, timelineWidth - 2),
+                            top: -4,
+                            bottom: -4,
+                            width: 2,
+                            child: Container(color: Colors.white),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

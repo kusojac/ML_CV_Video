@@ -359,7 +359,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         ),
         actions: [
           // ── Przyciski ładowania/zapisu jeśli są już akcje ───────────────
-          if (_actions.isNotEmpty) ...[
+          if (_actions.isNotEmpty && _isEditMode) ...[
             // Wskaźnik niezapisanych zmian
             if (_hasUnsavedChanges)
               const Padding(
