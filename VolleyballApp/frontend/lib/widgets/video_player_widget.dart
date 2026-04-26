@@ -404,10 +404,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                 // Uchwyt lewej krawędzi
                 if (widget.isEditMode) // Pokazuj uchwyty tylko w trybie edycji
                   Positioned(
-                    left: 0,
+                    left: -6, // Wystaje poza krawędź bloku, by łatwiej było złapać
                     top: 0,
                     bottom: 0,
-                    width: 12,
+                    width: 16,
                     child: MouseRegion(
                       cursor: SystemMouseCursors.resizeLeftRight,
                       child: GestureDetector(
@@ -430,10 +430,20 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                             confidence: action.confidence,
                           ));
                         },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isSelected ? Colors.white : Colors.white54,
-                            borderRadius: BorderRadius.circular(2),
+                        child: Center(
+                          child: Container(
+                            height: double.infinity,
+                            width: 8,
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.white : Colors.white70,
+                              borderRadius: BorderRadius.circular(4),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black45, blurRadius: 2, spreadRadius: 1)
+                              ],
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.chevron_left, size: 10, color: Colors.black87),
+                            ),
                           ),
                         ),
                       ),
@@ -442,10 +452,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                 // Uchwyt prawej krawędzi
                 if (widget.isEditMode) // Pokazuj uchwyty tylko w trybie edycji
                   Positioned(
-                    right: 0,
+                    right: -6,
                     top: 0,
                     bottom: 0,
-                    width: 12,
+                    width: 16,
                     child: MouseRegion(
                       cursor: SystemMouseCursors.resizeLeftRight,
                       child: GestureDetector(
@@ -468,10 +478,20 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                             confidence: action.confidence,
                           ));
                         },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isSelected ? Colors.white : Colors.white54,
-                            borderRadius: BorderRadius.circular(2),
+                        child: Center(
+                          child: Container(
+                            height: double.infinity,
+                            width: 8,
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.white : Colors.white70,
+                              borderRadius: BorderRadius.circular(4),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black45, blurRadius: 2, spreadRadius: 1)
+                              ],
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.chevron_right, size: 10, color: Colors.black87),
+                            ),
                           ),
                         ),
                       ),
@@ -831,28 +851,163 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                     videoH *
                     size.height)
                 .abs(),
-            child: IgnorePointer(
-              child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.greenAccent, width: 2),
-                  color: Colors.greenAccent.withAlpha(51),
-                ),
-                child: const Align(
-                  alignment: Alignment.topLeft,
-                  child: Padding(
-                    padding: EdgeInsets.all(2.0),
-                    child: Text(
-                      'Fokus',
-                      style: TextStyle(
-                        color: Colors.greenAccent,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        backgroundColor: Colors.black54,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.greenAccent, width: 2),
+                    color: Colors.greenAccent.withAlpha(51),
+                  ),
+                  child: const Align(
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: EdgeInsets.all(2.0),
+                      child: Text(
+                        'Fokus',
+                        style: TextStyle(
+                          color: Colors.greenAccent,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          backgroundColor: Colors.black54,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+                // Lewy górny róg
+                Positioned(
+                  left: -8,
+                  top: -8,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.resizeUpLeftDownRight,
+                    child: GestureDetector(
+                      onPanUpdate: (d) {
+                        final dx = d.delta.dx / size.width * videoW;
+                        final dy = d.delta.dy / size.height * videoH;
+                        final b = widget.selectedAction!.playerBox;
+                        widget.onActionUpdated?.call(ActionModel(
+                          id: widget.selectedAction!.id,
+                          type: widget.selectedAction!.type,
+                          startMs: widget.selectedAction!.startMs,
+                          endMs: widget.selectedAction!.endMs,
+                          playerBox: [
+                            (b[0] + dx).clamp(0.0, b[2] - 10.0),
+                            (b[1] + dy).clamp(0.0, b[3] - 10.0),
+                            b[2],
+                            b[3]
+                          ],
+                          playerId: widget.selectedAction!.playerId,
+                          confidence: widget.selectedAction!.confidence,
+                        ));
+                      },
+                      child: Container(
+                        width: 16, height: 16,
+                        decoration: BoxDecoration(color: Colors.greenAccent, border: Border.all(color: Colors.black), shape: BoxShape.circle),
+                      ),
+                    ),
+                  ),
+                ),
+                // Prawy górny róg
+                Positioned(
+                  right: -8,
+                  top: -8,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.resizeUpRightDownLeft,
+                    child: GestureDetector(
+                      onPanUpdate: (d) {
+                        final dx = d.delta.dx / size.width * videoW;
+                        final dy = d.delta.dy / size.height * videoH;
+                        final b = widget.selectedAction!.playerBox;
+                        widget.onActionUpdated?.call(ActionModel(
+                          id: widget.selectedAction!.id,
+                          type: widget.selectedAction!.type,
+                          startMs: widget.selectedAction!.startMs,
+                          endMs: widget.selectedAction!.endMs,
+                          playerBox: [
+                            b[0],
+                            (b[1] + dy).clamp(0.0, b[3] - 10.0),
+                            (b[2] + dx).clamp(b[0] + 10.0, videoW),
+                            b[3]
+                          ],
+                          playerId: widget.selectedAction!.playerId,
+                          confidence: widget.selectedAction!.confidence,
+                        ));
+                      },
+                      child: Container(
+                        width: 16, height: 16,
+                        decoration: BoxDecoration(color: Colors.greenAccent, border: Border.all(color: Colors.black), shape: BoxShape.circle),
+                      ),
+                    ),
+                  ),
+                ),
+                // Lewy dolny róg
+                Positioned(
+                  left: -8,
+                  bottom: -8,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.resizeUpRightDownLeft,
+                    child: GestureDetector(
+                      onPanUpdate: (d) {
+                        final dx = d.delta.dx / size.width * videoW;
+                        final dy = d.delta.dy / size.height * videoH;
+                        final b = widget.selectedAction!.playerBox;
+                        widget.onActionUpdated?.call(ActionModel(
+                          id: widget.selectedAction!.id,
+                          type: widget.selectedAction!.type,
+                          startMs: widget.selectedAction!.startMs,
+                          endMs: widget.selectedAction!.endMs,
+                          playerBox: [
+                            (b[0] + dx).clamp(0.0, b[2] - 10.0),
+                            b[1],
+                            b[2],
+                            (b[3] + dy).clamp(b[1] + 10.0, videoH)
+                          ],
+                          playerId: widget.selectedAction!.playerId,
+                          confidence: widget.selectedAction!.confidence,
+                        ));
+                      },
+                      child: Container(
+                        width: 16, height: 16,
+                        decoration: BoxDecoration(color: Colors.greenAccent, border: Border.all(color: Colors.black), shape: BoxShape.circle),
+                      ),
+                    ),
+                  ),
+                ),
+                // Prawy dolny róg
+                Positioned(
+                  right: -8,
+                  bottom: -8,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.resizeUpLeftDownRight,
+                    child: GestureDetector(
+                      onPanUpdate: (d) {
+                        final dx = d.delta.dx / size.width * videoW;
+                        final dy = d.delta.dy / size.height * videoH;
+                        final b = widget.selectedAction!.playerBox;
+                        widget.onActionUpdated?.call(ActionModel(
+                          id: widget.selectedAction!.id,
+                          type: widget.selectedAction!.type,
+                          startMs: widget.selectedAction!.startMs,
+                          endMs: widget.selectedAction!.endMs,
+                          playerBox: [
+                            b[0],
+                            b[1],
+                            (b[2] + dx).clamp(b[0] + 10.0, videoW),
+                            (b[3] + dy).clamp(b[1] + 10.0, videoH)
+                          ],
+                          playerId: widget.selectedAction!.playerId,
+                          confidence: widget.selectedAction!.confidence,
+                        ));
+                      },
+                      child: Container(
+                        width: 16, height: 16,
+                        decoration: BoxDecoration(color: Colors.greenAccent, border: Border.all(color: Colors.black), shape: BoxShape.circle),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
       ],
