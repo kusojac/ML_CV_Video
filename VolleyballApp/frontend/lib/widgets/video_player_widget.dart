@@ -88,6 +88,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
   // Poziom przybliżenia (zoom) osi czasu
   double _zoomLevel = 1.0;
+  
+  // Kontroler przewijania osi czasu
+  final ScrollController _timelineScrollController = ScrollController();
 
   @override
   void initState() {
@@ -127,6 +130,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   @override
   void dispose() {
     _player.dispose();
+    _timelineScrollController.dispose();
     super.dispose();
   }
 
@@ -641,9 +645,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                 ),
                 const SizedBox(height: 4),
                 // Pasek timeline z gesture
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  physics: _isDraggingRange ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
+                Scrollbar(
+                  controller: _timelineScrollController,
+                  thumbVisibility: true,
+                  thickness: 8,
+                  child: SingleChildScrollView(
+                    controller: _timelineScrollController,
+                    scrollDirection: Axis.horizontal,
+                    physics: _isDraggingRange ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     // ── Ruch / przewijanie (bez edit mode) ───────────────────
@@ -748,6 +757,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                           ),
                         ],
                       ),
+                    ),
                     ),
                   ),
                 ),
