@@ -689,47 +689,53 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
-                                GestureDetector(
-                                  onPanUpdate: (details) {
-                                    setState(() {
-                                      _focusPlayerTop += details.delta.dy;
-                                      _focusPlayerRight -= details.delta.dx;
-                                    });
-                                  },
-                                  child: FocusPlayerWidget(
-                                    controller: _videoController!,
-                                    action: _selectedAction!,
-                                    mainPosition: _currentPosition,
-                                    isUpdatingFocus: _isUpdatingFocus,
-                                    onResetFocus: _isEditMode
-                                        ? () {
-                                            // Start updating focus mode instead of resetting action to 0
-                                            setState(() {
-                                              _isUpdatingFocus = true;
-                                            });
-                                          }
-                                        : null,
+                                MouseRegion(
+                                  cursor: SystemMouseCursors.move,
+                                  child: GestureDetector(
+                                    onPanUpdate: (details) {
+                                      setState(() {
+                                        _focusPlayerTop += details.delta.dy;
+                                        _focusPlayerRight -= details.delta.dx;
+                                      });
+                                    },
+                                    child: FocusPlayerWidget(
+                                      controller: _videoController!,
+                                      action: _selectedAction!,
+                                      mainPosition: _currentPosition,
+                                      isUpdatingFocus: _isUpdatingFocus,
+                                      onResetFocus: _isEditMode
+                                          ? () {
+                                              // Start updating focus mode instead of resetting action to 0
+                                              setState(() {
+                                                _isUpdatingFocus = true;
+                                              });
+                                            }
+                                          : null,
+                                    ),
                                   ),
                                 ),
                                 // Uchwyt do zmiany rozmiaru (lewy dolny róg)
                                 Positioned(
                                   bottom: -10,
                                   left: -10,
-                                  child: GestureDetector(
-                                    onPanUpdate: (details) {
-                                      setState(() {
-                                        // delta.dx ujemna => ruch w lewo => szerokość rośnie
-                                        _focusPlayerWidth = (_focusPlayerWidth - details.delta.dx).clamp(100.0, 800.0);
-                                      });
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.purpleAccent,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 4)],
+                                  child: MouseRegion(
+                                    cursor: SystemMouseCursors.resizeUpRightDownLeft,
+                                    child: GestureDetector(
+                                      onPanUpdate: (details) {
+                                        setState(() {
+                                          // delta.dx ujemna => ruch w lewo => szerokość rośnie
+                                          _focusPlayerWidth = (_focusPlayerWidth - details.delta.dx).clamp(100.0, 800.0);
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.purpleAccent,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 4)],
+                                        ),
+                                        child: const Icon(Icons.open_in_full, size: 16, color: Colors.white),
                                       ),
-                                      child: const Icon(Icons.open_in_full, size: 16, color: Colors.white),
                                     ),
                                   ),
                                 ),

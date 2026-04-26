@@ -35,7 +35,7 @@ Poniżej znajduje się lista zaplanowanych zadań i przyszłych usprawnień dla 
   - w edytorze akcji, w panelu musi być możliwość dodania nowego wskaźnika dla danego zawodnika (wybieramy akcję, wybieramy zawodnika, dodajemy wskaźnik).
   - w edytorze akcji, w panelu musi być możliwość edycji numeru zawodnika, z którym ta akcja została wykonana.
 - [ ] **Dodanie przesuwania timeline w sytuacji gdy jest zoom i chcemy przejść do końca timeline.**
-  - Należy dodać możliwość przesuwania timeline w sytuacji gdy jest zoom i chcemy przejść do końca timeline. (najlepiej tak aby wskaźnik na timeline podążał za ręką wskaźnika)
+  - Należy dodać możliwość przesuwania timeline w sytuacji gdy jest zoom i chcemy przejść do końca timeline lub do momentu który nie jest widoczny na ekranie. 
 - [ ] **Zmiana wskaźnika akcji na timeline.**
   - W miejscu gdzie jest wskaźnik akcji na timeline, gdy jest zoom i chcemy przesunąć się na timeline, wskaźnik się przesuwa za ręką. Zamiast tego wskaźnik powinien być stały i nie powinien się przesuwać za ręką. (najlepiej tak aby wskaźnik na timeline podążał za ręką wskaźnika)
 - [ ] **Dodanie możliwości dodawania akcji z poziomu odtwarzacza.**
