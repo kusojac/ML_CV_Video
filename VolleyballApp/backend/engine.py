@@ -53,9 +53,12 @@ class VolleyballAnalyticsEngine:
             
             timestamp_ms = (frame_idx / fps) * 1000.0
             
+            # Bolt Optimization: Preprocess YOLO input once and reuse for both models
+            # This saves redundant image resizing and array operations per frame
+            yolo_input = preprocess_yolo_input(frame_rgb)
+
             # 1. Detect Ball
-            input_ball = preprocess_yolo_input(frame_rgb)
-            ball_outs = self.session_vb.run([self.output_name_vb], {self.input_name_vb: input_ball})
+            ball_outs = self.session_vb.run([self.output_name_vb], {self.input_name_vb: yolo_input})
             ball_boxes, ball_scores, _ = postprocess_yolo_output(ball_outs[0], original_shape, conf_threshold=0.5)
             
             detected_action = "NONE"
@@ -64,8 +67,7 @@ class VolleyballAnalyticsEngine:
             
             if len(ball_boxes) > 0:
                 # 2. Detect Persons
-                input_coco = preprocess_yolo_input(frame_rgb)
-                coco_outs = self.session_coco.run([self.output_name_coco], {self.input_name_coco: input_coco})
+                coco_outs = self.session_coco.run([self.output_name_coco], {self.input_name_coco: yolo_input})
                 coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_output(coco_outs[0], original_shape, conf_threshold=0.5)
                 
                 person_boxes = [coco_boxes[i] for i, cid in enumerate(coco_class_ids) if cid == 0]
