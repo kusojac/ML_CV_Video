@@ -1,0 +1,4 @@
+## 2025-05-18 - [Path Traversal in Video Processing Endpoints]
+**Vulnerability:** The `/analyze`, `/results`, and `/update_action` endpoints accepted `video_path` as unsanitized user input and passed it directly to `os.path.exists` and `open()`. This allowed path traversal to read arbitrary files via inputs like `../../../etc/passwd`.
+**Learning:** For a local Desktop + API architecture, we cannot blindly block all absolute paths (e.g. `/` or `C:\`) because the frontend user is expected to supply absolute paths to their local video files. The security context differs from a traditional web application escaping a webroot.
+**Prevention:** Validation must explicitly target directory traversal characters like `..` while preserving the application's required functionality of accessing user-specified local absolute paths. Always evaluate the architectural context before applying blanket path restrictions.
