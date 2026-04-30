@@ -37,6 +37,12 @@ class UpdateActionRequest(BaseModel):
     new_start_ms: float
     new_end_ms: float
 
+def validate_safe_path(file_path: str) -> str:
+    """Validates that the given path does not contain directory traversal characters."""
+    if ".." in file_path:
+        raise HTTPException(status_code=400, detail="Invalid path provided.")
+    return file_path
+
 def get_json_path(video_path: str) -> str:
     """Returns the associated json path for the given video file."""
     base, _ = os.path.splitext(video_path)
@@ -77,6 +83,7 @@ def process_video_task(job_id: str, video_path: str):
 
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
+    validate_safe_path(request.video_path)
     if not os.path.exists(request.video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
@@ -105,6 +112,7 @@ async def get_job_status(job_id: str):
 
 @app.get("/results")
 async def get_results(video_path: str):
+    validate_safe_path(video_path)
     json_path = get_json_path(video_path)
     if not os.path.exists(json_path):
         raise HTTPException(status_code=404, detail="Analysis results not found.")
@@ -116,6 +124,7 @@ async def get_results(video_path: str):
 
 @app.post("/update_action")
 async def update_action(req: UpdateActionRequest):
+    validate_safe_path(req.video_path)
     json_path = get_json_path(req.video_path)
     if not os.path.exists(json_path):
         raise HTTPException(status_code=404, detail="Analysis results not found.")
