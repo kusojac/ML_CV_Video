@@ -1,0 +1,4 @@
+## 2025-02-14 - Directory Traversal Vulnerability in Video Path
+**Vulnerability:** Endpoints `/analyze`, `/results`, and `/update_action` accept arbitrary user-provided file paths via the `video_path` parameter and performed file system operations directly using `os.path.exists` and `open`. Although this desktop app needs to support absolute paths, relative path traversal (`..`) wasn't explicitly blocked, potentially allowing access to unauthorized files.
+**Learning:** Because the app interacts with local file systems via API parameters, relying on client-side constraints is insufficient. The backend must enforce boundaries even when dealing with absolute paths intended for local desktop interaction.
+**Prevention:** Implement a `secure_path` helper function that blocks requests containing `..` in the `path`, returning an HTTP 400 response. This function must be consistently called at the beginning of all endpoints handling file paths.
