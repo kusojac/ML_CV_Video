@@ -46,19 +46,23 @@ def postprocess_yolo_output(output, original_img_shape, input_size=(640, 640),
     if num_features == 5:  # ball model (single class)
         boxes_raw = output[:, :4]
         scores = output[:, 4]
-        class_ids = np.zeros(len(scores), dtype=int)
     elif num_features == 84:  # COCO person model
         boxes_raw = output[:, :4]
         class_scores = output[:, 4:]
         scores = np.max(class_scores, axis=1)
-        class_ids = np.argmax(class_scores, axis=1)
     else:
         return np.array([]).reshape(0,4), np.array([]), np.array([])
 
     valid_mask = scores > conf_threshold
     boxes_filtered = boxes_raw[valid_mask]
     scores_filtered = scores[valid_mask]
-    class_ids_filtered = class_ids[valid_mask]
+
+    # ⚡ Bolt Optimization: Defer np.argmax to avoid calculating it on thousands of low-confidence boxes
+    if num_features == 5:
+        class_ids_filtered = np.zeros(len(scores_filtered), dtype=int)
+    elif num_features == 84:
+        class_scores_filtered = class_scores[valid_mask]
+        class_ids_filtered = np.argmax(class_scores_filtered, axis=1)
 
     if len(boxes_filtered) == 0:
         return np.array([]).reshape(0,4), np.array([]), np.array([])
