@@ -1,0 +1,4 @@
+## 2024-05-02 - Fix Path Traversal Vulnerability in Video Processing Endpoints
+**Vulnerability:** The API endpoints (`/analyze`, `/results`, `/update_action`) previously accepted unsanitized file paths via `video_path` parameter, allowing arbitrary path traversal using relative paths (`..`). This could expose system files or other sensitive JSON data.
+**Learning:** In desktop-focused backends where absolute local file paths are permitted for UX reasons, missing basic constraints on relative directory traversal (`..`) can result in silent critical vulnerabilities, especially when generating paths (e.g., `get_json_path`).
+**Prevention:** Always sanitize absolute path inputs by explicitly verifying and disallowing relative directory traversals (`..`) via a shared validation helper like `secure_path()` before they interact with the file system.
