@@ -1,40 +1,49 @@
-import numpy as np
 import pytest
-from frame_utilities import get_distance_person_ball_np
+import numpy as np
+from frame_utilities import preprocess_yolo_input
 
-def test_get_distance_person_ball_np_identical_boxes():
-    # If the boxes are identical, the distance should be 0
-    person_box = np.array([10, 10, 20, 20])
-    ball_box = np.array([10, 10, 20, 20])
+def test_preprocess_yolo_input_default_size():
+    # Arrange: Create a dummy image representing a frame (height=480, width=640, channels=3)
+    dummy_image = np.zeros((480, 640, 3), dtype=np.uint8)
 
-    distance = get_distance_person_ball_np(person_box, ball_box)
-    assert distance == 0.0
+    # Act: Process the input using the default size (640, 640)
+    output = preprocess_yolo_input(dummy_image)
 
-def test_get_distance_person_ball_np_horizontal_separation():
-    # Person center is at (15, 15)
-    person_box = np.array([10, 10, 20, 20])
-    # Ball center is at (25, 15)
-    ball_box = np.array([20, 10, 30, 20])
+    # Assert: Check that the output shape matches YOLO expectations
+    # Batch size = 1, Channels = 3, Height = 640, Width = 640
+    assert output.shape == (1, 3, 640, 640)
 
-    distance = get_distance_person_ball_np(person_box, ball_box)
-    assert distance == 10.0
+    # Assert: Output data type should be float32
+    assert output.dtype == np.float32
 
-def test_get_distance_person_ball_np_vertical_separation():
-    # Person center is at (15, 15)
-    person_box = np.array([10, 10, 20, 20])
-    # Ball center is at (15, 25)
-    ball_box = np.array([10, 20, 20, 30])
+def test_preprocess_yolo_input_scaling():
+    # Arrange: Create an image filled with max intensity values
+    dummy_image = np.full((100, 100, 3), 255, dtype=np.uint8)
 
-    distance = get_distance_person_ball_np(person_box, ball_box)
-    assert distance == 10.0
+    # Act: Process the input
+    output = preprocess_yolo_input(dummy_image)
 
-def test_get_distance_person_ball_np_diagonal_separation():
-    # Person center is at (5, 5)
-    person_box = np.array([0, 0, 10, 10])
-    # Ball center is at (8, 9)
-    ball_box = np.array([6, 7, 10, 11])
+    # Assert: Check that max value in input is scaled to 1.0
+    assert np.max(output) == 1.0
 
-    distance = get_distance_person_ball_np(person_box, ball_box)
+    # Arrange: Create an image with mixed values
+    dummy_image_mixed = np.array([[[0, 127, 255]]], dtype=np.uint8)
 
-    # Distance = sqrt((8-5)^2 + (9-5)^2) = sqrt(3^2 + 4^2) = sqrt(9+16) = sqrt(25) = 5
-    assert distance == 5.0
+    # Act: Process the input
+    output_mixed = preprocess_yolo_input(dummy_image_mixed)
+
+    # Assert: Output values should be correctly scaled
+    assert np.isclose(np.min(output_mixed), 0.0)
+    assert np.isclose(np.max(output_mixed), 1.0)
+    assert np.all(output_mixed >= 0.0)
+    assert np.all(output_mixed <= 1.0)
+
+def test_preprocess_yolo_input_custom_size():
+    # Arrange: Create a dummy image
+    dummy_image = np.zeros((480, 640, 3), dtype=np.uint8)
+
+    # Act: Process the input using a custom size
+    output = preprocess_yolo_input(dummy_image, input_size=(320, 320))
+
+    # Assert: Output shape should reflect the custom size
+    assert output.shape == (1, 3, 320, 320)
