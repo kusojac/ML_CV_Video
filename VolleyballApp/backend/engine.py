@@ -1,5 +1,4 @@
 import cv2
-import math
 import os
 import onnxruntime
 import pickle

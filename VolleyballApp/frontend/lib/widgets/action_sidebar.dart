@@ -431,6 +431,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                           subtitle: Text('Player: ${action.playerId}', style: const TextStyle(color: Colors.white54)),
                           trailing: IconButton(
                             icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+                            tooltip: 'Usuń z playlisty / Remove from playlist',
                             onPressed: () {
                               final newPlaylist = List<ActionModel>.from(widget.playlist!);
                               newPlaylist.removeAt(index);
