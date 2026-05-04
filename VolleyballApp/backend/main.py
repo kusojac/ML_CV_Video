@@ -106,22 +106,22 @@ async def get_job_status(job_id: str):
 @app.get("/results")
 async def get_results(video_path: str):
     json_path = get_json_path(video_path)
-    if not os.path.exists(json_path):
+    try:
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+    except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Analysis results not found.")
-    
-    with open(json_path, 'r') as f:
-        data = json.load(f)
     return data
 
 
 @app.post("/update_action")
 async def update_action(req: UpdateActionRequest):
     json_path = get_json_path(req.video_path)
-    if not os.path.exists(json_path):
+    try:
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+    except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Analysis results not found.")
-        
-    with open(json_path, 'r') as f:
-        data = json.load(f)
         
     found = False
     for action in data.get("actions", []):
