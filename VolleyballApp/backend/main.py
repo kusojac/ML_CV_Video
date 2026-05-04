@@ -88,7 +88,7 @@ async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTas
     if not os.path.exists(request.video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
-    json_path = get_json_path(request.video_path)
+    json_path = get_json_path(safe_video_path)
     
     # If already processed, return it immediately
     if os.path.exists(json_path):
@@ -98,9 +98,9 @@ async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTas
     analysis_jobs[job_id] = {
         "status": "pending",
         "progress": 0.0,
-        "video_path": request.video_path
+        "video_path": safe_video_path
     }
-    background_tasks.add_task(process_video_task, job_id, request.video_path)
+    background_tasks.add_task(process_video_task, job_id, safe_video_path)
     return {"job_id": job_id, "status": "pending"}
 
 
