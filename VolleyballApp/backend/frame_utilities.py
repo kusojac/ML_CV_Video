@@ -46,20 +46,25 @@ def postprocess_yolo_output(output, original_img_shape, input_size=(640, 640),
     if num_features == 5:  # ball model (single class)
         boxes_raw = output[:, :4]
         scores = output[:, 4]
+
         valid_mask = scores > conf_threshold
-        class_ids_filtered = np.zeros(np.sum(valid_mask), dtype=int)
+        boxes_filtered = boxes_raw[valid_mask]
+        scores_filtered = scores[valid_mask]
+        class_ids_filtered = np.zeros(len(scores_filtered), dtype=int)
     elif num_features == 84:  # COCO person model
         boxes_raw = output[:, :4]
         class_scores = output[:, 4:]
+        # ⚡ Bolt Optimization: Compute max score first, filter, then defer argmax
+        # np.argmax on 8400 anchors is expensive. We only compute it on anchors that pass the confidence threshold.
         scores = np.max(class_scores, axis=1)
+
         valid_mask = scores > conf_threshold
-        # ⚡ Bolt Optimization: Defer expensive argmax to after threshold filtering
+        boxes_filtered = boxes_raw[valid_mask]
+        scores_filtered = scores[valid_mask]
+        # Bolt Optimization: Defer expensive argmax to only the valid, high-confidence boxes
         class_ids_filtered = np.argmax(class_scores[valid_mask], axis=1)
     else:
         return np.array([]).reshape(0,4), np.array([]), np.array([])
-
-    boxes_filtered = boxes_raw[valid_mask]
-    scores_filtered = scores[valid_mask]
 
     if len(boxes_filtered) == 0:
         return np.array([]).reshape(0,4), np.array([]), np.array([])
