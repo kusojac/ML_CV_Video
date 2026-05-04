@@ -1,5 +1,4 @@
 import os
-import re
 import json
 import argparse
 from datetime import datetime

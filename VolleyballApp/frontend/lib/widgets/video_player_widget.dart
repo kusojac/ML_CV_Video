@@ -620,6 +620,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         if (_zoomLevel > 1.0) const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.zoom_out, color: Colors.white54, size: 14),
+                          tooltip: 'Oddal / Zoom out',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () => setState(() => _zoomLevel = (_zoomLevel - 0.5).clamp(1.0, 10.0)),
@@ -627,6 +628,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.zoom_in, color: Colors.white54, size: 14),
+                          tooltip: 'Przybliż / Zoom in',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () => setState(() => _zoomLevel = (_zoomLevel + 0.5).clamp(1.0, 10.0)),
@@ -1091,6 +1093,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                   IconButton(
                     icon: const Icon(Icons.replay_5,
                         color: Colors.white70, size: 22),
+                    tooltip: 'Cofnij 5 sekund / Rewind 5 seconds',
                     onPressed: () {
                       final newMs = (_currentPos.inMilliseconds - 5000)
                           .clamp(0, _totalDuration.inMilliseconds);
@@ -1109,6 +1112,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         size: 30,
                         color: Colors.white,
                       ),
+                      tooltip: _isPlaying ? 'Pauza / Pause' : 'Odtwarzaj / Play',
                       onPressed: () =>
                           _isPlaying ? _player.pause() : _player.play(),
                     ),
@@ -1117,6 +1121,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                   IconButton(
                     icon: const Icon(Icons.forward_5,
                         color: Colors.white70, size: 22),
+                    tooltip: 'Do przodu 5 sekund / Forward 5 seconds',
                     onPressed: () {
                       final newMs = (_currentPos.inMilliseconds + 5000)
                           .clamp(0, _totalDuration.inMilliseconds);

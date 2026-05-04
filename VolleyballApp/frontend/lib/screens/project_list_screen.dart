@@ -152,6 +152,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                         IconButton(
                           icon: const Icon(Icons.delete,
                               color: Colors.purpleAccent),
+                          tooltip: 'Usuń projekt / Delete project',
                           onPressed: () => _removeProject(path),
                         ),
                         const Icon(Icons.arrow_forward_ios,
