@@ -5,6 +5,7 @@ import time
 
 import os
 import uuid
+import aiofiles
 from typing import Dict, Any
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -109,8 +110,9 @@ async def get_results(video_path: str):
     if not os.path.exists(json_path):
         raise HTTPException(status_code=404, detail="Analysis results not found.")
     
-    with open(json_path, 'r') as f:
-        data = json.load(f)
+    async with aiofiles.open(json_path, 'r') as f:
+        content = await f.read()
+        data = json.loads(content)
     return data
 
 
@@ -120,8 +122,9 @@ async def update_action(req: UpdateActionRequest):
     if not os.path.exists(json_path):
         raise HTTPException(status_code=404, detail="Analysis results not found.")
         
-    with open(json_path, 'r') as f:
-        data = json.load(f)
+    async with aiofiles.open(json_path, 'r') as f:
+        content = await f.read()
+        data = json.loads(content)
         
     found = False
     for action in data.get("actions", []):
@@ -135,8 +138,9 @@ async def update_action(req: UpdateActionRequest):
     if not found:
         raise HTTPException(status_code=404, detail="Action ID not found.")
         
-    with open(json_path, 'w') as f:
-        json.dump(data, f, indent=4)
+    async with aiofiles.open(json_path, 'w') as f:
+        content = json.dumps(data, indent=4)
+        await f.write(content)
         
     return {"status": "success"}
 
