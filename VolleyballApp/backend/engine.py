@@ -21,9 +21,10 @@ class VolleyballAnalyticsEngine:
         self.input_name_vb = self.session_vb.get_inputs()[0].name
         self.output_name_vb = self.session_vb.get_outputs()[0].name
         
-        # RandomForest for actions
-        model_dict = pickle.load(open(os.path.join(models_dir, "model.p"), "rb"))
-        self.rf_model = model_dict["model"]
+        # RandomForest for actions (Converted to ONNX for security)
+        self.session_rf = onnxruntime.InferenceSession(os.path.join(models_dir, "model.onnx"), providers=providers)
+        self.input_name_rf = self.session_rf.get_inputs()[0].name
+        self.output_name_rf = self.session_rf.get_outputs()[0].name
         
         # MediaPipe pose
         self.mp_pose = mp.solutions.pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
@@ -116,8 +117,10 @@ class VolleyballAnalyticsEngine:
                                 data.append(max((bx_max - bx_min)/x_range, (by_max - by_min)/y_range))
                                 
                                 if len(data) == 31:
-                                    pred = self.rf_model.predict([np.asarray(data)])
-                                    detected_action = str(pred[0])
+                                    # Fix: Use secure ONNX model instead of vulnerable pickle
+                                    data_np = np.asarray([data], dtype=np.float32)
+                                    pred = self.session_rf.run([self.output_name_rf], {self.input_name_rf: data_np})
+                                    detected_action = str(pred[0][0])
 
             # Logic to smooth multi-frame predictions into discrete actions
             if detected_action != "NONE":
