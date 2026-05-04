@@ -85,8 +85,8 @@ def process_video_task(job_id: str, video_path: str):
 
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
-    validate_safe_path(request.video_path)
-    if not os.path.exists(request.video_path):
+    safe_video_path = validate_safe_path(request.video_path)
+    if not os.path.exists(safe_video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
     json_path = get_json_path(safe_video_path)
