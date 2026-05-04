@@ -2,7 +2,7 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="google.protobuf")
 import json
 import time
-
+import asyncio
 import os
 import uuid
 from typing import Dict, Any
@@ -10,12 +10,13 @@ from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from engine import VolleyballAnalyticsEngine
+from config import ALLOWED_ORIGINS
 
 app = FastAPI(title="Volleyball Action Detection API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,11 +38,11 @@ class UpdateActionRequest(BaseModel):
     new_start_ms: float
     new_end_ms: float
 
-def secure_path(path: str) -> str:
-    """Ensures the path does not contain relative traversal characters."""
-    if ".." in path:
-        raise HTTPException(status_code=400, detail="Path traversal detected. Relative paths are not allowed.")
-    return path
+def validate_safe_path(file_path: str) -> str:
+    """Validates that the given path does not contain directory traversal characters."""
+    if ".." in file_path:
+        raise HTTPException(status_code=400, detail="Invalid path provided.")
+    return file_path
 
 def get_json_path(video_path: str) -> str:
     """Returns the associated json path for the given video file."""
@@ -83,8 +84,8 @@ def process_video_task(job_id: str, video_path: str):
 
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
-    safe_video_path = secure_path(request.video_path)
-    if not os.path.exists(safe_video_path):
+    validate_safe_path(request.video_path)
+    if not os.path.exists(request.video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
     json_path = get_json_path(safe_video_path)
@@ -110,42 +111,62 @@ async def get_job_status(job_id: str):
     return analysis_jobs[job_id]
 
 
+@app.get("/ping")
+async def ping():
+    return {"status": "ok"}
+
+
 @app.get("/results")
 async def get_results(video_path: str):
-    safe_video_path = secure_path(video_path)
-    json_path = get_json_path(safe_video_path)
-    if not os.path.exists(json_path):
+    validate_safe_path(video_path)
+    json_path = get_json_path(video_path)
+
+    def load_json():
+        if not os.path.exists(json_path):
+            return None
+        with open(json_path, 'r') as f:
+            return json.load(f)
+
+    data = await asyncio.to_thread(load_json)
+    if data is None:
         raise HTTPException(status_code=404, detail="Analysis results not found.")
     
-    with open(json_path, 'r') as f:
-        data = json.load(f)
     return data
 
 
 @app.post("/update_action")
 async def update_action(req: UpdateActionRequest):
-    safe_video_path = secure_path(req.video_path)
-    json_path = get_json_path(safe_video_path)
-    if not os.path.exists(json_path):
-        raise HTTPException(status_code=404, detail="Analysis results not found.")
-        
-    with open(json_path, 'r') as f:
-        data = json.load(f)
-        
-    found = False
-    for action in data.get("actions", []):
-        if action.get("id") == req.action_id:
-            action["type"] = req.new_type
-            action["start_ms"] = req.new_start_ms
-            action["end_ms"] = req.new_end_ms
-            found = True
-            break
+    validate_safe_path(req.video_path)
+    json_path = get_json_path(req.video_path)
+
+    def perform_update():
+        if not os.path.exists(json_path):
+            return "NOT_FOUND"
+
+        with open(json_path, 'r') as f:
+            data = json.load(f)
             
-    if not found:
+        found = False
+        for action in data.get("actions", []):
+            if action.get("id") == req.action_id:
+                action["type"] = req.new_type
+                action["start_ms"] = req.new_start_ms
+                action["end_ms"] = req.new_end_ms
+                found = True
+                break
+
+        if not found:
+            return "ACTION_NOT_FOUND"
+
+        with open(json_path, 'w') as f:
+            json.dump(data, f, indent=4)
+        return "SUCCESS"
+
+    result = await asyncio.to_thread(perform_update)
+    if result == "NOT_FOUND":
+        raise HTTPException(status_code=404, detail="Analysis results not found.")
+    elif result == "ACTION_NOT_FOUND":
         raise HTTPException(status_code=404, detail="Action ID not found.")
-        
-    with open(json_path, 'w') as f:
-        json.dump(data, f, indent=4)
         
     return {"status": "success"}
 
