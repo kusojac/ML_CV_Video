@@ -1,3 +1,6 @@
+## 2024-05-04 - Asynchronous File I/O in FastAPI
+**Learning:** In FastAPI async endpoints, using synchronous Python file I/O operations (like `open()`, `json.load()`, `json.dump()`) can block the main thread and severely hinder throughput when under load.
+**Action:** When handling I/O operations inside `async def` routes, we should always use non-blocking counterparts, such as `aiofiles` and combined with `await f.read()`/`await f.write()` instead of standard context managers.
 ## 2024-04-30 - Deferred np.argmax in YOLO Post-Processing
 **Learning:** In the backend YOLO post-processing pipeline (`frame_utilities.py`), computing `np.argmax` over thousands of anchor boxes (e.g., 8400) for class IDs is extremely expensive and causes a severe performance bottleneck.
 **Action:** Always filter the confidence scores against a threshold first to generate a subset, and then defer expensive NumPy matrix operations like `np.argmax` until after filtering. This drastically reduces the workload and significantly improves post-processing performance.
