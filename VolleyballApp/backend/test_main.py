@@ -1,43 +1,51 @@
-import unittest
+import pytest
 import os
-from config import get_allowed_origins
+import sys
+from fastapi.testclient import TestClient
 
-class TestCORSLogic(unittest.TestCase):
-    def setUp(self):
-        # Store original environment variable
-        self.original_origins = os.environ.get("ALLOWED_ORIGINS")
+# Mock out dependencies that fail locally (like cv2, mediapipe, engine)
+import unittest.mock as mock
 
-    def tearDown(self):
-        # Restore original environment variable
-        if self.original_origins is None:
-            if "ALLOWED_ORIGINS" in os.environ:
-                del os.environ["ALLOWED_ORIGINS"]
-        else:
-            os.environ["ALLOWED_ORIGINS"] = self.original_origins
+# We mock engine module before importing main
+mock_engine = mock.MagicMock()
+sys.modules['engine'] = mock_engine
 
-    def test_default_origins(self):
-        if "ALLOWED_ORIGINS" in os.environ:
-            del os.environ["ALLOWED_ORIGINS"]
-        origins = get_allowed_origins()
-        expected = ["http://localhost:8001", "http://127.0.0.1:8001", "http://localhost:8000", "http://127.0.0.1:8000"]
-        self.assertEqual(origins, expected)
+# Now we can import main
+from main import app
+from config import ALLOWED_ORIGINS
 
-    def test_env_origins(self):
-        os.environ["ALLOWED_ORIGINS"] = "http://myapp.com, http://another.com"
-        origins = get_allowed_origins()
-        expected = ["http://myapp.com", "http://another.com"]
-        self.assertEqual(origins, expected)
+client = TestClient(app)
 
-    def test_env_origins_single(self):
-        os.environ["ALLOWED_ORIGINS"] = "http://onlyone.com"
-        origins = get_allowed_origins()
-        expected = ["http://onlyone.com"]
-        self.assertEqual(origins, expected)
+def test_cors_allowed_origin():
+    """Test that requests from an allowed origin succeed."""
+    # Assuming http://localhost:8001 is in the default allowed origins
+    origin = ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "http://localhost:8001"
+    response = client.options(
+        "/analyze",
+        headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert response.status_code == 200
 
-    def test_empty_env(self):
-        os.environ["ALLOWED_ORIGINS"] = ""
-        origins = get_allowed_origins()
-        self.assertEqual(origins, [])
+def test_cors_disallowed_origin():
+    """Test that requests from a disallowed origin fail."""
+    response = client.options(
+        "/analyze",
+        headers={
+            "Origin": "http://malicious.evil.website.com",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert response.status_code == 400
 
-if __name__ == "__main__":
-    unittest.main()
+def test_analyze_video_not_found():
+    """Basic test for an existing endpoint"""
+    response = client.post("/analyze", json={"video_path": "../../../etc/nonexistent"})
+    assert response.status_code == 404
+
+def test_get_results_not_found():
+    """Basic test for an existing endpoint"""
+    response = client.get("/results?video_path=../../../etc/nonexistent")
+    assert response.status_code == 404
