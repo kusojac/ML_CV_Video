@@ -54,6 +54,8 @@ def postprocess_yolo_output(output, original_img_shape, input_size=(640, 640),
     elif num_features == 84:  # COCO person model
         boxes_raw = output[:, :4]
         class_scores = output[:, 4:]
+        # ⚡ Bolt Optimization: Compute max score first, filter, then defer argmax
+        # np.argmax on 8400 anchors is expensive. We only compute it on anchors that pass the confidence threshold.
         scores = np.max(class_scores, axis=1)
 
         valid_mask = scores > conf_threshold
