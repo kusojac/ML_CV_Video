@@ -23,3 +23,7 @@
 **Vulnerability:** The FastAPI backend had its CORS middleware configured with `allow_origins=["*"]`, meaning it would accept cross-origin requests from any domain.
 **Learning:** In a local desktop architecture (like this Flutter app talking to a local Python backend), having an open CORS policy allows any malicious website a user visits to send requests to the local backend service (e.g., `http://localhost:8000`) and trigger local actions or access local files.
 **Prevention:** Use an explicit list of allowed local origins (e.g., `http://localhost:8001`, `http://127.0.0.1:8001`) via environment variables rather than a wildcard `*`.
+## 2025-05-05 - Fix Unauthorized Network Exposure in Local Backend
+**Vulnerability:** The local FastAPI backend was bound to `0.0.0.0`, exposing it to all network interfaces. Because it is intended solely to serve a local desktop Flutter application, it allowed anyone on the local network to send requests and potentially access local files or trigger processing.
+**Learning:** For local desktop applications with split frontend-backend architectures, the backend must strictly bind to the loopback interface (`127.0.0.1`) rather than all interfaces (`0.0.0.0`) to avoid unintentional and unauthorized network exposure.
+**Prevention:** Always default to binding to `127.0.0.1` or `localhost` when the backend service is intended exclusively for communication with an application on the same machine, and ensure this configuration is reviewed during deployment or packaging.

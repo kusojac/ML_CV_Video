@@ -42,10 +42,20 @@ def test_cors_disallowed_origin():
 
 def test_analyze_video_not_found():
     """Basic test for an existing endpoint"""
-    response = client.post("/analyze", json={"video_path": "../../../etc/nonexistent"})
+    response = client.post("/analyze", json={"video_path": "nonexistent_video.mp4"})
     assert response.status_code == 404
 
 def test_get_results_not_found():
     """Basic test for an existing endpoint"""
-    response = client.get("/results?video_path=../../../etc/nonexistent")
+    response = client.get("/results?video_path=nonexistent_video.mp4")
     assert response.status_code == 404
+
+def test_analyze_video_path_traversal():
+    """Test path traversal is blocked in analyze endpoint"""
+    response = client.post("/analyze", json={"video_path": "../../../etc/passwd"})
+    assert response.status_code == 400
+
+def test_get_results_path_traversal():
+    """Test path traversal is blocked in results endpoint"""
+    response = client.get("/results?video_path=../../../etc/passwd")
+    assert response.status_code == 400
