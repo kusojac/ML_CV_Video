@@ -39,10 +39,10 @@ class UpdateActionRequest(BaseModel):
     new_start_ms: float
     new_end_ms: float
 
-def validate_safe_path(file_path: str) -> str:
+def secure_path(file_path: str) -> str:
     """Validates that the given path does not contain directory traversal characters."""
     if ".." in file_path:
-        raise HTTPException(status_code=400, detail="Invalid path provided.")
+        raise HTTPException(status_code=400, detail="Directory traversal is not allowed")
     return file_path
 
 def get_json_path(video_path: str) -> str:
@@ -85,7 +85,7 @@ def process_video_task(job_id: str, video_path: str):
 
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
-    safe_video_path = validate_safe_path(request.video_path)
+    safe_video_path = secure_path(request.video_path)
     if not os.path.exists(safe_video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
@@ -119,7 +119,7 @@ async def ping():
 
 @app.get("/results")
 async def get_results(video_path: str):
-    validate_safe_path(video_path)
+    secure_path(video_path)
     json_path = get_json_path(video_path)
 
     def load_json():
@@ -137,7 +137,7 @@ async def get_results(video_path: str):
 
 @app.post("/update_action")
 async def update_action(req: UpdateActionRequest):
-    validate_safe_path(req.video_path)
+    secure_path(req.video_path)
     json_path = get_json_path(req.video_path)
 
     def perform_update():
@@ -174,4 +174,4 @@ async def update_action(req: UpdateActionRequest):
 if __name__ == "__main__":
     import uvicorn
     # Make sure to run the uvicorn server in a separate terminal process
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
