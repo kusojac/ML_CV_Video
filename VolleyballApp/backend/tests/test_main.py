@@ -66,7 +66,7 @@ def test_secure_path_valid():
     assert validate_safe_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
     assert validate_safe_path("video.mp4") == "video.mp4"
 
-def test_secure_path_invalid():
+def test_validate_safe_path_invalid():
     with pytest.raises(HTTPException) as excinfo:
         validate_safe_path("../../etc/passwd")
     assert excinfo.value.status_code == 400
