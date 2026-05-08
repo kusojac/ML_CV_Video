@@ -1,3 +1,12 @@
+
+## 2025-05-04 - Fix Insecure Deserialization Vulnerability
+**Vulnerability:** The backend loaded a Random Forest classifier using `pickle.load()` (`model.p`), exposing the system to arbitrary code execution (RCE) via insecure deserialization.
+**Learning:** Machine learning models serialized using Python's native `pickle` format are unsafe to deserialize, especially in production environments where malicious actors could manipulate the file.
+**Prevention:** Avoid `pickle` entirely for model storage. Always serialize machine learning models into safe representations like ONNX (via `skl2onnx`) and load them using secure engines like `onnxruntime`.
+## 2024-05-04 - Fix Path Traversal Vulnerability in Video Processing Endpoints
+**Vulnerability:** The backend endpoints `/analyze`, `/results`, and `/update_action` accepted a `video_path` parameter from the user directly and passed it to `os.path.exists` and `open()` without any validation. Because it's a local desktop app and allows absolute local file paths, an attacker could use relative path traversal (`..`) to access arbitrary files on the local file system.
+**Learning:** Even internal or local desktop APIs can be vulnerable to directory traversal if they allow absolute paths and do not sanitize inputs containing `..`.
+**Prevention:** Implement a `secure_path` helper function that blocks input containing `..` and apply it to all endpoints receiving user-provided file paths.
 ## 2024-05-02 - Fix Path Traversal Vulnerability in Video Processing Endpoints
 **Vulnerability:** The API endpoints (`/analyze`, `/results`, `/update_action`) previously accepted unsanitized file paths via `video_path` parameter, allowing arbitrary path traversal using relative paths (`..`). This could expose system files or other sensitive JSON data.
 **Learning:** In desktop-focused backends where absolute local file paths are permitted for UX reasons, missing basic constraints on relative directory traversal (`..`) can result in silent critical vulnerabilities, especially when generating paths (e.g., `get_json_path`).
@@ -14,3 +23,8 @@
 **Vulnerability:** The FastAPI backend had its CORS middleware configured with `allow_origins=["*"]`, meaning it would accept cross-origin requests from any domain.
 **Learning:** In a local desktop architecture (like this Flutter app talking to a local Python backend), having an open CORS policy allows any malicious website a user visits to send requests to the local backend service (e.g., `http://localhost:8000`) and trigger local actions or access local files.
 **Prevention:** Use an explicit list of allowed local origins (e.g., `http://localhost:8001`, `http://127.0.0.1:8001`) via environment variables rather than a wildcard `*`.
+
+## 2025-05-14 - Fix Server Bind to All Interfaces
+**Vulnerability:** The FastAPI backend was configured to bind to "0.0.0.0", exposing the local API to the entire network.
+**Learning:** For local desktop applications with a companion backend, binding to "0.0.0.0" is a security risk as it allows any device on the network to interact with the backend, which might have access to local files or perform sensitive actions.
+**Prevention:** Always bind to "127.0.0.1" for local-only services. Additionally, ensure the port configuration is consistent across the backend code, documentation, and frontend service to avoid connectivity issues while hardening the service.

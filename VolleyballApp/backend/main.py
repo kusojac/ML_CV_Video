@@ -5,6 +5,7 @@ import time
 import asyncio
 import os
 import uuid
+import aiofiles
 from typing import Dict, Any
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -84,8 +85,8 @@ def process_video_task(job_id: str, video_path: str):
 
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
-    validate_safe_path(request.video_path)
-    if not os.path.exists(request.video_path):
+    safe_video_path = validate_safe_path(request.video_path)
+    if not os.path.exists(safe_video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
     json_path = get_json_path(safe_video_path)
@@ -173,4 +174,4 @@ async def update_action(req: UpdateActionRequest):
 if __name__ == "__main__":
     import uvicorn
     # Make sure to run the uvicorn server in a separate terminal process
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8001)

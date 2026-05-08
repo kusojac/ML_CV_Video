@@ -1,8 +1,6 @@
 import cv2
-import math
 import os
 import onnxruntime
-import pickle
 import mediapipe as mp
 import numpy as np
 from frame_utilities import preprocess_yolo_input, postprocess_yolo_output, get_distance_person_ball_np, pad_frame_to_square
@@ -21,9 +19,9 @@ class VolleyballAnalyticsEngine:
         self.input_name_vb = self.session_vb.get_inputs()[0].name
         self.output_name_vb = self.session_vb.get_outputs()[0].name
         
-        # RandomForest for actions
-        model_dict = pickle.load(open(os.path.join(models_dir, "model.p"), "rb"))
-        self.rf_model = model_dict["model"]
+        # RandomForest for actions (converted to ONNX)
+        self.session_rf = onnxruntime.InferenceSession(os.path.join(models_dir, "model.onnx"), providers=providers)
+        self.input_name_rf = self.session_rf.get_inputs()[0].name
         
         # MediaPipe pose
         self.mp_pose = mp.solutions.pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
@@ -77,13 +75,15 @@ class VolleyballAnalyticsEngine:
                     ball_box = ball_boxes[ball_box_index]
                     detected_ball_box = ball_box
 
-                    # Bolt Optimization: Vectorized closest person search
-                    # Calculate centers for all person boxes and the ball box
-                    person_centers = (person_boxes[:, :2] + person_boxes[:, 2:]) / 2
-                    ball_center = (ball_box[:2] + ball_box[2:]) / 2
-                    # Find person with minimum squared distance to ball center
-                    dists_sq = np.sum((person_centers - ball_center)**2, axis=1)
-                    closest_person_box = person_boxes[np.argmin(dists_sq)]
+                    # Find closest person to the best ball prediction using vectorized numpy ops
+                    person_centers_x = (person_boxes[:, 0] + person_boxes[:, 2]) / 2.0
+                    person_centers_y = (person_boxes[:, 1] + person_boxes[:, 3]) / 2.0
+                    ball_center_x = (ball_box[0] + ball_box[2]) / 2.0
+                    ball_center_y = (ball_box[1] + ball_box[3]) / 2.0
+
+                    dists_sq = (person_centers_x - ball_center_x) ** 2 + (person_centers_y - ball_center_y) ** 2
+                    closest_idx = np.argmin(dists_sq)
+                    closest_person_box = person_boxes[closest_idx]
                             
                     px_min, py_min, px_max, py_max = closest_person_box
                     px_min, py_min = max(0, int(px_min)), max(0, int(py_min))
@@ -116,8 +116,9 @@ class VolleyballAnalyticsEngine:
                                 data.append(max((bx_max - bx_min)/x_range, (by_max - by_min)/y_range))
                                 
                                 if len(data) == 31:
-                                    pred = self.rf_model.predict([np.asarray(data)])
-                                    detected_action = str(pred[0])
+                                    X_onnx = np.asarray(data, dtype=np.float32).reshape(1, -1)
+                                    res = self.session_rf.run(None, {self.input_name_rf: X_onnx})
+                                    detected_action = str(res[0][0])
 
             # Logic to smooth multi-frame predictions into discrete actions
             if detected_action != "NONE":

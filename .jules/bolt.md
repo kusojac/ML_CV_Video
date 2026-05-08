@@ -1,9 +1,15 @@
+## 2024-05-04 - Asynchronous File I/O in FastAPI
+**Learning:** In FastAPI async endpoints, using synchronous Python file I/O operations (like `open()`, `json.load()`, `json.dump()`) can block the main thread and severely hinder throughput when under load.
+**Action:** When handling I/O operations inside `async def` routes, we should always use non-blocking counterparts, such as `aiofiles` and combined with `await f.read()`/`await f.write()` instead of standard context managers.
 ## 2024-04-30 - Deferred np.argmax in YOLO Post-Processing
 **Learning:** In the backend YOLO post-processing pipeline (`frame_utilities.py`), computing `np.argmax` over thousands of anchor boxes (e.g., 8400) for class IDs is extremely expensive and causes a severe performance bottleneck.
 **Action:** Always filter the confidence scores against a threshold first to generate a subset, and then defer expensive NumPy matrix operations like `np.argmax` until after filtering. This drastically reduces the workload and significantly improves post-processing performance.
 ## 2024-04-28 - Redundant Image Preprocessing in CV Pipeline
 **Learning:** Found an instance in `VolleyballApp/backend/engine.py` where the exact same preprocessing function (`preprocess_yolo_input`) was called twice on the same frame (once for ball detection and once for person detection) within the per-frame processing loop. In computer vision tasks, image resizing and array normalization are expensive.
 **Action:** When working with multiple inference models that expect the same input format in a hot loop, assign the preprocessed input to a variable and reuse it across multiple model runs.
+## 2024-05-04 - Vectorizing Loop Calculations for Distance Matching
+**Learning:** In `VolleyballApp/backend/engine.py`, distances between the detected ball and all detected persons were calculated using a Python `for` loop over individual elements. This involved fetching points from coordinate arrays, which acts as a major bottleneck on CPU during high frame rate videos with many detections. By filtering boxes using boolean masks and applying vectorized operations directly on NumPy 2D arrays, followed by `np.argmin`, we skipped iteration overhead.
+**Action:** Replace all Python `for` loops with vectorized NumPy operations for calculating array-based relationships (like distance, IOU, thresholds) when evaluating object detection bounding boxes or points. Also, calculate squared distances to avoid `np.sqrt` overhead where only the index of the minimum element matters.
 
 ## 2024-05-18 - Deferring Expensive Array Operations in YOLO Post-processing
 **Learning:** Found an instance in `VolleyballApp/backend/frame_utilities.py` where `np.argmax` was being called on thousands of YOLO output anchor boxes before applying the confidence threshold filter. This is a common bottleneck in object detection post-processing since the majority of anchors have very low confidence scores.
