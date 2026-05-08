@@ -103,40 +103,52 @@ async def get_job_status(job_id: str):
     return analysis_jobs[job_id]
 
 
+import threading
+file_locks: Dict[str, threading.Lock] = {}
+
+def get_file_lock(path: str) -> threading.Lock:
+    if path not in file_locks:
+        file_locks[path] = threading.Lock()
+    return file_locks[path]
+
 @app.get("/results")
-async def get_results(video_path: str):
+def get_results(video_path: str):
     json_path = get_json_path(video_path)
     if not os.path.exists(json_path):
         raise HTTPException(status_code=404, detail="Analysis results not found.")
     
-    with open(json_path, 'r') as f:
-        data = json.load(f)
+    lock = get_file_lock(json_path)
+    with lock:
+        with open(json_path, 'r') as f:
+            data = json.load(f)
     return data
 
 
 @app.post("/update_action")
-async def update_action(req: UpdateActionRequest):
+def update_action(req: UpdateActionRequest):
     json_path = get_json_path(req.video_path)
     if not os.path.exists(json_path):
         raise HTTPException(status_code=404, detail="Analysis results not found.")
         
-    with open(json_path, 'r') as f:
-        data = json.load(f)
-        
-    found = False
-    for action in data.get("actions", []):
-        if action.get("id") == req.action_id:
-            action["type"] = req.new_type
-            action["start_ms"] = req.new_start_ms
-            action["end_ms"] = req.new_end_ms
-            found = True
-            break
+    lock = get_file_lock(json_path)
+    with lock:
+        with open(json_path, 'r') as f:
+            data = json.load(f)
             
-    if not found:
-        raise HTTPException(status_code=404, detail="Action ID not found.")
-        
-    with open(json_path, 'w') as f:
-        json.dump(data, f, indent=4)
+        found = False
+        for action in data.get("actions", []):
+            if action.get("id") == req.action_id:
+                action["type"] = req.new_type
+                action["start_ms"] = req.new_start_ms
+                action["end_ms"] = req.new_end_ms
+                found = True
+                break
+
+        if not found:
+            raise HTTPException(status_code=404, detail="Action ID not found.")
+
+        with open(json_path, 'w') as f:
+            json.dump(data, f, indent=4)
         
     return {"status": "success"}
 
