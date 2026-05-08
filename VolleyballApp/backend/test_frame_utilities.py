@@ -1,5 +1,4 @@
 import numpy as np
-import cv2
 import pytest
 from frame_utilities import pad_frame_to_square, get_distance_person_ball_np
 
