@@ -35,3 +35,6 @@
 ## 2024-11-20 - Global In-Memory Caches for FastAPI Sync IO
 **Learning:** In a FastAPI backend handling heavy synchronous JSON I/O, repeated parsing of large JSON files and linear searches over arrays cause severe latency and event loop blocking.
 **Action:** Define the endpoint as `def` instead of `async def` so it runs in Starlette's external threadpool. Additionally, ensure thread safety for shared local files and use global in-memory dictionaries (`_parsed_json_cache` and `_action_dict_cache`) to provide O(1) action lookups and eliminate repetitive disk I/O.
+## 2024-05-24 - Async I/O in FastAPI Event Loop
+**Learning:** Using synchronous I/O operations like `os.path.exists()` inside an `async def` FastAPI route blocks the main event loop. This leads to poor concurrency, as the server cannot process other requests while waiting for the disk I/O to finish. EAFP patterns with `aiofiles.open()` are non-blocking but have side effects (updating file access times) and can throw unhandled exceptions (like `IsADirectoryError`).
+**Action:** Use `await anyio.Path(path).exists()` instead of `os.path.exists()` or `aiofiles.open()`. `anyio` is a dependency of Starlette (which powers FastAPI) and handles file existence checks safely and efficiently without blocking the event loop or introducing side effects.
