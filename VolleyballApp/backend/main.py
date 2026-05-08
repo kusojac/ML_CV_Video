@@ -133,7 +133,7 @@ async def ping():
 
 @app.get("/results")
 def get_results(video_path: str):
-    validate_safe_path(video_path)
+    video_path = secure_path(video_path)
     json_path = get_json_path(video_path)
 
     with _file_lock:
@@ -154,8 +154,8 @@ def get_results(video_path: str):
 
 @app.post("/update_action")
 def update_action(req: UpdateActionRequest):
-    validate_safe_path(req.video_path)
-    json_path = get_json_path(req.video_path)
+    safe_video_path = secure_path(req.video_path)
+    json_path = get_json_path(safe_video_path)
 
     with _file_lock:
         if json_path not in _parsed_json_cache:
