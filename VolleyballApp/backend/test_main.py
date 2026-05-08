@@ -1,4 +1,3 @@
-import pytest
 import os
 import sys
 from fastapi.testclient import TestClient
@@ -42,10 +41,16 @@ def test_cors_disallowed_origin():
 
 def test_analyze_video_not_found():
     """Basic test for an existing endpoint"""
-    response = client.post("/analyze", json={"video_path": "nonexistent.mp4"})
+    response = client.post("/analyze", json={"video_path": "dummy_nonexistent.mp4"})
     assert response.status_code == 404
 
 def test_get_results_not_found():
     """Basic test for an existing endpoint"""
-    response = client.get("/results?video_path=nonexistent.mp4")
+    response = client.get("/results?video_path=dummy_nonexistent.mp4")
     assert response.status_code == 404
+
+def test_get_job_status_not_found():
+    """Test that requesting an invalid or non-existent job ID returns 404."""
+    response = client.get("/job/nonexistent-job-id-1234")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Job not found"
