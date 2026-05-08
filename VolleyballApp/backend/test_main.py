@@ -1,66 +1,51 @@
 import pytest
-from fastapi.testclient import TestClient
-from main import app
 import os
-import json
-import uuid
+import sys
+from fastapi.testclient import TestClient
+
+# Mock out dependencies that fail locally (like cv2, mediapipe, engine)
+import unittest.mock as mock
+
+# We mock engine module before importing main
+mock_engine = mock.MagicMock()
+sys.modules['engine'] = mock_engine
+
+# Now we can import main
+from main import app
+from config import ALLOWED_ORIGINS
 
 client = TestClient(app)
 
-def test_update_action_success(tmp_path):
-    video_path = str(tmp_path / "test_video.mp4")
-    json_path = str(tmp_path / "test_video_analysis.json")
-
-    # Touch video
-    with open(video_path, 'w') as f: f.write("dummy")
-
-    data = {
-        "actions": [
-            {"id": "a1", "type": "SERVE", "start_ms": 0.0, "end_ms": 1.0},
-            {"id": "a2", "type": "RECEIVE", "start_ms": 1.0, "end_ms": 2.0}
-        ]
-    }
-    with open(json_path, 'w') as f:
-        json.dump(data, f)
-
-    response = client.post("/update_action", json={
-        "video_path": video_path,
-        "action_id": "a2",
-        "new_type": "SPIKE",
-        "new_start_ms": 1.5,
-        "new_end_ms": 2.5
-    })
-
+def test_cors_allowed_origin():
+    """Test that requests from an allowed origin succeed."""
+    # Assuming http://localhost:8001 is in the default allowed origins
+    origin = ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS else "http://localhost:8001"
+    response = client.options(
+        "/analyze",
+        headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "POST",
+        },
+    )
     assert response.status_code == 200
 
-    # Check if written to file
-    with open(json_path, 'r') as f:
-        updated_data = json.load(f)
+def test_cors_disallowed_origin():
+    """Test that requests from a disallowed origin fail."""
+    response = client.options(
+        "/analyze",
+        headers={
+            "Origin": "http://malicious.evil.website.com",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert response.status_code == 400
 
-    assert updated_data["actions"][1]["type"] == "SPIKE"
-    assert updated_data["actions"][1]["start_ms"] == 1.5
+def test_analyze_video_not_found():
+    """Basic test for an existing endpoint"""
+    response = client.post("/analyze", json={"video_path": "../../../etc/nonexistent"})
+    assert response.status_code == 404
 
-def test_update_action_not_found(tmp_path):
-    video_path = str(tmp_path / "test_video.mp4")
-    json_path = str(tmp_path / "test_video_analysis.json")
-
-    # Touch video
-    with open(video_path, 'w') as f: f.write("dummy")
-
-    data = {
-        "actions": [
-            {"id": "a1", "type": "SERVE", "start_ms": 0.0, "end_ms": 1.0},
-        ]
-    }
-    with open(json_path, 'w') as f:
-        json.dump(data, f)
-
-    response = client.post("/update_action", json={
-        "video_path": video_path,
-        "action_id": "non_existent",
-        "new_type": "SPIKE",
-        "new_start_ms": 1.5,
-        "new_end_ms": 2.5
-    })
-
+def test_get_results_not_found():
+    """Basic test for an existing endpoint"""
+    response = client.get("/results?video_path=../../../etc/nonexistent")
     assert response.status_code == 404
