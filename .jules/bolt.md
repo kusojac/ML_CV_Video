@@ -1,3 +1,9 @@
+## 2024-05-04 - Asynchronous File I/O in FastAPI
+**Learning:** In FastAPI async endpoints, using synchronous Python file I/O operations (like `open()`, `json.load()`, `json.dump()`) can block the main thread and severely hinder throughput when under load.
+**Action:** When handling I/O operations inside `async def` routes, we should always use non-blocking counterparts, such as `aiofiles` and combined with `await f.read()`/`await f.write()` instead of standard context managers.
+## 2024-04-30 - Deferred np.argmax in YOLO Post-Processing
+**Learning:** In the backend YOLO post-processing pipeline (`frame_utilities.py`), computing `np.argmax` over thousands of anchor boxes (e.g., 8400) for class IDs is extremely expensive and causes a severe performance bottleneck.
+**Action:** Always filter the confidence scores against a threshold first to generate a subset, and then defer expensive NumPy matrix operations like `np.argmax` until after filtering. This drastically reduces the workload and significantly improves post-processing performance.
 ## 2024-04-28 - Redundant Image Preprocessing in CV Pipeline
 **Learning:** Found an instance in `VolleyballApp/backend/engine.py` where the exact same preprocessing function (`preprocess_yolo_input`) was called twice on the same frame (once for ball detection and once for person detection) within the per-frame processing loop. In computer vision tasks, image resizing and array normalization are expensive.
 **Action:** When working with multiple inference models that expect the same input format in a hot loop, assign the preprocessed input to a variable and reuse it across multiple model runs.
@@ -6,3 +12,31 @@
 **Learning:** When performing blocking synchronous file I/O (like reading/writing large JSON files) within FastAPI endpoints, using `async def` without `await` blocks the main asyncio event loop, causing severe latency for concurrent requests. Defining the endpoints with `def` allows Starlette to automatically route them to an external threadpool, preserving asynchronous performance. However, shifting to a threadpool introduces concurrency, meaning data structures accessed from these endpoints (like shared files) require thread safety mechanisms like `threading.Lock()` to prevent race conditions and data corruption.
 
 **Action:** For heavy, synchronous IO-bound operations in FastAPI, define the endpoint function with `def` rather than `async def` and ensure shared resources are protected with threading locks.
+## 2024-05-04 - Vectorizing Loop Calculations for Distance Matching
+**Learning:** In `VolleyballApp/backend/engine.py`, distances between the detected ball and all detected persons were calculated using a Python `for` loop over individual elements. This involved fetching points from coordinate arrays, which acts as a major bottleneck on CPU during high frame rate videos with many detections. By filtering boxes using boolean masks and applying vectorized operations directly on NumPy 2D arrays, followed by `np.argmin`, we skipped iteration overhead.
+**Action:** Replace all Python `for` loops with vectorized NumPy operations for calculating array-based relationships (like distance, IOU, thresholds) when evaluating object detection bounding boxes or points. Also, calculate squared distances to avoid `np.sqrt` overhead where only the index of the minimum element matters.
+
+## 2024-05-18 - Deferring Expensive Array Operations in YOLO Post-processing
+**Learning:** Found an instance in `VolleyballApp/backend/frame_utilities.py` where `np.argmax` was being called on thousands of YOLO output anchor boxes before applying the confidence threshold filter. This is a common bottleneck in object detection post-processing since the majority of anchors have very low confidence scores.
+**Action:** Always filter YOLO anchor boxes based on objectness or max class score before calculating specific class assignments via `np.argmax` to avoid unnecessary expensive operations on irrelevant data.
+## 2024-05-03 - Deferring Expensive Numpy Operations in YOLO Postprocessing
+**Learning:** In backend computer vision pipelines, computing operations like `np.argmax` on thousands of YOLO anchor boxes (e.g., 8400) is highly inefficient when most of those boxes will be discarded. The backend YOLO pipeline processes thousands of anchor boxes per frame, and running `np.argmax` on all of them was a significant bottleneck.
+**Action:** Always filter by confidence threshold *before* performing expensive row-wise operations like `np.argmax` on model outputs. Defer the heavy computation only to the subset of anchor boxes that pass the threshold.
+## 2024-05-02 - Deferring Expensive Numpy Operations in YOLO Post-processing
+**Learning:** Found an instance in `VolleyballApp/backend/frame_utilities.py` where `np.argmax` was being called on the entire raw output array from a YOLO model (e.g., thousands of anchor boxes) before applying the confidence threshold filter. This operation is expensive and unnecessary for bounding boxes that will be discarded.
+**Action:** In object detection post-processing pipelines handling many anchor boxes, defer expensive array operations like `np.argmax` until *after* filtering by the initial confidence threshold mask to process significantly fewer elements.
+## 2024-05-15 - Defer Expensive Operations in Object Detection Pipelines
+**Learning:** Found a performance bottleneck in `VolleyballApp/backend/frame_utilities.py` where `np.argmax(class_scores, axis=1)` was executed on all anchor boxes (thousands per frame) before filtering by confidence threshold.
+**Action:** When filtering a large number of predictions based on a confidence threshold, apply the threshold mask *before* running expensive operations like `np.argmax` on the remaining high-confidence candidates to significantly improve per-frame processing speed.
+## 2024-04-29 - [Optimization of YOLO post-processing pipeline]
+**Learning:** Computing `np.argmax(class_scores, axis=1)` across all 8400 outputs of the COCO model before filtering out low-confidence boxes leads to significant unnecessary processing overhead. This was a critical bottleneck affecting the overall pipeline latency per frame.
+**Action:** Defer calculating class IDs via `np.argmax` (and zero initialization for ball models) until after applying the `valid_mask = scores > conf_threshold`. This simple reordering dramatically cuts the computation time from thousands of boxes to a few dozen without altering the result.
+## 2024-05-18 - Vectorized NMS Input Preparation
+**Learning:** In the backend YOLO pipeline, preparing NMS inputs using Python list comprehensions over NumPy arrays (e.g., `[[b[0], b[1]...] for b in boxes_final]`) is a major performance bottleneck. This requires converting numpy arrays back to python objects, looping over them, and creating new lists, which is extremely slow on large amounts of boxes.
+**Action:** Replace list comprehensions for manipulating NumPy bounding box arrays with vectorized operations (e.g., `boxes_nms_input = boxes_final.copy()`, `boxes_nms_input[:, 2] = boxes_final[:, 2] - boxes_final[:, 0]`) to achieve significant speedups during NMS preparation.
+## 2025-02-12 - YOLO Input Preprocessing Bottleneck
+**Learning:** Manual image preprocessing via explicit NumPy operations (`cv2.resize`, array slicing, type casting, division, `np.transpose`, `np.expand_dims`) incurs significant overhead, particularly in tight loops (e.g., per-frame processing for YOLO models).
+**Action:** Replace multi-step NumPy-based image preprocessing with `cv2.dnn.blobFromImage`, which handles resizing, scaling, and HWC-to-NCHW conversion in a single, highly optimized C++ pass. This simple replacement reduces preprocessing latency by ~50% with identical output.
+## 2024-11-20 - Global In-Memory Caches for FastAPI Sync IO
+**Learning:** In a FastAPI backend handling heavy synchronous JSON I/O, repeated parsing of large JSON files and linear searches over arrays cause severe latency and event loop blocking.
+**Action:** Define the endpoint as `def` instead of `async def` so it runs in Starlette's external threadpool. Additionally, ensure thread safety for shared local files and use global in-memory dictionaries (`_parsed_json_cache` and `_action_dict_cache`) to provide O(1) action lookups and eliminate repetitive disk I/O.

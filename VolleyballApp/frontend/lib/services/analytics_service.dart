@@ -5,9 +5,12 @@ import 'dart:io';
 
 class AnalyticsService {
   static const String baseUrl = 'http://127.0.0.1:8001';
+  final http.Client _client;
+
+  AnalyticsService({http.Client? client}) : _client = client ?? http.Client();
 
   Future<String> startAnalysis(String videoPath) async {
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$baseUrl/analyze'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'video_path': videoPath}),
@@ -24,7 +27,7 @@ class AnalyticsService {
   }
 
   Future<Map<String, dynamic>> checkJobStatus(String jobId) async {
-    final response = await http.get(Uri.parse('$baseUrl/job/$jobId'))
+    final response = await _client.get(Uri.parse('$baseUrl/job/$jobId'))
         .timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
@@ -40,7 +43,7 @@ class AnalyticsService {
   Future<List<ActionModel>> getResults(String videoPath) async {
     // We can just try reading the local json file directly instead of HTTP if it's the same machine
     // But let's use the API for correctness
-    final response = await http
+    final response = await _client
         .get(Uri.parse('$baseUrl/results?video_path=${Uri.encodeComponent(videoPath)}'))
         .timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) {
@@ -60,7 +63,7 @@ class AnalyticsService {
   }
 
   Future<void> updateAction(String videoPath, ActionModel action) async {
-    final response = await http.post(
+    final response = await _client.post(
       Uri.parse('$baseUrl/update_action'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({

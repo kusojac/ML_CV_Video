@@ -2,20 +2,23 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="google.protobuf")
 import json
 import time
-
+import asyncio
 import os
 import uuid
+import threading
+import aiofiles
 from typing import Dict, Any
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from engine import VolleyballAnalyticsEngine
+from config import ALLOWED_ORIGINS
 
 app = FastAPI(title="Volleyball Action Detection API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,6 +26,11 @@ app.add_middleware(
 
 # In-memory job state (In production, replace with DB/Redis)
 analysis_jobs: Dict[str, Dict[str, Any]] = {}
+
+# Caches for parsed JSON data and O(1) action lookups
+_parsed_json_cache: Dict[str, Any] = {}
+_action_dict_cache: Dict[str, Dict[str, Any]] = {}
+_file_lock = threading.Lock()
 
 MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
 engine = VolleyballAnalyticsEngine(models_dir=MODELS_DIR)
@@ -36,6 +44,12 @@ class UpdateActionRequest(BaseModel):
     new_type: str
     new_start_ms: float
     new_end_ms: float
+
+def secure_path(file_path: str) -> str:
+    """Validates that the given path does not contain directory traversal characters."""
+    if ".." in file_path:
+        raise HTTPException(status_code=400, detail="Directory traversal is not allowed")
+    return file_path
 
 def get_json_path(video_path: str) -> str:
     """Returns the associated json path for the given video file."""
@@ -63,8 +77,16 @@ def process_video_task(job_id: str, video_path: str):
         
         # Save exact path relative to video 
         json_path = get_json_path(video_path)
-        with open(json_path, 'w') as f:
-            json.dump(result, f, indent=4)
+
+        with _file_lock:
+            with open(json_path, 'w') as f:
+                json.dump(result, f, indent=4)
+
+            # Populate cache
+            _parsed_json_cache[json_path] = result
+            _action_dict_cache[json_path] = {
+                action["id"]: action for action in result.get("actions", [])
+            }
             
         analysis_jobs[job_id]["status"] = "completed"
         analysis_jobs[job_id]["progress"] = 1.0
@@ -77,10 +99,11 @@ def process_video_task(job_id: str, video_path: str):
 
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
-    if not os.path.exists(request.video_path):
+    safe_video_path = secure_path(request.video_path)
+    if not os.path.exists(safe_video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
-    json_path = get_json_path(request.video_path)
+    json_path = get_json_path(safe_video_path)
     
     # If already processed, return it immediately
     if os.path.exists(json_path):
@@ -90,9 +113,9 @@ async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTas
     analysis_jobs[job_id] = {
         "status": "pending",
         "progress": 0.0,
-        "video_path": request.video_path
+        "video_path": safe_video_path
     }
-    background_tasks.add_task(process_video_task, job_id, request.video_path)
+    background_tasks.add_task(process_video_task, job_id, safe_video_path)
     return {"job_id": job_id, "status": "pending"}
 
 
@@ -103,56 +126,68 @@ async def get_job_status(job_id: str):
     return analysis_jobs[job_id]
 
 
-import threading
-file_locks: Dict[str, threading.Lock] = {}
+@app.get("/ping")
+async def ping():
+    return {"status": "ok"}
 
-def get_file_lock(path: str) -> threading.Lock:
-    if path not in file_locks:
-        file_locks[path] = threading.Lock()
-    return file_locks[path]
 
 @app.get("/results")
 def get_results(video_path: str):
+    video_path = secure_path(video_path)
     json_path = get_json_path(video_path)
-    if not os.path.exists(json_path):
-        raise HTTPException(status_code=404, detail="Analysis results not found.")
-    
-    lock = get_file_lock(json_path)
-    with lock:
-        with open(json_path, 'r') as f:
-            data = json.load(f)
-    return data
 
+    with _file_lock:
+        if json_path in _parsed_json_cache:
+            return _parsed_json_cache[json_path]
+
+        try:
+            with open(json_path, 'r') as f:
+                data = json.load(f)
+
+            _parsed_json_cache[json_path] = data
+            _action_dict_cache[json_path] = {
+                action["id"]: action for action in data.get("actions", [])
+            }
+            return data
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="Analysis results not found.")
 
 @app.post("/update_action")
 def update_action(req: UpdateActionRequest):
-    json_path = get_json_path(req.video_path)
-    if not os.path.exists(json_path):
-        raise HTTPException(status_code=404, detail="Analysis results not found.")
-        
-    lock = get_file_lock(json_path)
-    with lock:
-        with open(json_path, 'r') as f:
-            data = json.load(f)
-            
-        found = False
-        for action in data.get("actions", []):
-            if action.get("id") == req.action_id:
-                action["type"] = req.new_type
-                action["start_ms"] = req.new_start_ms
-                action["end_ms"] = req.new_end_ms
-                found = True
-                break
+    safe_video_path = secure_path(req.video_path)
+    json_path = get_json_path(safe_video_path)
 
-        if not found:
+    with _file_lock:
+        if json_path not in _parsed_json_cache:
+            try:
+                with open(json_path, 'r') as f:
+                    data = json.load(f)
+
+                _parsed_json_cache[json_path] = data
+                _action_dict_cache[json_path] = {
+                    action["id"]: action for action in data.get("actions", [])
+                }
+            except FileNotFoundError:
+                raise HTTPException(status_code=404, detail="Analysis results not found.")
+
+        data = _parsed_json_cache[json_path]
+        actions_dict = _action_dict_cache[json_path]
+
+        action = actions_dict.get(req.action_id)
+        if not action:
             raise HTTPException(status_code=404, detail="Action ID not found.")
+            
+        action["type"] = req.new_type
+        action["start_ms"] = req.new_start_ms
+        action["end_ms"] = req.new_end_ms
 
+        # Write updated data back to disk
         with open(json_path, 'w') as f:
             json.dump(data, f, indent=4)
-        
+
     return {"status": "success"}
 
 if __name__ == "__main__":
     import uvicorn
     # Make sure to run the uvicorn server in a separate terminal process
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8001)
