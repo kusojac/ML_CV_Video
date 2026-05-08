@@ -42,7 +42,7 @@ class UpdateActionRequest(BaseModel):
 def validate_safe_path(file_path: str) -> str:
     """Validates that the given path does not contain directory traversal characters."""
     if ".." in file_path:
-        raise HTTPException(status_code=400, detail="Invalid path provided.")
+        raise HTTPException(status_code=400, detail="Directory traversal is not allowed")
     return file_path
 
 def get_json_path(video_path: str) -> str:
@@ -174,4 +174,5 @@ async def update_action(req: UpdateActionRequest):
 if __name__ == "__main__":
     import uvicorn
     # Make sure to run the uvicorn server in a separate terminal process
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # 🛡️ Sentinel: Bind strictly to loopback interface to prevent unauthorized network exposure
+    uvicorn.run(app, host="127.0.0.1", port=8000)
