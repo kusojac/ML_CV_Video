@@ -151,6 +151,8 @@ def get_results(video_path: str):
             return data
         except FileNotFoundError:
             raise HTTPException(status_code=404, detail="Analysis results not found.")
+        except json.decoder.JSONDecodeError:
+            raise HTTPException(status_code=500, detail="Error decoding analysis results.")
 
 @app.post("/update_action")
 def update_action(req: UpdateActionRequest):
