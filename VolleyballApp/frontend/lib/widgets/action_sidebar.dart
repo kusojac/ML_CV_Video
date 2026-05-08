@@ -306,7 +306,33 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                     ),
                                     const SizedBox(width: 12),
                                     InkWell(
-                                      onTap: () => widget.onActionDeleted?.call(action),
+                                      onTap: () async {
+                                        final bool? confirm = await showDialog<bool>(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            backgroundColor: const Color(0xFF1E1E24),
+                                            title: const Text('Usuń akcję', style: TextStyle(color: Colors.white)),
+                                            content: const Text(
+                                              'Czy na pewno chcesz usunąć tę akcję?',
+                                              style: TextStyle(color: Colors.white70),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context, false),
+                                                child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+                                              ),
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context, true),
+                                                child: const Text('Usuń', style: TextStyle(color: Colors.redAccent)),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        if (!mounted) return;
+                                        if (confirm == true) {
+                                          widget.onActionDeleted?.call(action);
+                                        }
+                                      },
                                       child: const Row(
                                         children: [
                                           Text('DEL', style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -431,7 +457,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                           subtitle: Text('Player: ${action.playerId}', style: const TextStyle(color: Colors.white54)),
                           trailing: IconButton(
                             icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
-                            tooltip: 'Remove from playlist',
+                            tooltip: 'Usuń z playlisty / Remove from playlist',
                             onPressed: () {
                               final newPlaylist = List<ActionModel>.from(widget.playlist!);
                               newPlaylist.removeAt(index);
