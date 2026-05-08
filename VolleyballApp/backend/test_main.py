@@ -42,10 +42,10 @@ def test_cors_disallowed_origin():
 
 def test_analyze_video_not_found():
     """Basic test for an existing endpoint"""
-    response = client.post("/analyze", json={"video_path": "../../../etc/nonexistent"})
+    response = client.post("/analyze", json={"video_path": "dummy_nonexistent.mp4"})
     assert response.status_code == 404
 
 def test_get_results_not_found():
     """Basic test for an existing endpoint"""
-    response = client.get("/results?video_path=../../../etc/nonexistent")
+    response = client.get("/results?video_path=dummy_nonexistent.mp4")
     assert response.status_code == 404

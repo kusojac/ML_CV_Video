@@ -7,12 +7,12 @@ client = TestClient(app)
 def test_analyze_path_traversal():
     response = client.post("/analyze", json={"video_path": "../../../etc/passwd"})
     assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid path provided."}
+    assert response.json() == {"detail": "Directory traversal is not allowed"}
 
 def test_results_path_traversal():
     response = client.get("/results?video_path=../../../etc/passwd")
     assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid path provided."}
+    assert response.json() == {"detail": "Directory traversal is not allowed"}
 
 def test_update_action_path_traversal():
     response = client.post("/update_action", json={
@@ -23,7 +23,7 @@ def test_update_action_path_traversal():
         "new_end_ms": 1.0
     })
     assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid path provided."}
+    assert response.json() == {"detail": "Directory traversal is not allowed"}
 
 def test_absolute_path_allowed():
     # Should not return 400, but 404 because file doesn't exist
