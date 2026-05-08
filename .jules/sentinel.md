@@ -27,3 +27,8 @@
 **Vulnerability:** The local FastAPI backend was bound to `0.0.0.0`, exposing it to all network interfaces. Because it is intended solely to serve a local desktop Flutter application, it allowed anyone on the local network to send requests and potentially access local files or trigger processing.
 **Learning:** For local desktop applications with split frontend-backend architectures, the backend must strictly bind to the loopback interface (`127.0.0.1`) rather than all interfaces (`0.0.0.0`) to avoid unintentional and unauthorized network exposure.
 **Prevention:** Always default to binding to `127.0.0.1` or `localhost` when the backend service is intended exclusively for communication with an application on the same machine, and ensure this configuration is reviewed during deployment or packaging.
+
+## 2025-05-14 - Fix Server Bind to All Interfaces
+**Vulnerability:** The FastAPI backend was configured to bind to "0.0.0.0", exposing the local API to the entire network.
+**Learning:** For local desktop applications with a companion backend, binding to "0.0.0.0" is a security risk as it allows any device on the network to interact with the backend, which might have access to local files or perform sensitive actions.
+**Prevention:** Always bind to "127.0.0.1" for local-only services. Additionally, ensure the port configuration is consistent across the backend code, documentation, and frontend service to avoid connectivity issues while hardening the service.
