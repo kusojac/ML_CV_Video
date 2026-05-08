@@ -49,6 +49,22 @@ def test_get_results_not_found():
     response = client.get("/results?video_path=dummy_nonexistent.mp4")
     assert response.status_code == 404
 
+def test_get_results_invalid_json():
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(suffix="_analysis.json", delete=False) as f:
+        f.write(b"{invalid json")
+        temp_path = f.name
+
+    video_path = temp_path.replace("_analysis.json", ".mp4")
+
+    try:
+        response = client.get(f"/results?video_path={video_path}")
+        assert response.status_code == 500
+        assert response.json()["detail"] == "Invalid JSON format in analysis results."
+    finally:
+        os.remove(temp_path)
+
 def test_get_job_status_not_found():
     """Test that requesting an invalid or non-existent job ID returns 404."""
     response = client.get("/job/nonexistent-job-id-1234")
