@@ -49,11 +49,64 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     }
   }
 
-  void _removeProject(String path) {
-    setState(() {
-      _videoPaths.remove(path);
-    });
-    _saveProjects();
+  Future<void> _removeProject(String path) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E24),
+        title: const Text('Remove Project', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Are you sure you want to remove this project from the list?\n'
+          'The video file will not be deleted from your disk.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _videoPaths.remove(path);
+      });
+      _saveProjects();
+    }
+  }
+
+  Future<void> _confirmRemoveProject(String path) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E24),
+        title: const Text('Usuń projekt', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Czy na pewno chcesz usunąć ten projekt z listy?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Usuń', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      _removeProject(path);
+    }
   }
 
   void _openProject(String path) {
@@ -153,7 +206,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
                           icon: const Icon(Icons.delete,
                               color: Colors.purpleAccent),
                           tooltip: 'Usuń projekt / Delete project',
-                          onPressed: () => _removeProject(path),
+                          onPressed: () => _confirmRemoveProject(path),
                         ),
                         const Icon(Icons.arrow_forward_ios,
                             color: Colors.white54),
