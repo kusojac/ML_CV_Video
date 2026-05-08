@@ -26,3 +26,6 @@
 ## 2024-04-29 - [Optimization of YOLO post-processing pipeline]
 **Learning:** Computing `np.argmax(class_scores, axis=1)` across all 8400 outputs of the COCO model before filtering out low-confidence boxes leads to significant unnecessary processing overhead. This was a critical bottleneck affecting the overall pipeline latency per frame.
 **Action:** Defer calculating class IDs via `np.argmax` (and zero initialization for ball models) until after applying the `valid_mask = scores > conf_threshold`. This simple reordering dramatically cuts the computation time from thousands of boxes to a few dozen without altering the result.
+## 2024-05-18 - Vectorized NMS Input Preparation
+**Learning:** In the backend YOLO pipeline, preparing NMS inputs using Python list comprehensions over NumPy arrays (e.g., `[[b[0], b[1]...] for b in boxes_final]`) is a major performance bottleneck. This requires converting numpy arrays back to python objects, looping over them, and creating new lists, which is extremely slow on large amounts of boxes.
+**Action:** Replace list comprehensions for manipulating NumPy bounding box arrays with vectorized operations (e.g., `boxes_nms_input = boxes_final.copy()`, `boxes_nms_input[:, 2] = boxes_final[:, 2] - boxes_final[:, 0]`) to achieve significant speedups during NMS preparation.
