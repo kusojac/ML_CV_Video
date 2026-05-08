@@ -49,11 +49,36 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     }
   }
 
-  void _removeProject(String path) {
-    setState(() {
-      _videoPaths.remove(path);
-    });
-    _saveProjects();
+  Future<void> _removeProject(String path) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E24),
+        title: const Text('Remove Project', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Are you sure you want to remove this project from the list?\n'
+          'The video file will not be deleted from your disk.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _videoPaths.remove(path);
+      });
+      _saveProjects();
+    }
   }
 
   Future<void> _confirmRemoveProject(String path) async {
