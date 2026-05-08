@@ -55,110 +55,12 @@ class VolleyballAnalyticsEngine:
             # This saves redundant image resizing and array operations per frame
             yolo_input = preprocess_yolo_input(frame_rgb)
 
-            # 1. Detect Ball
-            ball_outs = self.session_vb.run([self.output_name_vb], {self.input_name_vb: yolo_input})
-            ball_boxes, ball_scores, _ = postprocess_yolo_output(ball_outs[0], original_shape, conf_threshold=0.5)
+            detected_action, closest_person_box = self._detect_action_in_frame(frame_rgb, original_shape, yolo_input)
             
-            detected_action = "NONE"
-            closest_person_box = None
-            detected_ball_box = None
-            
-            if len(ball_boxes) > 0:
-                # 2. Detect Persons
-                coco_outs = self.session_coco.run([self.output_name_coco], {self.input_name_coco: yolo_input})
-                coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_output(coco_outs[0], original_shape, conf_threshold=0.5)
-                
-                person_boxes = coco_boxes[coco_class_ids == 0]
-                
-                if len(person_boxes) > 0:
-                    ball_box_index = np.argmax(ball_scores)
-                    ball_box = ball_boxes[ball_box_index]
-                    detected_ball_box = ball_box
-
-                    # Find closest person to the best ball prediction using vectorized numpy ops
-                    person_centers_x = (person_boxes[:, 0] + person_boxes[:, 2]) / 2.0
-                    person_centers_y = (person_boxes[:, 1] + person_boxes[:, 3]) / 2.0
-                    ball_center_x = (ball_box[0] + ball_box[2]) / 2.0
-                    ball_center_y = (ball_box[1] + ball_box[3]) / 2.0
-
-                    dists_sq = (person_centers_x - ball_center_x) ** 2 + (person_centers_y - ball_center_y) ** 2
-                    closest_idx = np.argmin(dists_sq)
-                    closest_person_box = person_boxes[closest_idx]
-                            
-                    px_min, py_min, px_max, py_max = closest_person_box
-                    px_min, py_min = max(0, int(px_min)), max(0, int(py_min))
-                    px_max, py_max = min(original_shape[1], int(px_max)), min(original_shape[0], int(py_max))
-                    
-                    if px_min < px_max and py_min < py_max:
-                        person_roi = frame_rgb[py_min:py_max, px_min:px_max]
-                        if person_roi.size > 0:
-                            sq_frame, pad_l, pad_t = pad_frame_to_square(person_roi)
-                            pose_res = self.mp_pose.process(sq_frame)
-                            
-                            if pose_res.pose_landmarks:
-                                rel_landmarks = pose_res.pose_landmarks.landmark[11:25]
-                                px_coords = [lm.x for lm in rel_landmarks]
-                                py_coords = [lm.y for lm in rel_landmarks]
-                                pm_x_min, pm_x_max = min(px_coords), max(px_coords)
-                                pm_y_min, pm_y_max = min(py_coords), max(py_coords)
-                                
-                                x_range = max(pm_x_max - pm_x_min, 1e-6)
-                                y_range = max(pm_y_max - pm_y_min, 1e-6)
-                                
-                                data = []
-                                for lm in rel_landmarks:
-                                    data.append((lm.x - pm_x_min) / x_range)
-                                    data.append((lm.y - pm_y_min) / y_range)
-                                    
-                                bx_min, by_min, bx_max, by_max = ball_box
-                                data.append((bx_min - pm_x_min) / x_range)
-                                data.append((by_min - pm_y_min) / y_range)
-                                data.append(max((bx_max - bx_min)/x_range, (by_max - by_min)/y_range))
-                                
-                                if len(data) == 31:
-                                    X_onnx = np.asarray(data, dtype=np.float32).reshape(1, -1)
-                                    res = self.session_rf.run(None, {self.input_name_rf: X_onnx})
-                                    detected_action = str(res[0][0])
-
-            # Logic to smooth multi-frame predictions into discrete actions
-            if detected_action != "NONE":
-                if current_action_type == detected_action:
-                    # Continue current action
-                    current_action_boxes.append(closest_person_box)
-                else:
-                    # Transition
-                    if current_action_type != "NONE" and current_action_start is not None:
-                        # Append the finished action
-                        results.append({
-                            "id": f"action_{len(results)}",
-                            "type": current_action_type,
-                            "start_ms": current_action_start,
-                            "end_ms": timestamp_ms,
-                            # Provide the median/average box or the last box for focus
-                            "player_box": [float(x) for x in current_action_boxes[len(current_action_boxes)//2]],
-                            "player_id": "Unknown",
-                            "confidence": 0.8
-                        })
-                    current_action_type = detected_action
-                    current_action_start = timestamp_ms
-                    current_action_boxes = [closest_person_box]
-            else:
-                if current_action_type != "NONE" and current_action_start is not None:
-                    duration = timestamp_ms - current_action_start
-                    # Only register if it lasted a few frames (e.g. at least 100ms) to avoid random noise flashes
-                    if duration > 100:
-                        results.append({
-                            "id": f"action_{len(results)}",
-                            "type": current_action_type,
-                            "start_ms": current_action_start,
-                            "end_ms": timestamp_ms,
-                            "player_box": [float(x) for x in current_action_boxes[len(current_action_boxes)//2]],
-                            "player_id": "Unknown",
-                            "confidence": 0.8
-                        })
-                    current_action_type = "NONE"
-                    current_action_start = None
-                    current_action_boxes = []
+            current_action_type, current_action_start, current_action_boxes = self._update_action_state(
+                detected_action, closest_person_box, timestamp_ms,
+                current_action_type, current_action_start, current_action_boxes, results
+            )
                     
             frame_idx += 1
             # Fire callback every 5 % of total frames
@@ -186,3 +88,112 @@ class VolleyballAnalyticsEngine:
             "fps": fps,
             "actions": results
         }
+
+    def _detect_action_in_frame(self, frame_rgb, original_shape, yolo_input):
+        # 1. Detect Ball
+        ball_outs = self.session_vb.run([self.output_name_vb], {self.input_name_vb: yolo_input})
+        ball_boxes, ball_scores, _ = postprocess_yolo_output(ball_outs[0], original_shape, conf_threshold=0.5)
+
+        detected_action = "NONE"
+        closest_person_box = None
+
+        if len(ball_boxes) > 0:
+            # 2. Detect Persons
+            coco_outs = self.session_coco.run([self.output_name_coco], {self.input_name_coco: yolo_input})
+            coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_output(coco_outs[0], original_shape, conf_threshold=0.5)
+
+            person_boxes = coco_boxes[coco_class_ids == 0]
+
+            if len(person_boxes) > 0:
+                ball_box_index = np.argmax(ball_scores)
+                ball_box = ball_boxes[ball_box_index]
+
+                # Find closest person to the best ball prediction using vectorized numpy ops
+                person_centers_x = (person_boxes[:, 0] + person_boxes[:, 2]) / 2.0
+                person_centers_y = (person_boxes[:, 1] + person_boxes[:, 3]) / 2.0
+                ball_center_x = (ball_box[0] + ball_box[2]) / 2.0
+                ball_center_y = (ball_box[1] + ball_box[3]) / 2.0
+
+                dists_sq = (person_centers_x - ball_center_x) ** 2 + (person_centers_y - ball_center_y) ** 2
+                closest_idx = np.argmin(dists_sq)
+                closest_person_box = person_boxes[closest_idx]
+
+                px_min, py_min, px_max, py_max = closest_person_box
+                px_min, py_min = max(0, int(px_min)), max(0, int(py_min))
+                px_max, py_max = min(original_shape[1], int(px_max)), min(original_shape[0], int(py_max))
+
+                if px_min < px_max and py_min < py_max:
+                    person_roi = frame_rgb[py_min:py_max, px_min:px_max]
+                    if person_roi.size > 0:
+                        sq_frame, pad_l, pad_t = pad_frame_to_square(person_roi)
+                        pose_res = self.mp_pose.process(sq_frame)
+
+                        if pose_res.pose_landmarks:
+                            rel_landmarks = pose_res.pose_landmarks.landmark[11:25]
+                            px_coords = [lm.x for lm in rel_landmarks]
+                            py_coords = [lm.y for lm in rel_landmarks]
+                            pm_x_min, pm_x_max = min(px_coords), max(px_coords)
+                            pm_y_min, pm_y_max = min(py_coords), max(py_coords)
+
+                            x_range = max(pm_x_max - pm_x_min, 1e-6)
+                            y_range = max(pm_y_max - pm_y_min, 1e-6)
+
+                            data = []
+                            for lm in rel_landmarks:
+                                data.append((lm.x - pm_x_min) / x_range)
+                                data.append((lm.y - pm_y_min) / y_range)
+
+                            bx_min, by_min, bx_max, by_max = ball_box
+                            data.append((bx_min - pm_x_min) / x_range)
+                            data.append((by_min - pm_y_min) / y_range)
+                            data.append(max((bx_max - bx_min)/x_range, (by_max - by_min)/y_range))
+
+                            if len(data) == 31:
+                                X_onnx = np.asarray(data, dtype=np.float32).reshape(1, -1)
+                                res = self.session_rf.run(None, {self.input_name_rf: X_onnx})
+                                detected_action = str(res[0][0])
+
+        return detected_action, closest_person_box
+
+    def _update_action_state(self, detected_action, closest_person_box, timestamp_ms, current_action_type, current_action_start, current_action_boxes, results):
+        # Logic to smooth multi-frame predictions into discrete actions
+        if detected_action != "NONE":
+            if current_action_type == detected_action:
+                # Continue current action
+                current_action_boxes.append(closest_person_box)
+            else:
+                # Transition
+                if current_action_type != "NONE" and current_action_start is not None:
+                    # Append the finished action
+                    results.append({
+                        "id": f"action_{len(results)}",
+                        "type": current_action_type,
+                        "start_ms": current_action_start,
+                        "end_ms": timestamp_ms,
+                        # Provide the median/average box or the last box for focus
+                        "player_box": [float(x) for x in current_action_boxes[len(current_action_boxes)//2]],
+                        "player_id": "Unknown",
+                        "confidence": 0.8
+                    })
+                current_action_type = detected_action
+                current_action_start = timestamp_ms
+                current_action_boxes = [closest_person_box]
+        else:
+            if current_action_type != "NONE" and current_action_start is not None:
+                duration = timestamp_ms - current_action_start
+                # Only register if it lasted a few frames (e.g. at least 100ms) to avoid random noise flashes
+                if duration > 100:
+                    results.append({
+                        "id": f"action_{len(results)}",
+                        "type": current_action_type,
+                        "start_ms": current_action_start,
+                        "end_ms": timestamp_ms,
+                        "player_box": [float(x) for x in current_action_boxes[len(current_action_boxes)//2]],
+                        "player_id": "Unknown",
+                        "confidence": 0.8
+                    })
+                current_action_type = "NONE"
+                current_action_start = None
+                current_action_boxes = []
+
+        return current_action_type, current_action_start, current_action_boxes
