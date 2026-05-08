@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from engine import VolleyballAnalyticsEngine
 from config import ALLOWED_ORIGINS
+from database import JobStore
 
 app = FastAPI(title="Volleyball Action Detection API")
 
@@ -22,8 +23,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# In-memory job state (In production, replace with DB/Redis)
-analysis_jobs: Dict[str, Dict[str, Any]] = {}
+# Persistent job state
+job_store = JobStore(os.path.join(os.path.dirname(__file__), "jobs.db"))
 
 MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
 engine = VolleyballAnalyticsEngine(models_dir=MODELS_DIR)
@@ -51,20 +52,26 @@ def get_json_path(video_path: str) -> str:
 
 def process_video_task(job_id: str, video_path: str):
     try:
-        analysis_jobs[job_id]["status"] = "processing"
-        analysis_jobs[job_id]["progress"] = 0.0
-        analysis_jobs[job_id]["eta_seconds"] = None
+        job_store.update_job(job_id, {
+            "status": "processing",
+            "progress": 0.0,
+            "eta_seconds": None
+        })
         start_time = time.time()
 
         def update_progress(current_frame, total_frames):
             if total_frames > 0:
                 progress = current_frame / total_frames
-                analysis_jobs[job_id]["progress"] = round(progress, 3)
                 elapsed = time.time() - start_time
+                eta = None
                 if progress > 0:
                     total_estimated = elapsed / progress
-                    eta = max(0.0, total_estimated - elapsed)
-                    analysis_jobs[job_id]["eta_seconds"] = round(eta)
+                    eta = round(max(0.0, total_estimated - elapsed))
+
+                job_store.update_job(job_id, {
+                    "progress": round(progress, 3),
+                    "eta_seconds": eta
+                })
 
         result = engine.process_video(video_path, progress_callback=update_progress)
         
@@ -73,19 +80,23 @@ def process_video_task(job_id: str, video_path: str):
         with open(json_path, 'w') as f:
             json.dump(result, f, indent=4)
             
-        analysis_jobs[job_id]["status"] = "completed"
-        analysis_jobs[job_id]["progress"] = 1.0
-        analysis_jobs[job_id]["result"] = result
-        analysis_jobs[job_id]["json_path"] = json_path
+        job_store.update_job(job_id, {
+            "status": "completed",
+            "progress": 1.0,
+            "result": result,
+            "json_path": json_path
+        })
     except Exception as e:
-        analysis_jobs[job_id]["status"] = "error"
-        analysis_jobs[job_id]["error"] = str(e)
+        job_store.update_job(job_id, {
+            "status": "error",
+            "error": str(e)
+        })
 
 
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
-    validate_safe_path(request.video_path)
-    if not os.path.exists(request.video_path):
+    safe_video_path = validate_safe_path(request.video_path)
+    if not os.path.exists(safe_video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
     json_path = get_json_path(safe_video_path)
@@ -95,20 +106,21 @@ async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTas
         return {"status": "completed", "json_path": json_path}
 
     job_id = str(uuid.uuid4())
-    analysis_jobs[job_id] = {
+    job_store.set_job(job_id, {
         "status": "pending",
         "progress": 0.0,
         "video_path": safe_video_path
-    }
+    })
     background_tasks.add_task(process_video_task, job_id, safe_video_path)
     return {"job_id": job_id, "status": "pending"}
 
 
 @app.get("/job/{job_id}")
 async def get_job_status(job_id: str):
-    if job_id not in analysis_jobs:
+    job = await asyncio.to_thread(job_store.get_job, job_id)
+    if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
-    return analysis_jobs[job_id]
+    return job
 
 
 @app.get("/ping")
