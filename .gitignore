@@ -1,17 +1,22 @@
-rozpiska_akcji_v2.csv
-tylko_akcje_v2.mp4
-czasy_PRO.csv
-tylko_akcje_PRO.mp4
-rozpiska_PRO_v3.csv
-ATJSW_Volley_Concept_Katowice_MlodzikSet2_VID20260110123022.mp4
-.gitignore
-# Python
-venv/
-.venv/
-__pycache__/
+*.json
+*.txt
+*.log
 *.pyc
 20260328_094545.mp4
 MLCV test_analysis.json
 MLCV test.mp4
 20260328_094545_analysis.json
 VolleyballApp/backend/test_video_analysis.json
+VolleyballApp/backend/venv
+
+# Flutter / Dart
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/windows/flutter/ephemeral/
+
+# Python
+**/__pycache__/
+**/.venv/
+**/.pytest_cache/
