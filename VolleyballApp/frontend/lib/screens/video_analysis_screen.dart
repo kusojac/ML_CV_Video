@@ -11,14 +11,15 @@ import '../widgets/focus_player_widget.dart';
 
 class VideoAnalysisScreen extends StatefulWidget {
   final String videoPath;
-  const VideoAnalysisScreen({super.key, required this.videoPath});
+  final AnalyticsService? analyticsService;
+  const VideoAnalysisScreen({super.key, required this.videoPath, this.analyticsService});
 
   @override
   State<VideoAnalysisScreen> createState() => _VideoAnalysisScreenState();
 }
 
 class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
-  final AnalyticsService _analyticsService = AnalyticsService();
+  late final AnalyticsService _analyticsService;
   bool _isAnalyzing = false;
   double _analysisProgress = 0.0;
   int? _etaSeconds;
@@ -66,6 +67,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   @override
   void initState() {
     super.initState();
+    _analyticsService = widget.analyticsService ?? AnalyticsService();
     // Check existing analysis in background
     Future.microtask(() => _checkExistingAnalysis());
   }
