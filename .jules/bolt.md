@@ -40,3 +40,6 @@
 ## 2024-11-20 - Global In-Memory Caches for FastAPI Sync IO
 **Learning:** In a FastAPI backend handling heavy synchronous JSON I/O, repeated parsing of large JSON files and linear searches over arrays cause severe latency and event loop blocking.
 **Action:** Define the endpoint as `def` instead of `async def` so it runs in Starlette's external threadpool. Additionally, ensure thread safety for shared local files and use global in-memory dictionaries (`_parsed_json_cache` and `_action_dict_cache`) to provide O(1) action lookups and eliminate repetitive disk I/O.
+## 2024-05-19 - Unexpected slowdown with cv2.dnn.blobFromImage
+**Learning:** While `cv2.dnn.blobFromImage` is generally recommended for optimizing image preprocessing (resizing, scaling, transposing) before passing it to deep learning models, benchmarking in this specific environment surprisingly showed that manual NumPy operations (`cv2.resize`, array slicing/division, `np.transpose`, `np.expand_dims`) are roughly 30% faster.
+**Action:** When working on performance optimizations in this environment, do not assume `cv2.dnn.blobFromImage` is automatically faster. Stick to explicit NumPy operations for YOLO image preprocessing unless thorough benchmarking proves otherwise.
