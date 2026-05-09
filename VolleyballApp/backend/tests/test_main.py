@@ -62,9 +62,9 @@ from fastapi import HTTPException
 
 client = TestClient(app)
 
-def test_secure_path_valid():
-    assert secure_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
-    assert secure_path("video.mp4") == "video.mp4"
+def test_validate_safe_path_valid():
+    assert validate_safe_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
+    assert validate_safe_path("video.mp4") == "video.mp4"
 
 def test_secure_path_invalid():
     with pytest.raises(HTTPException) as excinfo:
@@ -88,3 +88,39 @@ def test_update_action_path_traversal():
         "new_end_ms": 2.0
     })
     assert response.status_code == 400
+
+def test_invalid_json_handling_get_results(tmp_path):
+    video_path = "test_invalid.mp4"
+    json_path = tmp_path / "test_invalid_analysis.json"
+
+    # Create invalid JSON file
+    with open(json_path, "w") as f:
+        f.write("{ invalid json }")
+
+    with patch("main.get_json_path") as mock_get_json_path:
+        mock_get_json_path.return_value = str(json_path)
+
+        response = client.get(f"/results?video_path={video_path}")
+        assert response.status_code == 500
+        assert response.json() == {"detail": "Invalid JSON format in analysis results."}
+
+def test_invalid_json_handling_update_action(tmp_path):
+    video_path = "test_invalid.mp4"
+    json_path = tmp_path / "test_invalid_analysis.json"
+
+    # Create invalid JSON file
+    with open(json_path, "w") as f:
+        f.write("{ invalid json }")
+
+    with patch("main.get_json_path") as mock_get_json_path:
+        mock_get_json_path.return_value = str(json_path)
+
+        response = client.post("/update_action", json={
+            "video_path": video_path,
+            "action_id": "123",
+            "new_type": "Serve",
+            "new_start_ms": 1.0,
+            "new_end_ms": 2.0
+        })
+        assert response.status_code == 500
+        assert response.json() == {"detail": "Invalid JSON format in analysis results."}
