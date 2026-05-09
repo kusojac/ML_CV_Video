@@ -133,10 +133,23 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
       ),
       body: _videoPaths.isEmpty
           ? const Center(
-              child: Text(
-                'No videos found.\nClick + to import a volleyball video.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.video_library_outlined, size: 64, color: Colors.white30),
+                  SizedBox(height: 16),
+                  Text(
+                    'No videos found.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white70),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Click + to import a volleyball video.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white54, fontSize: 14),
+                  ),
+                ],
               ),
             )
           : ListView.builder(
