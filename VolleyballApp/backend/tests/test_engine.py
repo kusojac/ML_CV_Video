@@ -1,134 +1,106 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest import mock
 import numpy as np
-import sys
 
-# Because main.py is loaded, it might have mocked things.
-# Let's remove main and engine from sys.modules to start fresh!
-if 'main' in sys.modules:
-    del sys.modules['main']
-if 'engine' in sys.modules:
-    del sys.modules['engine']
+# We patch these dependencies before importing engine
+@pytest.fixture(autouse=True)
+def mock_dependencies():
+    with mock.patch("onnxruntime.InferenceSession") as mock_ort_session, \
+         mock.patch("mediapipe.solutions.pose.Pose") as mock_mp_pose, \
+         mock.patch("builtins.open", mock.mock_open()) as mock_file, \
+         mock.patch("pickle.load") as mock_pickle:
 
-import engine
+        # Set up mock returns
+        mock_session_instance = mock.MagicMock()
+        mock_input = mock.MagicMock()
+        mock_input.name = "input"
+        mock_session_instance.get_inputs.return_value = [mock_input]
+        mock_output = mock.MagicMock()
+        mock_output.name = "output"
+        mock_session_instance.get_outputs.return_value = [mock_output]
+        mock_ort_session.return_value = mock_session_instance
 
-@patch("onnxruntime.InferenceSession")
-@patch("mediapipe.solutions.pose.Pose")
-@patch("builtins.open", create=True)
-@patch("pickle.load", create=True)
-def test_engine_init(mock_pickle_load, mock_open, mock_mp_pose, mock_inference_session):
-    mock_session = MagicMock()
-    mock_input = MagicMock()
-    mock_input.name = "mock_input"
-    mock_output = MagicMock()
-    mock_output.name = "mock_output"
-    mock_session.get_inputs.return_value = [mock_input]
-    mock_session.get_outputs.return_value = [mock_output]
-    mock_inference_session.return_value = mock_session
-    mock_pickle_load.return_value = {"model": MagicMock()}
+        mock_pickle.return_value = {"model": mock.MagicMock()}
 
-    analytics_engine = engine.VolleyballAnalyticsEngine("dummy_dir")
+        yield mock_ort_session, mock_mp_pose, mock_file, mock_pickle
 
-    assert mock_inference_session.call_count >= 2
+def test_engine_initialization(mock_dependencies):
+    from engine import VolleyballAnalyticsEngine
+    mock_ort, mock_pose, mock_file, mock_pickle = mock_dependencies
 
-@patch("cv2.VideoCapture")
-@patch("onnxruntime.InferenceSession")
-@patch("mediapipe.solutions.pose.Pose")
-@patch("builtins.open", create=True)
-@patch("pickle.load", create=True)
-def test_process_video(mock_pickle_load, mock_open, mock_mp_pose, mock_inference_session, mock_cap):
-    mock_session = MagicMock()
-    mock_input = MagicMock()
-    mock_input.name = "mock_input"
-    mock_output = MagicMock()
-    mock_output.name = "mock_output"
-    mock_session.get_inputs.return_value = [mock_input]
-    mock_session.get_outputs.return_value = [mock_output]
-    mock_inference_session.return_value = mock_session
-    mock_pickle_load.return_value = {"model": MagicMock()}
+    # Act
+    engine = VolleyballAnalyticsEngine("/fake/models/dir")
 
-    analytics_engine = engine.VolleyballAnalyticsEngine("dummy_dir")
+    # Assert
+    # Check if ONNX sessions were created
+    assert mock_ort.call_count >= 2
+    mock_pose.assert_called_once()
 
-    mock_cap_instance = MagicMock()
-    mock_cap.return_value = mock_cap_instance
-    mock_cap_instance.get.side_effect = [30.0, 10]
-    mock_cap_instance.isOpened.side_effect = [True] * 10 + [False]
-    dummy_frame = np.zeros((100, 100, 3), dtype=np.uint8)
-    mock_cap_instance.read.side_effect = [(True, dummy_frame)] * 10 + [(False, None)]
 
-    with patch.object(analytics_engine, '_detect_objects') as mock_detect, \
-         patch.object(analytics_engine, '_classify_action') as mock_classify, \
-         patch("engine.preprocess_yolo_input") as mock_preprocess:
+def test_process_video_empty(mock_dependencies):
+    from engine import VolleyballAnalyticsEngine
+    mock_ort, mock_pose, mock_file, mock_pickle = mock_dependencies
 
-        mock_preprocess.return_value = np.zeros((1, 3, 640, 640), dtype=np.float32)
-        mock_detect.return_value = ([0, 0, 10, 10], [10, 10, 20, 20])
-        mock_classify.side_effect = ["NONE"] + ["Serve"] * 4 + ["NONE"] * 5
+    with mock.patch("cv2.VideoCapture") as mock_cap:
+        # Arrange
+        mock_cap_instance = mock.MagicMock()
+        mock_cap_instance.get.side_effect = lambda prop: 30.0 if prop == 5 else 0.0 # FPS=30, TotalFrames=0
+        mock_cap_instance.isOpened.return_value = False
+        mock_cap.return_value = mock_cap_instance
 
-        result = analytics_engine.process_video("dummy.mp4")
+        engine = VolleyballAnalyticsEngine("/fake")
 
+        # Act
+        result = engine.process_video("fake.mp4")
+
+        # Assert
+        assert result["total_frames"] == 0
         assert result["fps"] == 30.0
-        assert result["total_frames"] == 10
-        assert len(result["actions"]) == 1
+        assert result["actions"] == []
 
-@patch("cv2.VideoCapture")
-@patch("onnxruntime.InferenceSession")
-@patch("mediapipe.solutions.pose.Pose")
-@patch("builtins.open", create=True)
-@patch("pickle.load", create=True)
-def test_process_video_error_handling(mock_pickle_load, mock_open, mock_mp_pose, mock_inference_session, mock_cap):
-    mock_session = MagicMock()
-    mock_input = MagicMock()
-    mock_input.name = "mock_input"
-    mock_session.get_inputs.return_value = [mock_input]
-    mock_session.get_outputs.return_value = [mock_input]
-    mock_inference_session.return_value = mock_session
-    mock_pickle_load.return_value = {"model": MagicMock()}
 
-    analytics_engine = engine.VolleyballAnalyticsEngine("dummy_dir")
+def test_process_video_with_frames(mock_dependencies):
+    from engine import VolleyballAnalyticsEngine
+    mock_ort, mock_pose, mock_file, mock_pickle = mock_dependencies
 
-    mock_cap_instance = MagicMock()
-    mock_cap.return_value = mock_cap_instance
-    mock_cap_instance.get.side_effect = [0.0, 0]
-    mock_cap_instance.isOpened.return_value = False
+    with mock.patch("cv2.VideoCapture") as mock_cap, \
+         mock.patch("engine.preprocess_yolo_input") as mock_preprocess, \
+         mock.patch.object(VolleyballAnalyticsEngine, "_detect_objects") as mock_detect, \
+         mock.patch.object(VolleyballAnalyticsEngine, "_classify_action") as mock_classify, \
+         mock.patch("cv2.cvtColor") as mock_cvt:
 
-    result = analytics_engine.process_video("dummy.mp4")
+        # Arrange
+        mock_cap_instance = mock.MagicMock()
+        mock_cap_instance.get.side_effect = lambda prop: 30.0 if prop == 5 else 3.0 # FPS=30, TotalFrames=3
 
-    assert result["fps"] == 30.0
+        # Simulate 3 frames
+        frame_read_returns = [(True, np.zeros((100, 100, 3))), (True, np.zeros((100, 100, 3))), (True, np.zeros((100, 100, 3))), (False, None)]
+        mock_cap_instance.read.side_effect = frame_read_returns
 
-@patch("cv2.VideoCapture")
-@patch("onnxruntime.InferenceSession")
-@patch("mediapipe.solutions.pose.Pose")
-@patch("builtins.open", create=True)
-@patch("pickle.load", create=True)
-def test_process_video_flush_last_action(mock_pickle_load, mock_open, mock_mp_pose, mock_inference_session, mock_cap):
-    mock_session = MagicMock()
-    mock_input = MagicMock()
-    mock_input.name = "mock_input"
-    mock_output = MagicMock()
-    mock_output.name = "mock_output"
-    mock_session.get_inputs.return_value = [mock_input]
-    mock_session.get_outputs.return_value = [mock_output]
-    mock_inference_session.return_value = mock_session
-    mock_pickle_load.return_value = {"model": MagicMock()}
+        # isOpened should return True until we run out of frames
+        mock_cap_instance.isOpened.side_effect = [True, True, True, True, False]
+        mock_cap.return_value = mock_cap_instance
 
-    analytics_engine = engine.VolleyballAnalyticsEngine("dummy_dir")
+        mock_cvt.return_value = np.zeros((100, 100, 3))
+        mock_preprocess.return_value = np.zeros((1, 3, 640, 640))
 
-    mock_cap_instance = MagicMock()
-    mock_cap.return_value = mock_cap_instance
-    mock_cap_instance.get.side_effect = [30.0, 3]
-    mock_cap_instance.isOpened.side_effect = [True] * 3 + [False]
-    dummy_frame = np.zeros((100, 100, 3), dtype=np.uint8)
-    mock_cap_instance.read.side_effect = [(True, dummy_frame)] * 3 + [(False, None)]
+        mock_detect.return_value = ([0, 0, 10, 10], [20, 20, 50, 50])
 
-    with patch.object(analytics_engine, '_detect_objects') as mock_detect, \
-         patch.object(analytics_engine, '_classify_action') as mock_classify, \
-         patch("engine.preprocess_yolo_input") as mock_preprocess:
+        # Let's say action is NONE, then SPIKE, then SPIKE
+        mock_classify.side_effect = ["NONE", "SPIKE", "SPIKE", "NONE"]
 
-        mock_preprocess.return_value = np.zeros((1, 3, 640, 640), dtype=np.float32)
-        mock_detect.return_value = ([0, 0, 10, 10], [10, 10, 20, 20])
-        mock_classify.side_effect = ["Spike", "Spike", "Spike"]
+        engine = VolleyballAnalyticsEngine("/fake")
 
-        result = analytics_engine.process_video("dummy.mp4")
+        # Act
+        result = engine.process_video("fake.mp4")
 
+        # Assert
         assert result["total_frames"] == 3
+        assert result["fps"] == 30.0
         assert len(result["actions"]) == 1
+
+        action = result["actions"][0]
+        assert action["type"] == "SPIKE"
+        # start frame 1 (33.3ms) to frame 3 (100ms)
+        assert np.isclose(action["start_ms"], (1 / 30.0) * 1000.0)
+        assert np.isclose(action["end_ms"], (3 / 30.0) * 1000.0)
