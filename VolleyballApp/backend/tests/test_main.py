@@ -57,7 +57,7 @@ def test_process_video_task_success(tmp_path):
         data = json.load(f)
     assert data == mock_result
 from fastapi.testclient import TestClient
-from main import app, secure_path as validate_safe_path
+from main import app, validate_safe_path as secure_path
 from fastapi import HTTPException
 
 client = TestClient(app)

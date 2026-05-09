@@ -44,3 +44,8 @@
 **Vulnerability:** FastAPIs internal behavior exposed internal application stacks if endpoints loaded corrupted or malformed internal JSON files, which is a potential source of internal architecture data leakage for bad actors parsing stack traces.
 **Learning:** `json.load()` throws `json.JSONDecodeError` for invalid JSON payloads. Without specific handlers caching or trapping this, generic exceptions bubble up exposing verbose system internals.
 **Prevention:** Make sure `json.load` explicitly handles `json.JSONDecodeError` using `try-except` blocks and replaces it with standard `HTTPException` displaying sanitized or minimal error messages to clients without exposing the application runtime stack.
+
+## 2024-05-09 - Insecure Deserialization via pickle.load
+**Vulnerability:** The backend `VolleyballAnalyticsEngine` previously initialized a machine learning model (`model.p`) using `pickle.load`. This exposed the application to remote code execution (RCE) via insecure deserialization, as a malicious actor could replace `model.p` with a crafted payload.
+**Learning:** `pickle.load` executes arbitrary code contained within the serialized payload during deserialization. It is fundamentally unsafe to use `pickle` for loading machine learning models (or any data) from untrusted or easily accessible locations.
+**Prevention:** Avoid `pickle` entirely for model serialization. Always convert machine learning models into safe, standardized formats like ONNX (`.onnx`) using tools like `skl2onnx`, and load them using secure engines such as `onnxruntime.InferenceSession`.
