@@ -115,10 +115,10 @@ class _ActionSidebarState extends State<ActionSidebar> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Actions List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const Expanded(child: Text('Actions List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white), overflow: TextOverflow.ellipsis)),
                   Row(
                     children: [
-                      const Text('Edit Mode', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      const Text('Edit', style: TextStyle(color: Colors.white70, fontSize: 12)),
                       Switch(
                         value: widget.isEditMode,
                         onChanged: widget.onEditModeChanged,
