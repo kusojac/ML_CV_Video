@@ -47,7 +47,7 @@ class UpdateActionRequest(BaseModel):
     new_start_ms: float
     new_end_ms: float
 
-def secure_path(file_path: str) -> str:
+def validate_safe_path(file_path: str) -> str:
     """Validates that the given path does not contain directory traversal characters."""
     if ".." in file_path:
         raise HTTPException(status_code=400, detail="Directory traversal is not allowed")
@@ -135,7 +135,7 @@ async def ping():
 
 @app.get("/results")
 def get_results(video_path: str):
-    video_path = secure_path(video_path)
+    video_path = validate_safe_path(video_path)
     json_path = get_json_path(video_path)
 
     with _file_lock:
@@ -153,10 +153,12 @@ def get_results(video_path: str):
             return data
         except FileNotFoundError:
             raise HTTPException(status_code=404, detail="Analysis results not found.")
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=500, detail="Invalid JSON format in analysis results.")
 
 @app.post("/update_action")
 def update_action(req: UpdateActionRequest):
-    safe_video_path = secure_path(req.video_path)
+    safe_video_path = validate_safe_path(req.video_path)
     json_path = get_json_path(safe_video_path)
 
     with _file_lock:
@@ -171,6 +173,8 @@ def update_action(req: UpdateActionRequest):
                 }
             except FileNotFoundError:
                 raise HTTPException(status_code=404, detail="Analysis results not found.")
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=500, detail="Invalid JSON format in analysis results.")
 
         data = _parsed_json_cache[json_path]
         actions_dict = _action_dict_cache[json_path]
