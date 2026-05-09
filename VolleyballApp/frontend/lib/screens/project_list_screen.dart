@@ -132,11 +132,43 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
         ],
       ),
       body: _videoPaths.isEmpty
-          ? const Center(
-              child: Text(
-                'No videos found.\nClick + to import a volleyball video.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.video_library_outlined,
+                    size: 64,
+                    color: Colors.white30,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No projects yet',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Import a volleyball video to start analysis.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: _importVideo,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Import Video'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      backgroundColor: Colors.purpleAccent.withValues(alpha: 0.2),
+                      foregroundColor: Colors.purpleAccent,
+                      side: const BorderSide(color: Colors.purpleAccent),
+                    ),
+                  ),
+                ],
               ),
             )
           : ListView.builder(

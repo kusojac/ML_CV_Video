@@ -78,6 +78,30 @@ def test_get_distance_person_ball_np():
     dist = get_distance_person_ball_np(person_box, ball_box)
     assert dist == pytest.approx(np.sqrt(200))
 
+from frame_utilities import preprocess_yolo_input
+
+def test_preprocess_yolo_input_default():
+    image = np.zeros((1080, 1920, 3), dtype=np.uint8)
+    output = preprocess_yolo_input(image)
+    assert output.shape == (1, 3, 640, 640)
+    assert output.dtype == np.float32
+
+def test_preprocess_yolo_input_custom_size():
+    image = np.zeros((1080, 1920, 3), dtype=np.uint8)
+    output = preprocess_yolo_input(image, input_size=(320, 320))
+    assert output.shape == (1, 3, 320, 320)
+    assert output.dtype == np.float32
+
+def test_preprocess_yolo_input_value_scaling():
+    # Test that values are scaled to [0, 1]
+    image = np.ones((640, 640, 3), dtype=np.uint8) * 255
+    output = preprocess_yolo_input(image)
+    assert np.allclose(output, 1.0)
+
+    image_half = np.ones((640, 640, 3), dtype=np.uint8) * 127
+    output_half = preprocess_yolo_input(image_half)
+    assert np.allclose(output_half, 127 / 255.0)
+
 from frame_utilities import postprocess_yolo_output
 
 def test_postprocess_yolo_output_ball_below_threshold():
