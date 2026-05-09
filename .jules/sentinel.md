@@ -40,3 +40,7 @@
 **Vulnerability:** The FastAPI backend was configured to bind to "0.0.0.0", exposing the local API to the entire network.
 **Learning:** For local desktop applications with a companion backend, binding to "0.0.0.0" is a security risk as it allows any device on the network to interact with the backend, which might have access to local files or perform sensitive actions.
 **Prevention:** Always bind to "127.0.0.1" for local-only services. Additionally, ensure the port configuration is consistent across the backend code, documentation, and frontend service to avoid connectivity issues while hardening the service.
+## 2025-05-09 - [Fix unhandled JSONDecodeError exposing stack trace]
+**Vulnerability:** FastAPIs internal behavior exposed internal application stacks if endpoints loaded corrupted or malformed internal JSON files, which is a potential source of internal architecture data leakage for bad actors parsing stack traces.
+**Learning:** `json.load()` throws `json.JSONDecodeError` for invalid JSON payloads. Without specific handlers caching or trapping this, generic exceptions bubble up exposing verbose system internals.
+**Prevention:** Make sure `json.load` explicitly handles `json.JSONDecodeError` using `try-except` blocks and replaces it with standard `HTTPException` displaying sanitized or minimal error messages to clients without exposing the application runtime stack.
