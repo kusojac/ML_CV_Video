@@ -12,12 +12,7 @@ import '../widgets/focus_player_widget.dart';
 class VideoAnalysisScreen extends StatefulWidget {
   final String videoPath;
   final AnalyticsService? analyticsService;
-
-  const VideoAnalysisScreen({
-    super.key,
-    required this.videoPath,
-    this.analyticsService,
-  });
+  const VideoAnalysisScreen({super.key, required this.videoPath, this.analyticsService});
 
   @override
   State<VideoAnalysisScreen> createState() => _VideoAnalysisScreenState();
