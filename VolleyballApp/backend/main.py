@@ -7,6 +7,8 @@ import os
 import uuid
 import threading
 import aiofiles
+import anyio
+from anyio import Path
 from typing import Dict, Any
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -100,13 +102,13 @@ def process_video_task(job_id: str, video_path: str):
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
     safe_video_path = secure_path(request.video_path)
-    if not os.path.exists(safe_video_path):
+    if not await asyncio.to_thread(os.path.exists, safe_video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
     json_path = get_json_path(safe_video_path)
     
     # If already processed, return it immediately
-    if os.path.exists(json_path):
+    if await asyncio.to_thread(os.path.exists, json_path):
         return {"status": "completed", "json_path": json_path}
 
     job_id = str(uuid.uuid4())
