@@ -7,3 +7,16 @@ MLCV test_analysis.json
 MLCV test.mp4
 20260328_094545_analysis.json
 VolleyballApp/backend/test_video_analysis.json
+VolleyballApp/backend/venv
+
+# Flutter / Dart
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/windows/flutter/ephemeral/
+
+# Python
+**/__pycache__/
+**/.venv/
+**/.pytest_cache/

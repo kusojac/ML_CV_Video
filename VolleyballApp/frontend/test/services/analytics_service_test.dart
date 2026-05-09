@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/testing.dart';
 import 'package:http/http.dart' as http;
 import 'package:frontend/services/analytics_service.dart';
+import 'package:frontend/models/action_model.dart';
 
 void main() {
   group('AnalyticsService - getResults', () {
@@ -108,6 +109,163 @@ void main() {
         () => service.getResults(videoPath),
         throwsA(
           isA<Exception>().having((e) => e.toString(), 'message', contains('Failed to get results')),
+        ),
+      );
+    });
+  });
+
+  group('AnalyticsService - startAnalysis', () {
+    test('returns "completed" when job is already completed', () async {
+      final mockClient = MockClient((request) async {
+        expect(request.url.path, '/analyze');
+        return http.Response(
+          jsonEncode({'status': 'completed', 'job_id': 'job_123'}),
+          200,
+        );
+      });
+
+      final service = AnalyticsService(client: mockClient);
+      final result = await service.startAnalysis('test.mp4');
+
+      expect(result, 'completed');
+    });
+
+    test('returns job_id when job starts processing', () async {
+      final mockClient = MockClient((request) async {
+        expect(request.url.path, '/analyze');
+        return http.Response(
+          jsonEncode({'status': 'processing', 'job_id': 'job_123'}),
+          200,
+        );
+      });
+
+      final service = AnalyticsService(client: mockClient);
+      final result = await service.startAnalysis('test.mp4');
+
+      expect(result, 'job_123');
+    });
+
+    test('throws Exception when API fails', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Internal Server Error', 500);
+      });
+
+      final service = AnalyticsService(client: mockClient);
+
+      expect(
+        () => service.startAnalysis('test.mp4'),
+        throwsA(
+          isA<Exception>().having((e) => e.toString(), 'message', contains('Failed to start analysis')),
+        ),
+      );
+    });
+  });
+
+  group('AnalyticsService - checkJobStatus', () {
+    test('returns status map on success', () async {
+      final mockClient = MockClient((request) async {
+        expect(request.url.path, '/job/job_123');
+        return http.Response(
+          jsonEncode({
+            'status': 'processing',
+            'progress': 0.5,
+            'eta_seconds': 10.0,
+          }),
+          200,
+        );
+      });
+
+      final service = AnalyticsService(client: mockClient);
+      final result = await service.checkJobStatus('job_123');
+
+      expect(result['status'], 'processing');
+      expect(result['progress'], 0.5);
+      expect(result['eta_seconds'], 10.0);
+    });
+
+    test('handles missing progress field', () async {
+      final mockClient = MockClient((request) async {
+        expect(request.url.path, '/job/job_123');
+        return http.Response(
+          jsonEncode({
+            'status': 'pending',
+            'eta_seconds': null,
+          }),
+          200,
+        );
+      });
+
+      final service = AnalyticsService(client: mockClient);
+      final result = await service.checkJobStatus('job_123');
+
+      expect(result['status'], 'pending');
+      expect(result['progress'], 0.0);
+      expect(result['eta_seconds'], null);
+    });
+
+    test('throws Exception when API fails', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Internal Server Error', 500);
+      });
+
+      final service = AnalyticsService(client: mockClient);
+
+      expect(
+        () => service.checkJobStatus('job_123'),
+        throwsA(
+          isA<Exception>().having((e) => e.toString(), 'message', contains('Failed to check status')),
+        ),
+      );
+    });
+  });
+
+  group('AnalyticsService - updateAction', () {
+    test('completes successfully on 200 OK', () async {
+      final mockClient = MockClient((request) async {
+        expect(request.url.path, '/update_action');
+        final body = jsonDecode(request.body);
+        expect(body['video_path'], 'test.mp4');
+        expect(body['action_id'], 'action_1');
+        expect(body['new_type'], 'SPIKE');
+        expect(body['new_start_ms'], 100.0);
+        expect(body['new_end_ms'], 200.0);
+        return http.Response('OK', 200);
+      });
+
+      final service = AnalyticsService(client: mockClient);
+      final action = ActionModel(
+        id: 'action_1',
+        type: 'SPIKE',
+        startMs: 100.0,
+        endMs: 200.0,
+        playerBox: [0, 0, 10, 10],
+        playerId: 'player_1',
+        confidence: 0.9,
+      );
+
+      await expectLater(service.updateAction('test.mp4', action), completes);
+    });
+
+    test('throws Exception when API fails', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Internal Server Error', 500);
+      });
+
+      final service = AnalyticsService(client: mockClient);
+      final action = ActionModel(
+        id: 'action_1',
+        type: 'SPIKE',
+        startMs: 100.0,
+        endMs: 200.0,
+        playerBox: [0, 0, 10, 10],
+        playerId: 'player_1',
+        confidence: 0.9,
+      );
+
+      expect(
+        () => service.updateAction('test.mp4', action),
+        throwsA(
+          isA<Exception>().having((e) => e.toString(), 'message', contains('Failed to update action')),
         ),
       );
     });
