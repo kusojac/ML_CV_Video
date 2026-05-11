@@ -37,7 +37,7 @@ def preprocess_yolo_input(image_rgb, input_size=(640, 640)):
     return np.expand_dims(img_transposed, axis=0)
 
 def postprocess_yolo_output(output, original_img_shape, input_size=(640, 640),
-                            conf_threshold=0.25, nms_threshold=0.45):
+                            conf_threshold=0.25, nms_threshold=0.45, target_class_id=None):
     output = np.squeeze(output)
 
     if output.shape[0] < output.shape[1]:
@@ -56,15 +56,26 @@ def postprocess_yolo_output(output, original_img_shape, input_size=(640, 640),
     elif num_features == 84:  # COCO person model
         boxes_raw = output[:, :4]
         class_scores = output[:, 4:]
-        # ⚡ Bolt Optimization: Compute max score first, filter, then defer argmax
-        # np.argmax on 8400 anchors is expensive. We only compute it on anchors that pass the confidence threshold.
-        scores = np.max(class_scores, axis=1)
 
-        valid_mask = scores > conf_threshold
-        boxes_filtered = boxes_raw[valid_mask]
-        scores_filtered = scores[valid_mask]
-        # Bolt Optimization: Defer expensive argmax to only the valid, high-confidence boxes
-        class_ids_filtered = np.argmax(class_scores[valid_mask], axis=1)
+        if target_class_id is not None:
+            # ⚡ Bolt Optimization: Skip np.max and np.argmax if we only want one class.
+            # Directly extracting the column for the target class avoids max operations
+            # and reduces array allocation, dropping post-processing time significantly.
+            scores = class_scores[:, target_class_id]
+            valid_mask = scores > conf_threshold
+            boxes_filtered = boxes_raw[valid_mask]
+            scores_filtered = scores[valid_mask]
+            class_ids_filtered = np.full(len(scores_filtered), target_class_id, dtype=int)
+        else:
+            # ⚡ Bolt Optimization: Compute max score first, filter, then defer argmax
+            # np.argmax on 8400 anchors is expensive. We only compute it on anchors that pass the confidence threshold.
+            scores = np.max(class_scores, axis=1)
+
+            valid_mask = scores > conf_threshold
+            boxes_filtered = boxes_raw[valid_mask]
+            scores_filtered = scores[valid_mask]
+            # Bolt Optimization: Defer expensive argmax to only the valid, high-confidence boxes
+            class_ids_filtered = np.argmax(class_scores[valid_mask], axis=1)
     else:
         return np.array([]).reshape(0,4), np.array([]), np.array([])
 

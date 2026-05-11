@@ -37,7 +37,9 @@ class VolleyballAnalyticsEngine:
         if len(ball_boxes) > 0:
             # 2. Detect Persons
             coco_outs = self.session_coco.run([self.output_name_coco], {self.input_name_coco: yolo_input})
-            coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_output(coco_outs[0], original_shape, conf_threshold=0.5)
+            coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_output(
+                coco_outs[0], original_shape, conf_threshold=0.5, target_class_id=0
+            )
 
             person_boxes = coco_boxes[coco_class_ids == 0]
 
