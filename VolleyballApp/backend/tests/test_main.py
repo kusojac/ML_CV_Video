@@ -4,7 +4,7 @@ import json
 from unittest.mock import patch
 
 from main import process_video_task, analysis_jobs
-from main import app, validate_safe_path as secure_path
+from main import app, secure_path
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
@@ -65,14 +65,25 @@ from fastapi import HTTPException
 client = TestClient(app)
 
 def test_validate_safe_path_valid():
-    assert validate_safe_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
-    assert validate_safe_path("video.mp4") == "video.mp4"
+    assert secure_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
+    assert secure_path("video.mp4") == "video.mp4"
 
 def test_validate_safe_path_invalid():
     with pytest.raises(HTTPException) as excinfo:
-        validate_safe_path("../../etc/passwd")
+        secure_path("../../etc/passwd")
     assert excinfo.value.status_code == 400
 
+
+
+def test_validate_safe_path_null_byte():
+    with pytest.raises(HTTPException) as excinfo:
+        secure_path("video\x00.mp4")
+    assert excinfo.value.status_code == 400
+    assert excinfo.value.detail == "Invalid path provided."
+
+def test_analyze_null_byte():
+    response = client.post("/analyze", json={"video_path": "video\x00.mp4"})
+    assert response.status_code == 400
 def test_analyze_path_traversal():
     response = client.post("/analyze", json={"video_path": "../../secret.txt"})
     assert response.status_code == 400
