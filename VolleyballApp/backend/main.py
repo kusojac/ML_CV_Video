@@ -47,10 +47,12 @@ class UpdateActionRequest(BaseModel):
     new_start_ms: float
     new_end_ms: float
 
-def validate_safe_path(file_path: str) -> str:
+def secure_path(file_path: str) -> str:
     """Validates that the given path does not contain directory traversal characters."""
     if ".." in file_path:
-        raise HTTPException(status_code=400, detail="Directory traversal is not allowed")
+        raise HTTPException(status_code=400, detail="Invalid path provided.")
+    if "\x00" in file_path:
+        raise HTTPException(status_code=400, detail="Invalid path provided.")
     return file_path
 
 def get_json_path(video_path: str) -> str:
@@ -101,7 +103,7 @@ def process_video_task(job_id: str, video_path: str):
 
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
-    safe_video_path = validate_safe_path(request.video_path)
+    safe_video_path = secure_path(request.video_path)
     if not await asyncio.to_thread(os.path.exists, safe_video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
@@ -135,7 +137,7 @@ async def ping():
 
 @app.get("/results")
 def get_results(video_path: str):
-    video_path = validate_safe_path(video_path)
+    video_path = secure_path(video_path)
     json_path = get_json_path(video_path)
 
     with _file_lock:
@@ -158,7 +160,7 @@ def get_results(video_path: str):
 
 @app.post("/update_action")
 def update_action(req: UpdateActionRequest):
-    safe_video_path = validate_safe_path(req.video_path)
+    safe_video_path = secure_path(req.video_path)
     json_path = get_json_path(safe_video_path)
 
     with _file_lock:
