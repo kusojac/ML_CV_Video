@@ -8,11 +8,21 @@ import '../models/action_model.dart';
 import '../widgets/video_player_widget.dart';
 import '../widgets/action_sidebar.dart';
 import '../widgets/focus_player_widget.dart';
+import '../models/project_model.dart';
+import '../models/artifact_model.dart';
+import '../services/project_data_service.dart';
 
 class VideoAnalysisScreen extends StatefulWidget {
   final String videoPath;
   final AnalyticsService? analyticsService;
-  const VideoAnalysisScreen({super.key, required this.videoPath, this.analyticsService});
+  final String? projectId;
+
+  const VideoAnalysisScreen({
+    super.key, 
+    required this.videoPath, 
+    this.analyticsService,
+    this.projectId,
+  });
 
   @override
   State<VideoAnalysisScreen> createState() => _VideoAnalysisScreenState();
@@ -236,9 +246,22 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         _hasUnsavedChanges = false;
         _loadedFromPath = null;
       });
+
+      final fileName = widget.videoPath.split(Platform.pathSeparator).last;
+      final artifact = ArtifactModel(
+        type: ArtifactType.video,
+        title: '$fileName - Analiza',
+        description: 'Zapisana analiza wideo',
+        filePath: widget.videoPath,
+      );
+      await ProjectDataService().createArtifact(artifact);
+      if (widget.projectId != null) {
+        await ProjectDataService().linkArtifactToProject(widget.projectId!, artifact.id);
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Analiza zapisana obok wideo.'),
+          content: const Text('Analiza zapisana obok wideo i dodana do artefaktów.'),
           action: SnackBarAction(
             label: 'OK',
             onPressed: () {},
@@ -324,10 +347,25 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         videoPath: widget.videoPath,
         playlist: _playlist,
       );
+      
+      final path = AnalysisFileService.defaultPlaylistJsonPath(widget.videoPath);
+      final fileName = path.split(Platform.pathSeparator).last;
+      final artifact = ArtifactModel(
+        type: ArtifactType.playlist,
+        title: fileName,
+        description: 'Domyślna playlista',
+        filePath: path,
+        sourceVideoPath: widget.videoPath,
+      );
+      await ProjectDataService().createArtifact(artifact);
+      if (widget.projectId != null) {
+        await ProjectDataService().linkArtifactToProject(widget.projectId!, artifact.id);
+      }
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Playlista zapisana domyślnie.'),
+          content: Text('Playlista zapisana i dodana do artefaktów.'),
           backgroundColor: Color(0xFF1B5E20),
         ),
       );
@@ -345,10 +383,24 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         playlist: _playlist,
       );
       if (savedPath == null) return;
+      
+      final fileName = savedPath.split(Platform.pathSeparator).last;
+      final artifact = ArtifactModel(
+        type: ArtifactType.playlist,
+        title: fileName,
+        description: 'Zapisana playlista',
+        filePath: savedPath,
+        sourceVideoPath: widget.videoPath,
+      );
+      await ProjectDataService().createArtifact(artifact);
+      if (widget.projectId != null) {
+        await ProjectDataService().linkArtifactToProject(widget.projectId!, artifact.id);
+      }
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Zapisano playlistę: ${savedPath.split(Platform.pathSeparator).last}'),
+          content: Text('Zapisano playlistę: $fileName i dodano jako artefakt.'),
           backgroundColor: const Color(0xFF1B5E20),
         ),
       );

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:media_kit/media_kit.dart';
-import 'screens/project_list_screen.dart';
+import 'screens/home_screen.dart';
+import 'services/project_data_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
+  await ProjectDataService().init();
   runApp(const VolleyballApp());
 }
 
@@ -27,7 +29,7 @@ class VolleyballApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: const ProjectListScreen(),
+      home: const HomeScreen(),
     );
   }
 }
