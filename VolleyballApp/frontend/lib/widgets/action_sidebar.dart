@@ -211,7 +211,28 @@ class _ActionSidebarState extends State<ActionSidebar> {
               SingleChildScrollView(
                 controller: _scrollController,
                 padding: const EdgeInsets.only(top: 8, bottom: 20),
-                child: Column(
+                child: filteredActions.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 40.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.search_off, size: 48, color: Colors.white30),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Brak akcji',
+                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Zmień filtry lub dodaj nowe akcje.',
+                              style: TextStyle(color: Colors.white54, fontSize: 13),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      )
+                    : Column(
               children: filteredActions.map((action) {
                 final isSelected = widget.selectedAction?.id == action.id;
                 final key = _itemKeys.putIfAbsent(action.id, () => GlobalKey());
@@ -428,8 +449,31 @@ class _ActionSidebarState extends State<ActionSidebar> {
                       ],
                     ),
                   ),
-                Expanded(
-                  child: ReorderableListView.builder(
+                if ((widget.playlist?.length ?? 0) == 0)
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.playlist_play, size: 48, color: Colors.white30),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Pusta playlista',
+                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Zaznacz akcje z zakładki "Wszystkie"\nlub wczytaj zapisaną playlistę.',
+                            style: TextStyle(color: Colors.white54, fontSize: 13),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: ReorderableListView.builder(
                     itemCount: widget.playlist?.length ?? 0,
                     onReorder: (oldIndex, newIndex) {
                       if (oldIndex < newIndex) newIndex -= 1;
