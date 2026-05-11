@@ -13,12 +13,14 @@ class ProjectModel {
     String? id,
     required this.name,
     this.description = '',
-    this.tags = const [],
+    List<String>? tags,
     this.imagePath,
     DateTime? createdAt,
-    this.artifactIds = const [],
+    List<String>? artifactIds,
   })  : id = id ?? const Uuid().v4(),
-        createdAt = createdAt ?? DateTime.now();
+        createdAt = createdAt ?? DateTime.now(),
+        tags = tags ?? [],
+        artifactIds = artifactIds ?? [];
 
   factory ProjectModel.fromJson(Map<String, dynamic> json) {
     return ProjectModel(

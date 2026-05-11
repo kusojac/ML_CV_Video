@@ -24,13 +24,14 @@ class ArtifactModel {
     required this.type,
     required this.title,
     this.description = '',
-    this.tags = const [],
+    List<String>? tags,
     required this.filePath,
     this.thumbnailPath,
     DateTime? createdAt,
     this.sourceVideoPath,
   })  : id = id ?? const Uuid().v4(),
-        createdAt = createdAt ?? DateTime.now();
+        createdAt = createdAt ?? DateTime.now(),
+        tags = tags ?? [];
 
   factory ArtifactModel.fromJson(Map<String, dynamic> json) {
     return ArtifactModel(
