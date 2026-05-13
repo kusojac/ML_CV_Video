@@ -53,3 +53,8 @@
 **Vulnerability:** The `secure_path` function in `main.py` checked for directory traversal (`..`) but failed to check for null bytes (`\x00`). When a null byte was passed to file system operations (like `open`, `os.path.exists`, or `cv2.VideoCapture`), it caused a `ValueError('embedded null byte')`.
 **Learning:** Python's underlying C file system APIs reject strings containing null bytes. In a web API, if user input is not explicitly validated against `\x00`, this can lead to unhandled 500 Internal Server Errors, application crashes, or bypasses of file extension checks (e.g., `file.mp4\x00.exe`).
 **Prevention:** Always validate user-provided file paths against null bytes (`\x00`) in addition to directory traversal sequences, returning a 400 Bad Request to fail securely.
+
+## 2025-05-13 - Add Path Max Length Validation to Prevent DoS
+**Vulnerability:** The `/analyze`, `/results`, and `/update_action` endpoints accepted arbitrarily long strings for `video_path` and `action_id` without validation. Very long strings caused an unhandled `OSError` deeper in the call stack due to OS file name length limits, bypassing our structured HTTP 400 paths and crashing threads, representing a DoS vector.
+**Learning:** Pydantic `BaseModel` default `str` fields and FastAPI query string parameters do not enforce maximum lengths automatically. Large payloads are processed by the framework and event loop before custom logic.
+**Prevention:** Use `pydantic.Field(..., max_length=1000)` and `fastapi.Query(..., max_length=1000)` to enforce strict bounds on unbounded inputs at the framework level, guaranteeing a graceful 422 Unprocessable Entity response before processing.

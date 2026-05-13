@@ -10,9 +10,9 @@ import aiofiles
 import anyio
 from anyio import Path
 from typing import Dict, Any
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from engine import VolleyballAnalyticsEngine
 from config import ALLOWED_ORIGINS
 
@@ -38,12 +38,12 @@ MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
 engine = VolleyballAnalyticsEngine(models_dir=MODELS_DIR)
 
 class AnalyzeRequest(BaseModel):
-    video_path: str
+    video_path: str = Field(..., max_length=1000)
 
 class UpdateActionRequest(BaseModel):
-    video_path: str
-    action_id: str
-    new_type: str
+    video_path: str = Field(..., max_length=1000)
+    action_id: str = Field(..., max_length=100)
+    new_type: str = Field(..., max_length=100)
     new_start_ms: float
     new_end_ms: float
 
@@ -136,7 +136,7 @@ async def ping():
 
 
 @app.get("/results")
-def get_results(video_path: str):
+def get_results(video_path: str = Query(..., max_length=1000)):
     video_path = secure_path(video_path)
     json_path = get_json_path(video_path)
 
