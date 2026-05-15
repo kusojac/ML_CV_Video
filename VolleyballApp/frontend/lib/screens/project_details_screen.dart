@@ -188,9 +188,14 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     // Obecnie zakładamy, że VideoAnalysisScreen obsługuje główny wideo
     // Dla playlist / akcji powinniśmy przekazać context
     String videoToOpen = artifact.filePath;
+    String? playlistToOpen;
+
     if (artifact.type == ArtifactType.playlist || artifact.type == ArtifactType.action) {
       if (artifact.sourceVideoPath != null && artifact.sourceVideoPath!.isNotEmpty) {
          videoToOpen = artifact.sourceVideoPath!;
+      }
+      if (artifact.type == ArtifactType.playlist) {
+        playlistToOpen = artifact.filePath;
       }
     }
 
@@ -200,6 +205,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
         builder: (context) => VideoAnalysisScreen(
           videoPath: videoToOpen,
           projectId: widget.project.id,
+          initialPlaylistPath: playlistToOpen,
         ),
       ),
     ).then((_) => _loadArtifacts());
