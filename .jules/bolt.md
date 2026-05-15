@@ -52,3 +52,6 @@
 ## 2026-05-18 - Target Class ID Extraction in YOLO Post-processing
 **Learning:** Found an instance in `VolleyballApp/backend/frame_utilities.py` where `np.max(class_scores, axis=1)` and `np.argmax` were being calculated across all 80 COCO classes for 8400 anchor boxes, even though the application immediately filters for only class 0 (`coco_class_ids == 0`). This calculates maximums for irrelevant classes unnecessarily.
 **Action:** When filtering a model output for a single specific target class, skip `np.max` across classes and instead directly extract the scores column for the target class (`class_scores[:, target_class_id]`). This drastically reduces the arrays processed, avoiding max calculations completely.
+## 2024-06-25 - In-place Array Operations for Preprocessing
+**Learning:** In hot loops like per-frame YOLO preprocessing, operations like `img_scaled = img_resized.astype(np.float32) / 255.0` are a hidden bottleneck. They perform out-of-place division, which allocates a completely new NumPy array, doubling memory allocation and slowing down the process.
+**Action:** Always use in-place operations after casting when normalizing or modifying arrays in hot loops (e.g., `img_scaled = img_resized.astype(np.float32); img_scaled /= 255.0`). This avoids allocating a new array for the result and provides a massive speedup.
