@@ -5,6 +5,7 @@ import '../models/project_model.dart';
 import '../models/artifact_model.dart';
 import '../services/project_data_service.dart';
 import 'video_analysis_screen.dart';
+import 'artifact_edit_screen.dart';
 
 class ProjectDetailsScreen extends StatefulWidget {
   final ProjectModel project;
@@ -180,6 +181,19 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     if (confirm == true) {
       await _dataService.unlinkArtifactFromProject(widget.project.id, artifact.id);
       _loadArtifacts();
+    }
+  }
+
+  Future<void> _editArtifact(ArtifactModel artifact) async {
+    final updatedArtifact = await Navigator.push<ArtifactModel?>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ArtifactEditScreen(artifact: artifact),
+      ),
+    );
+
+    if (updatedArtifact != null) {
+      _loadArtifacts(); // Odśwież widok po powrocie
     }
   }
 
@@ -391,16 +405,35 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                   Positioned(
                     top: 8,
                     left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: _getColorForArtifact(artifact.type),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        artifact.type.name.toUpperCase(),
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _getColorForArtifact(artifact.type),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            artifact.type.name.toUpperCase(),
+                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                        ),
+                        if (artifact.videoCategory != null) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: artifact.videoCategory == 'Mecz' ? Colors.redAccent : Colors.teal,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              artifact.videoCategory!.toUpperCase(),
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                   Positioned(
@@ -408,11 +441,17 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                     right: 0,
                     child: PopupMenuButton<String>(
                       onSelected: (value) {
-                        if (value == 'unlink') {
+                        if (value == 'edit') {
+                          _editArtifact(artifact);
+                        } else if (value == 'unlink') {
                           _unlinkArtifact(artifact);
                         }
                       },
                       itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Text('Edytuj szczegóły'),
+                        ),
                         const PopupMenuItem(
                           value: 'unlink',
                           child: Text('Odłącz od projektu'),

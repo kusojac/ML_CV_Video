@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import 'team_metadata.dart';
 
 enum ArtifactType {
   video,
@@ -19,6 +20,11 @@ class ArtifactModel {
   // W przypadku typu "action" lub "playlist", wskazanie na plik wideo bazowy
   String? sourceVideoPath; 
 
+  // Dodatkowe metadane dla wideo (mecz, trening)
+  String? videoCategory; // np. 'Mecz', 'Trening'
+  TeamMetadata? teamA;
+  TeamMetadata? teamB;
+
   ArtifactModel({
     String? id,
     required this.type,
@@ -29,6 +35,9 @@ class ArtifactModel {
     this.thumbnailPath,
     DateTime? createdAt,
     this.sourceVideoPath,
+    this.videoCategory,
+    this.teamA,
+    this.teamB,
   })  : id = id ?? const Uuid().v4(),
         createdAt = createdAt ?? DateTime.now(),
         tags = tags ?? [];
@@ -49,6 +58,9 @@ class ArtifactModel {
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
       sourceVideoPath: json['sourceVideoPath'],
+      videoCategory: json['videoCategory'],
+      teamA: json['teamA'] != null ? TeamMetadata.fromJson(json['teamA']) : null,
+      teamB: json['teamB'] != null ? TeamMetadata.fromJson(json['teamB']) : null,
     );
   }
 
@@ -63,6 +75,9 @@ class ArtifactModel {
       'thumbnailPath': thumbnailPath,
       'createdAt': createdAt.toIso8601String(),
       'sourceVideoPath': sourceVideoPath,
+      'videoCategory': videoCategory,
+      'teamA': teamA?.toJson(),
+      'teamB': teamB?.toJson(),
     };
   }
 }
