@@ -6,7 +6,6 @@ import asyncio
 import os
 import uuid
 import threading
-import aiofiles
 import anyio
 from anyio import Path
 from typing import Dict, Any
