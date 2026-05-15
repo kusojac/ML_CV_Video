@@ -15,12 +15,14 @@ class VideoAnalysisScreen extends StatefulWidget {
   final String videoPath;
   final AnalyticsService? analyticsService;
   final String? projectId;
+  final String? initialPlaylistPath;
 
   const VideoAnalysisScreen({
     super.key, 
     required this.videoPath, 
     this.analyticsService,
     this.projectId,
+    this.initialPlaylistPath,
   });
 
   @override
@@ -78,7 +80,35 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     super.initState();
     _analyticsService = widget.analyticsService ?? AnalyticsService();
     // Check existing analysis in background
-    Future.microtask(() => _checkExistingAnalysis());
+    Future.microtask(() {
+      _checkExistingAnalysis();
+      if (widget.initialPlaylistPath != null) {
+        _loadInitialPlaylist(widget.initialPlaylistPath!);
+      }
+    });
+  }
+
+  Future<void> _loadInitialPlaylist(String path) async {
+    try {
+      final result = await AnalysisFileService.loadPlaylistFromPath(path);
+      if (result == null) return;
+      if (!mounted) return;
+      setState(() {
+        _playlist = result;
+        _isPlayingPlaylist = false;
+        _currentPlaylistIndex = 0;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Wczytano playlistę (${result.length} akcji)'),
+          backgroundColor: const Color(0xFF0D47A1),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd odczytu playlisty: $e')));
+      }
+    }
   }
 
   void _onPositionChanged(Duration pos) {
