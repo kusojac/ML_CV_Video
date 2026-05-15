@@ -52,3 +52,7 @@
 ## 2026-05-18 - Target Class ID Extraction in YOLO Post-processing
 **Learning:** Found an instance in `VolleyballApp/backend/frame_utilities.py` where `np.max(class_scores, axis=1)` and `np.argmax` were being calculated across all 80 COCO classes for 8400 anchor boxes, even though the application immediately filters for only class 0 (`coco_class_ids == 0`). This calculates maximums for irrelevant classes unnecessarily.
 **Action:** When filtering a model output for a single specific target class, skip `np.max` across classes and instead directly extract the scores column for the target class (`class_scores[:, target_class_id]`). This drastically reduces the arrays processed, avoiding max calculations completely.
+
+## 2024-05-12 - FastAPI Large Payload Serialization Bottleneck
+**Learning:** Returning large dictionaries directly from FastAPI endpoints triggers default Pydantic/Starlette JSON serialization. For large payloads (e.g., 500k objects), this serialization is incredibly slow (~4.5s) compared to Python's standard `json.dumps()` (~0.4s). Furthermore, when returning from a synchronous `def` endpoint, even though it runs in a threadpool, the default serialization occurs *after* the function returns, causing significant latency and potentially blocking worker threads unnecessarily.
+**Action:** When returning large JSON-serializable payloads in FastAPI, bypass the default serialization by manually serializing the data with `json.dumps()` and explicitly returning a `fastapi.Response(content=json_str, media_type="application/json")`.
