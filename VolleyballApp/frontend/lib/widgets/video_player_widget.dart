@@ -134,6 +134,42 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(VideoPlayerWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedAction?.id != oldWidget.selectedAction?.id && widget.selectedAction != null) {
+      if (_zoomLevel > 1.0) {
+        _scrollToSelectedAction();
+      }
+    }
+  }
+
+  void _scrollToSelectedAction() {
+    if (!mounted || !_timelineScrollController.hasClients) return;
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_timelineScrollController.hasClients) return;
+      
+      final totalMs = _totalDuration.inMilliseconds.toDouble();
+      if (totalMs <= 0) return;
+
+      final maxScroll = _timelineScrollController.position.maxScrollExtent;
+      if (maxScroll <= 0) return;
+      
+      final viewport = _timelineScrollController.position.viewportDimension;
+      final timelineWidth = maxScroll + viewport;
+      
+      final startFrac = widget.selectedAction!.startMs / totalMs;
+      final targetScroll = (startFrac * timelineWidth) - (viewport / 2);
+      
+      _timelineScrollController.animateTo(
+        targetScroll.clamp(0.0, maxScroll),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
   void _seekToMs(double ms) =>
       _player.seek(Duration(milliseconds: ms.round()));
 

@@ -32,7 +32,11 @@ def preprocess_yolo_input(image_rgb, input_size=(640, 640)):
     # Benchmarking in this environment shows that manual NumPy operations are surprisingly
     # ~30% faster than cv2.dnn.blobFromImage for this specific workflow.
     img_resized = cv2.resize(image_rgb, input_size)
-    img_scaled = img_resized.astype(np.float32) / 255.0
+
+    # ⚡ Bolt Optimization: Use in-place scaling to prevent memory reallocation
+    img_scaled = img_resized.astype(np.float32)
+    img_scaled /= 255.0
+
     img_transposed = np.transpose(img_scaled, (2, 0, 1))
     return np.expand_dims(img_transposed, axis=0)
 
