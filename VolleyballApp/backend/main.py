@@ -10,7 +10,7 @@ import aiofiles
 import anyio
 from anyio import Path
 from typing import Dict, Any
-from fastapi import FastAPI, BackgroundTasks, HTTPException, Path as FastApiPath, Query
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Path as APIPath
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from engine import VolleyballAnalyticsEngine
@@ -38,10 +38,10 @@ MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
 engine = VolleyballAnalyticsEngine(models_dir=MODELS_DIR)
 
 class AnalyzeRequest(BaseModel):
-    video_path: str = Field(..., max_length=1000)
+    video_path: str = Field(..., max_length=2048)
 
 class UpdateActionRequest(BaseModel):
-    video_path: str = Field(..., max_length=1000)
+    video_path: str = Field(..., max_length=2048)
     action_id: str = Field(..., max_length=100)
     new_type: str = Field(..., max_length=100)
     new_start_ms: float
@@ -124,7 +124,7 @@ async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTas
 
 
 @app.get("/job/{job_id}")
-async def get_job_status(job_id: str = FastApiPath(..., max_length=100)):
+async def get_job_status(job_id: str = APIPath(..., max_length=100)):
     if job_id not in analysis_jobs:
         raise HTTPException(status_code=404, detail="Job not found")
     return analysis_jobs[job_id]
@@ -136,7 +136,7 @@ async def ping():
 
 
 @app.get("/results")
-def get_results(video_path: str = Query(..., max_length=1000)):
+def get_results(video_path: str = Query(..., max_length=2048)):
     video_path = secure_path(video_path)
     json_path = get_json_path(video_path)
 
