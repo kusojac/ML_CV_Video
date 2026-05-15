@@ -2,7 +2,6 @@ import asyncio
 import time
 import httpx
 import json
-import threading
 
 # Create a large dummy json
 dummy_json = {"actions": []}
