@@ -1,5 +1,3 @@
-import pytest
-import sys
 from unittest import mock
 from fastapi.testclient import TestClient
 

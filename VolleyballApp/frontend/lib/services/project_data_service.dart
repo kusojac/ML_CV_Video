@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:flutter/foundation.dart';
 import '../models/project_model.dart';
 import '../models/artifact_model.dart';
 
@@ -59,7 +60,7 @@ class ProjectDataService {
         _artifacts = jsonList.map((json) => ArtifactModel.fromJson(json)).toList();
       }
     } catch (e) {
-      print('Błąd ładowania danych projektów: \$e');
+      debugPrint('Błąd ładowania danych projektów: $e');
     }
   }
 
@@ -73,7 +74,7 @@ class ProjectDataService {
       final String aContents = jsonEncode(_artifacts.map((a) => a.toJson()).toList());
       await aFile.writeAsString(aContents);
     } catch (e) {
-      print('Błąd zapisu danych projektów: \$e');
+      debugPrint('Błąd zapisu danych projektów: $e');
     }
   }
 

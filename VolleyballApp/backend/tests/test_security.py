@@ -28,3 +28,13 @@ def test_absolute_path_allowed():
     # Should not return 400, but 404 because file doesn't exist
     response = client.post("/analyze", json={"video_path": "/var/log/syslog"})
     assert response.status_code == 404
+
+def test_analyze_dos():
+    long_path = "a" * 5000
+    response = client.post("/analyze", json={"video_path": long_path})
+    assert response.status_code == 422 # Unprocessable Entity
+
+def test_results_dos():
+    long_path = "a" * 5000
+    response = client.get(f"/results?video_path={long_path}")
+    assert response.status_code == 422 # Unprocessable Entity
