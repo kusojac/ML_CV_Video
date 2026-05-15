@@ -183,6 +183,74 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     }
   }
 
+  Future<void> _editProjectDetailsDialog() async {
+    final nameController = TextEditingController(text: widget.project.name);
+    final descController = TextEditingController(text: widget.project.description);
+    final tagsController = TextEditingController(text: widget.project.tags.join(', '));
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edytuj Projekt'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Nazwa projektu'),
+                ),
+                TextField(
+                  controller: descController,
+                  decoration: const InputDecoration(labelText: 'Krótki opis'),
+                  maxLines: 3,
+                ),
+                TextField(
+                  controller: tagsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Tagi (oddzielone przecinkami)',
+                    hintText: 'np. JanKowalski, trening, przyjęcie',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Anuluj'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.trim().isNotEmpty) {
+                  Navigator.pop(context, true);
+                }
+              },
+              child: const Text('Zapisz'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true) {
+      final tags = tagsController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+
+      setState(() {
+        widget.project.name = nameController.text.trim();
+        widget.project.description = descController.text.trim();
+        widget.project.tags = tags;
+      });
+
+      await _dataService.updateProject(widget.project);
+    }
+  }
+
   void _openArtifact(ArtifactModel artifact) {
     // W zależności od typu, otwieramy ekran z odpowiednim widokiem
     // Obecnie zakładamy, że VideoAnalysisScreen obsługuje główny wideo
@@ -217,6 +285,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       appBar: AppBar(
         title: Text(widget.project.name),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: _editProjectDetailsDialog,
+            tooltip: 'Edytuj projekt',
+          ),
           IconButton(
             icon: const Icon(Icons.link),
             onPressed: _linkExistingArtifactDialog,
