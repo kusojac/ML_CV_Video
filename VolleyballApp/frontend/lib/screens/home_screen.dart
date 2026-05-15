@@ -122,6 +122,75 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _editProjectDialog(ProjectModel project) async {
+    final nameController = TextEditingController(text: project.name);
+    final descController = TextEditingController(text: project.description);
+    final tagsController = TextEditingController(text: project.tags.join(', '));
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edytuj Projekt'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Nazwa projektu'),
+                ),
+                TextField(
+                  controller: descController,
+                  decoration: const InputDecoration(labelText: 'Krótki opis'),
+                  maxLines: 3,
+                ),
+                TextField(
+                  controller: tagsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Tagi (oddzielone przecinkami)',
+                    hintText: 'np. JanKowalski, trening, przyjęcie',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Anuluj'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.trim().isNotEmpty) {
+                  Navigator.pop(context, true);
+                }
+              },
+              child: const Text('Zapisz'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true) {
+      final tags = tagsController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+
+      setState(() {
+        project.name = nameController.text.trim();
+        project.description = descController.text.trim();
+        project.tags = tags;
+      });
+
+      await _dataService.updateProject(project);
+      _filterProjects();
+    }
+  }
+
   Future<void> _deleteProject(ProjectModel project) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -281,10 +350,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.redAccent),
-                      tooltip: 'Usuń projekt',
-                      onPressed: () => _deleteProject(project),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.blueAccent),
+                          tooltip: 'Edytuj projekt',
+                          onPressed: () => _editProjectDialog(project),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.redAccent),
+                          tooltip: 'Usuń projekt',
+                          onPressed: () => _deleteProject(project),
+                        ),
+                      ],
                     ),
                   ),
                 ],
