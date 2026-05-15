@@ -54,6 +54,10 @@
 **Learning:** Python's underlying C file system APIs reject strings containing null bytes. In a web API, if user input is not explicitly validated against `\x00`, this can lead to unhandled 500 Internal Server Errors, application crashes, or bypasses of file extension checks (e.g., `file.mp4\x00.exe`).
 **Prevention:** Always validate user-provided file paths against null bytes (`\x00`) in addition to directory traversal sequences, returning a 400 Bad Request to fail securely.
 
+## 2026-05-12 - Insecure Deserialization via pickle in Conversion Scripts
+**Vulnerability:** The model conversion script (`convert.py`) used `pickle.load` directly to load the `model.p` file. This exposes the developer environment/build pipeline to Remote Code Execution (RCE) via insecure deserialization, as a malicious actor could replace the input `.p` file.
+**Learning:** Even one-off conversion scripts that process `.p` or `.pkl` files are vulnerable if they blindly trust the payload. The risk isn't just in production APIs but also in ML engineering pipelines.
+**Prevention:** For model conversion scripts where `pickle` input is unavoidable, mitigate Remote Code Execution (RCE) risks by implementing a `RestrictedUnpickler` that overrides `find_class` to strictly whitelist only essential scikit-learn/numpy namespaces and safe primitive built-in types (e.g., `dict`, `list`, `int`). Explicitly avoid whitelisting entire modules like `builtins` or dangerous functions like `eval` and `getattr`.
 ## 2025-05-13 - Add Path Max Length Validation to Prevent DoS
 **Vulnerability:** The `/analyze`, `/results`, and `/update_action` endpoints accepted arbitrarily long strings for `video_path` and `action_id` without validation. Very long strings caused an unhandled `OSError` deeper in the call stack due to OS file name length limits, bypassing our structured HTTP 400 paths and crashing threads, representing a DoS vector.
 **Learning:** Pydantic `BaseModel` default `str` fields and FastAPI query string parameters do not enforce maximum lengths automatically. Large payloads are processed by the framework and event loop before custom logic.
