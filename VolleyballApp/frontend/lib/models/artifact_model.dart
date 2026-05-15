@@ -59,8 +59,8 @@ class ArtifactModel {
           : DateTime.now(),
       sourceVideoPath: json['sourceVideoPath'],
       videoCategory: json['videoCategory'],
-      teamA: json['teamA'] != null ? TeamMetadata.fromJson(json['teamA']) : null,
-      teamB: json['teamB'] != null ? TeamMetadata.fromJson(json['teamB']) : null,
+      teamA: json['teamA'] != null ? TeamMetadata.fromJson(json['teamA'] as Map<String, dynamic>) : null,
+      teamB: json['teamB'] != null ? TeamMetadata.fromJson(json['teamB'] as Map<String, dynamic>) : null,
     );
   }
 

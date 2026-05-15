@@ -39,7 +39,7 @@ class TeamMetadata {
     var playersJson = json['players'] as List? ?? [];
     return TeamMetadata(
       name: json['name'] ?? '',
-      players: playersJson.map((p) => PlayerMetadata.fromJson(p)).toList(),
+      players: playersJson.map((p) => PlayerMetadata.fromJson(p as Map<String, dynamic>)).toList(),
     );
   }
 
