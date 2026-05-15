@@ -12,3 +12,6 @@
 ## 2026-05-12 - Missing tooltips on IconButtons
 **Learning:** Icon-only interactive elements like `IconButton` require a `tooltip` property in Flutter to provide context for screen readers and show hover text, otherwise they are inaccessible and lack clear intent.
 **Action:** Always provide a `tooltip` property for icon-only `IconButton` widgets to ensure accessibility and improve UX.
+## 2024-05-13 - Enhance Empty States and Tooltips
+**Learning:** Replaced plain text empty state in `home_screen.dart` with a structured empty state including an icon, title, and clear instructions. Added `tooltip` to the delete button in the project tile to ensure screen reader users understand the action. This aligns with our existing Palette guidelines.
+**Action:** Consistently apply these UX and accessibility improvements across the app's components to ensure a cohesive and user-friendly experience.

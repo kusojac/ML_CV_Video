@@ -8,7 +8,6 @@ import '../models/action_model.dart';
 import '../widgets/video_player_widget.dart';
 import '../widgets/action_sidebar.dart';
 import '../widgets/focus_player_widget.dart';
-import '../models/project_model.dart';
 import '../models/artifact_model.dart';
 import '../services/project_data_service.dart';
 
@@ -16,12 +15,14 @@ class VideoAnalysisScreen extends StatefulWidget {
   final String videoPath;
   final AnalyticsService? analyticsService;
   final String? projectId;
+  final String? initialPlaylistPath;
 
   const VideoAnalysisScreen({
     super.key, 
     required this.videoPath, 
     this.analyticsService,
     this.projectId,
+    this.initialPlaylistPath,
   });
 
   @override
@@ -79,7 +80,35 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     super.initState();
     _analyticsService = widget.analyticsService ?? AnalyticsService();
     // Check existing analysis in background
-    Future.microtask(() => _checkExistingAnalysis());
+    Future.microtask(() {
+      _checkExistingAnalysis();
+      if (widget.initialPlaylistPath != null) {
+        _loadInitialPlaylist(widget.initialPlaylistPath!);
+      }
+    });
+  }
+
+  Future<void> _loadInitialPlaylist(String path) async {
+    try {
+      final result = await AnalysisFileService.loadPlaylistFromPath(path);
+      if (result == null) return;
+      if (!mounted) return;
+      setState(() {
+        _playlist = result;
+        _isPlayingPlaylist = false;
+        _currentPlaylistIndex = 0;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Wczytano playlistę (${result.length} akcji)'),
+          backgroundColor: const Color(0xFF0D47A1),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd odczytu playlisty: $e')));
+      }
+    }
   }
 
   void _onPositionChanged(Duration pos) {
@@ -259,6 +288,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         await ProjectDataService().linkArtifactToProject(widget.projectId!, artifact.id);
       }
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Analiza zapisana obok wideo i dodana do artefaktów.'),
@@ -829,6 +859,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               onSavePlaylistAs: _savePlaylistAs,
               onLoadPlaylist: _loadPlaylist,
               onActionAdded: _onActionAdded,
+              initialTabIndex: widget.initialPlaylistPath != null ? 1 : 0,
               onActionDeleted: (action) {
                 setState(() {
                   _actions.removeWhere((a) => a.id == action.id);

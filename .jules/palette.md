@@ -8,3 +8,7 @@
 ## 2024-05-11 - Visually Structured Empty States
 **Learning:** Leaving blank spaces for empty lists (like an empty Column or ReorderableListView) looks like a bug and leaves users confused about the current state or next steps.
 **Action:** Always provide a visually structured empty state using a clear Icon, a bold title explaining the state, and a subtle subtitle offering guidance or a call-to-action when lists or dynamic content areas are empty.
+
+## 2024-05-13 - Enhance Empty States and Tooltips
+**Learning:** Replaced plain text empty state in `home_screen.dart` with a structured empty state including an icon, title, and clear instructions. Added `tooltip` to the delete button in the project tile to ensure screen reader users understand the action. This aligns with our existing Palette guidelines.
+**Action:** Consistently apply these UX and accessibility improvements across the app's components to ensure a cohesive and user-friendly experience.
