@@ -56,3 +56,6 @@
 ## 2024-05-14 - In-place Numpy Operations for Image Scaling
 **Learning:** Using out-of-place numpy division (`array / 255.0`) on large image arrays allocates an entirely new array in memory, causing significant allocation overhead in high-frequency loops (like per-frame video processing). Profiling showed that switching to in-place operations (`array /= 255.0`) after casting to float32 reduces the operation time by over 500% (from ~3s to ~0.5s for 1000 frames).
 **Action:** When scaling or normalizing large numpy arrays, allocate the destination array once (e.g. `img_scaled = img.astype(np.float32)`) and then use in-place operations (e.g. `img_scaled /= 255.0`) to avoid redundant memory allocations.
+## 2024-06-25 - In-place Array Operations for Preprocessing
+**Learning:** In hot loops like per-frame YOLO preprocessing, operations like `img_scaled = img_resized.astype(np.float32) / 255.0` are a hidden bottleneck. They perform out-of-place division, which allocates a completely new NumPy array, doubling memory allocation and slowing down the process.
+**Action:** Always use in-place operations after casting when normalizing or modifying arrays in hot loops (e.g., `img_scaled = img_resized.astype(np.float32); img_scaled /= 255.0`). This avoids allocating a new array for the result and provides a massive speedup.

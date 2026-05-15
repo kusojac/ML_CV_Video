@@ -8,7 +8,6 @@ import '../models/action_model.dart';
 import '../widgets/video_player_widget.dart';
 import '../widgets/action_sidebar.dart';
 import '../widgets/focus_player_widget.dart';
-import '../models/project_model.dart';
 import '../models/artifact_model.dart';
 import '../services/project_data_service.dart';
 
@@ -259,6 +258,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         await ProjectDataService().linkArtifactToProject(widget.projectId!, artifact.id);
       }
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Analiza zapisana obok wideo i dodana do artefaktów.'),

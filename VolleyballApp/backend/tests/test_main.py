@@ -129,3 +129,43 @@ def test_invalid_json_handling_update_action(tmp_path):
         })
         assert response.status_code == 500
         assert response.json() == {"detail": "Invalid JSON format in analysis results."}
+
+def test_max_length_validation_analyze_request():
+    response = client.post("/analyze", json={"video_path": "a" * 2049})
+    assert response.status_code == 422
+
+def test_max_length_validation_update_action_request():
+    response = client.post("/update_action", json={
+        "video_path": "a" * 2049,
+        "action_id": "123",
+        "new_type": "Serve",
+        "new_start_ms": 1.0,
+        "new_end_ms": 2.0
+    })
+    assert response.status_code == 422
+
+    response = client.post("/update_action", json={
+        "video_path": "a.mp4",
+        "action_id": "a" * 101,
+        "new_type": "Serve",
+        "new_start_ms": 1.0,
+        "new_end_ms": 2.0
+    })
+    assert response.status_code == 422
+
+    response = client.post("/update_action", json={
+        "video_path": "a.mp4",
+        "action_id": "123",
+        "new_type": "a" * 101,
+        "new_start_ms": 1.0,
+        "new_end_ms": 2.0
+    })
+    assert response.status_code == 422
+
+def test_max_length_validation_job_id():
+    response = client.get(f"/job/{'a' * 101}")
+    assert response.status_code == 422
+
+def test_max_length_validation_get_results():
+    response = client.get(f"/results?video_path={'a' * 2049}")
+    assert response.status_code == 422
