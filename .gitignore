@@ -20,4 +20,5 @@ VolleyballApp/backend/venv
 **/__pycache__/
 **/.venv/
 **/.pytest_cache/
+venv/
 MLCV test_playlist.json

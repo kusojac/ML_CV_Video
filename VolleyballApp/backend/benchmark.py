@@ -42,12 +42,12 @@ async def run_benchmark():
             return time.time() - start
 
         # Fix benchmark logic based on review
-        update_task = asyncio.create_task(update())
-        await asyncio.sleep(0.01)
-
         ping_tasks = [asyncio.create_task(ping()) for _ in range(10)]
-        ping_times = await asyncio.gather(*ping_tasks)
-        update_time = await update_task
+        update_task = asyncio.create_task(update())
+
+        all_results = await asyncio.gather(update_task, *ping_tasks)
+        update_time = all_results[0]
+        ping_times = all_results[1:]
 
         print(f"Update time: {update_time:.3f}s")
         print(f"Average ping time during update: {sum(ping_times)/len(ping_times):.3f}s")
