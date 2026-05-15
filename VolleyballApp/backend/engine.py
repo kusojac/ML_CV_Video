@@ -192,16 +192,7 @@ class VolleyballAnalyticsEngine:
         cap.release()
         
         # Flush the last action if any
-        if current_action_type != "NONE" and current_action_start is not None:
-            results.append({
-                "id": f"action_{len(results)}",
-                "type": current_action_type,
-                "start_ms": current_action_start,
-                "end_ms": (frame_idx / fps) * 1000.0,
-                "player_box": [float(x) for x in current_action_boxes[len(current_action_boxes)//2]],
-                "player_id": "Unknown",
-                "confidence": 0.8
-            })
+        self._append_action(results, current_action_type, current_action_start, (frame_idx / fps) * 1000.0, current_action_boxes)
 
         return {
             "total_frames": total_frames,
