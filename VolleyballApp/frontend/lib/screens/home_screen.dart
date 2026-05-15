@@ -194,6 +194,31 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Expanded(
             child: _filteredProjects.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.folder_open,
+                          size: 64,
+                          color: Colors.white30,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Brak projektów',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Dodaj nowy projekt, aby rozpocząć pracę.',
+                          style: TextStyle(color: Colors.white54),
+                        ),
+                      ],
+                    ),
                 ? const Center(
                     child: Text('Brak projektów. Dodaj nowy projekt.'),
                   )
@@ -260,6 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     right: 8,
                     child: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.redAccent),
+                      tooltip: 'Usuń projekt',
                       onPressed: () => _deleteProject(project),
                     ),
                   ),

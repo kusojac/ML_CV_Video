@@ -859,6 +859,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               onSavePlaylistAs: _savePlaylistAs,
               onLoadPlaylist: _loadPlaylist,
               onActionAdded: _onActionAdded,
+              initialTabIndex: widget.initialPlaylistPath != null ? 1 : 0,
               onActionDeleted: (action) {
                 setState(() {
                   _actions.removeWhere((a) => a.id == action.id);
