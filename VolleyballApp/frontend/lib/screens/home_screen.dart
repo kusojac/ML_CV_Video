@@ -219,8 +219,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-                ? const Center(
-                    child: Text('Brak projektów. Dodaj nowy projekt.'),
                   )
                 : GridView.builder(
                     padding: const EdgeInsets.all(16),
