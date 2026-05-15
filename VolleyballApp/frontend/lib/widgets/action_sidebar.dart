@@ -26,6 +26,7 @@ class ActionSidebar extends StatefulWidget {
   final VoidCallback? onLoadPlaylist;
   final ValueChanged<ActionModel>? onActionDeleted;
   final VoidCallback? onActionAdded;
+  final int initialTabIndex;
 
   const ActionSidebar({
     super.key,
@@ -52,6 +53,7 @@ class ActionSidebar extends StatefulWidget {
     this.onLoadPlaylist,
     this.onActionDeleted,
     this.onActionAdded,
+    this.initialTabIndex = 0,
   });
 
   @override
@@ -104,6 +106,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
 
     return DefaultTabController(
       length: 2,
+      initialIndex: widget.initialTabIndex,
       child: Column(
         children: [
         Container(
