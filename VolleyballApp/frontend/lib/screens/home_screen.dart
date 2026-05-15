@@ -282,7 +282,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     top: 8,
                     right: 8,
                     child: IconButton(
-                      tooltip: 'Usuń projekt',
                       icon: const Icon(Icons.delete, color: Colors.redAccent),
                       tooltip: 'Usuń projekt',
                       onPressed: () => _deleteProject(project),
