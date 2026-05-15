@@ -3,7 +3,7 @@ import os
 import onnxruntime
 import mediapipe as mp
 import numpy as np
-from frame_utilities import preprocess_yolo_input, postprocess_yolo_output, get_distance_person_ball_np, pad_frame_to_square
+from frame_utilities import preprocess_yolo_input, postprocess_yolo_output, pad_frame_to_square
 
 class VolleyballAnalyticsEngine:
     def __init__(self, models_dir):
