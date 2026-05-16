@@ -67,3 +67,8 @@
 **Vulnerability:** The FastAPI endpoints endpoints (`/analyze`, `/results`, `/update_action`, `/job/{job_id}`) accepted arbitrary string inputs (e.g. `video_path`, `action_id`) through Pydantic models and query/path parameters without any `max_length` bounds. An attacker could exploit this by sending requests with exceptionally large strings, forcing the backend to allocate large amounts of memory and crash due to memory exhaustion (Denial of Service).
 **Learning:** By default, Pydantic `str` types and FastAPI string parameters have unbounded lengths. This poses a silent DoS risk in API boundaries parsing unbounded incoming JSON and URL requests.
 **Prevention:** Always enforce strict `max_length` constraints on string inputs using `pydantic.Field` for model attributes and `fastapi.Query`/`fastapi.Path` for route parameters to limit memory allocation.
+
+## 2026-05-15 - Missing Security Headers in FastAPI Response
+**Vulnerability:** The FastAPI backend did not include standard security headers in its HTTP responses. This leaves API endpoints vulnerable to several web-based attacks (e.g., MIME sniffing, clickjacking, XSS), which reduces defense-in-depth even for local desktop or basic APIs.
+**Learning:** Default framework configurations (like bare FastAPI) do not typically add fundamental security headers automatically. Relying solely on CORS middleware leaves gaps in defense-in-depth protection for other common browser-based attack vectors.
+**Prevention:** Implement a global middleware that automatically injects fundamental security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security`, and `X-XSS-Protection`) to enforce defense-in-depth across all endpoints.
