@@ -376,58 +376,65 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
             ),
           ),
           // Pasek filtrowania i sortowania artefaktów
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
+          Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              title: const Text('Wyszukaj i sortuj artefakty'),
+              leading: const Icon(Icons.filter_list),
+              childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               children: [
-                Expanded(
-                  flex: 2,
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Filtruj artefakty...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Filtruj artefakty...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFF2A2A2A),
+                        ),
                       ),
-                      filled: true,
-                      fillColor: const Color(0xFF2A2A2A),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2A2A2A),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _sortOption,
-                      icon: const Icon(Icons.sort, color: Colors.white70),
-                      dropdownColor: const Color(0xFF2E2E2E),
-                      style: const TextStyle(color: Colors.white),
-                      items: const [
-                        DropdownMenuItem(value: 'date_desc', child: Text('Najnowsze')),
-                        DropdownMenuItem(value: 'date_asc', child: Text('Najstarsze')),
-                        DropdownMenuItem(value: 'title_asc', child: Text('Nazwa (A-Z)')),
-                        DropdownMenuItem(value: 'title_desc', child: Text('Nazwa (Z-A)')),
-                        DropdownMenuItem(value: 'type', child: Text('Typ artefaktu')),
-                        DropdownMenuItem(value: 'category', child: Text('Kategoria')),
-                        DropdownMenuItem(value: 'team', child: Text('Drużyna')),
-                      ],
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() {
-                            _sortOption = val;
-                            _filterArtifacts();
-                          });
-                        }
-                      },
+                    const SizedBox(width: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A2A2A),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _sortOption,
+                          icon: const Icon(Icons.sort, color: Colors.white70),
+                          dropdownColor: const Color(0xFF2E2E2E),
+                          style: const TextStyle(color: Colors.white),
+                          items: const [
+                            DropdownMenuItem(value: 'date_desc', child: Text('Najnowsze')),
+                            DropdownMenuItem(value: 'date_asc', child: Text('Najstarsze')),
+                            DropdownMenuItem(value: 'title_asc', child: Text('Nazwa (A-Z)')),
+                            DropdownMenuItem(value: 'title_desc', child: Text('Nazwa (Z-A)')),
+                            DropdownMenuItem(value: 'type', child: Text('Typ artefaktu')),
+                            DropdownMenuItem(value: 'category', child: Text('Kategoria')),
+                            DropdownMenuItem(value: 'team', child: Text('Drużyna')),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                _sortOption = val;
+                                _filterArtifacts();
+                              });
+                            }
+                          },
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),

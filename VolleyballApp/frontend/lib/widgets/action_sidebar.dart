@@ -183,69 +183,81 @@ class _ActionSidebarState extends State<ActionSidebar> {
                     ],
                   ),
                 ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: actionTypes.contains(widget.filterType) ? widget.filterType : 'All',
-                dropdownColor: const Color(0xFF2E2E2E),
-                decoration: const InputDecoration(
-                  labelText: 'Filter by Action',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-                style: const TextStyle(color: Colors.white),
-                items: ['All', ...actionTypes.toList()..sort()]
-                    .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                onChanged: (v) {
-                  widget.onFilterTypeChanged(v ?? 'All');
-                },
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: playerIds.contains(widget.filterPlayer) ? widget.filterPlayer : 'All',
-                dropdownColor: const Color(0xFF2E2E2E),
-                decoration: const InputDecoration(
-                  labelText: 'Filter by Player #',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-                style: const TextStyle(color: Colors.white),
-                items: ['All', ...playerIds.toList()..sort()]
-                    .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                onChanged: (v) {
-                  widget.onFilterPlayerChanged(v ?? 'All');
-                },
-              ),
-              const SizedBox(height: 12),
-              InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Sortuj po',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _sortOption,
-                    dropdownColor: const Color(0xFF2E2E2E),
-                    isExpanded: true,
-                    style: const TextStyle(color: Colors.white),
-                    items: const [
-                      DropdownMenuItem(value: 'time_asc', child: Text('Czas (rosnąco)')),
-                      DropdownMenuItem(value: 'time_desc', child: Text('Czas (malejąco)')),
-                      DropdownMenuItem(value: 'type', child: Text('Typ akcji')),
-                      DropdownMenuItem(value: 'player', child: Text('Zawodnik')),
-                      DropdownMenuItem(value: 'confidence', child: Text('Pewność (malejąco)')),
-                    ],
-                    onChanged: (v) {
-                      if (v != null) {
-                        setState(() {
-                          _sortOption = v;
-                        });
-                      }
-                    },
-                  ),
+              Theme(
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  title: const Text('Filtry i sortowanie', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  leading: const Icon(Icons.filter_list, size: 20),
+                  iconColor: Colors.purpleAccent,
+                  collapsedIconColor: Colors.white70,
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: const EdgeInsets.only(bottom: 8.0),
+                  children: [
+                    DropdownButtonFormField<String>(
+                      initialValue: actionTypes.contains(widget.filterType) ? widget.filterType : 'All',
+                      dropdownColor: const Color(0xFF2E2E2E),
+                      decoration: const InputDecoration(
+                        labelText: 'Filter by Action',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                        labelStyle: TextStyle(color: Colors.white70),
+                      ),
+                      style: const TextStyle(color: Colors.white),
+                      items: ['All', ...actionTypes.toList()..sort()]
+                          .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                      onChanged: (v) {
+                        widget.onFilterTypeChanged(v ?? 'All');
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: playerIds.contains(widget.filterPlayer) ? widget.filterPlayer : 'All',
+                      dropdownColor: const Color(0xFF2E2E2E),
+                      decoration: const InputDecoration(
+                        labelText: 'Filter by Player #',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                        labelStyle: TextStyle(color: Colors.white70),
+                      ),
+                      style: const TextStyle(color: Colors.white),
+                      items: ['All', ...playerIds.toList()..sort()]
+                          .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                      onChanged: (v) {
+                        widget.onFilterPlayerChanged(v ?? 'All');
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Sortuj po',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                        labelStyle: TextStyle(color: Colors.white70),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _sortOption,
+                          dropdownColor: const Color(0xFF2E2E2E),
+                          isExpanded: true,
+                          style: const TextStyle(color: Colors.white),
+                          items: const [
+                            DropdownMenuItem(value: 'time_asc', child: Text('Czas (rosnąco)')),
+                            DropdownMenuItem(value: 'time_desc', child: Text('Czas (malejąco)')),
+                            DropdownMenuItem(value: 'type', child: Text('Typ akcji')),
+                            DropdownMenuItem(value: 'player', child: Text('Zawodnik')),
+                            DropdownMenuItem(value: 'confidence', child: Text('Pewność (malejąco)')),
+                          ],
+                          onChanged: (v) {
+                            if (v != null) {
+                              setState(() {
+                                _sortOption = v;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               if (widget.isEditMode)
