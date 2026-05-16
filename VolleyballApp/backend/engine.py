@@ -141,6 +141,18 @@ class VolleyballAnalyticsEngine:
                 current_action_boxes = []
         return current_action_type, current_action_start, current_action_boxes
 
+    def _append_action(self, results, current_action_type, current_action_start, timestamp_ms, current_action_boxes):
+        if current_action_type != "NONE" and current_action_start is not None:
+            results.append({
+                "id": f"action_{len(results)}",
+                "type": current_action_type,
+                "start_ms": current_action_start,
+                "end_ms": timestamp_ms,
+                "player_box": [float(x) for x in current_action_boxes[len(current_action_boxes)//2]] if current_action_boxes else [0.0, 0.0, 0.0, 0.0],
+                "player_id": "Unknown",
+                "confidence": 0.8
+            })
+
     def process_video(self, video_path, progress_callback=None):
         cap = cv2.VideoCapture(video_path)
         fps = cap.get(cv2.CAP_PROP_FPS)
