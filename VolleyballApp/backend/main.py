@@ -6,10 +6,11 @@ import asyncio
 import os
 import uuid
 import threading
+import concurrent.futures
 import anyio
 from anyio import Path
 from typing import Dict, Any
-from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Path as APIPath
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Path as APIPath, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from engine import VolleyballAnalyticsEngine
@@ -158,7 +159,9 @@ def get_results(video_path: str = Query(..., max_length=2048)):
 
     # ⚡ Bolt Optimization: Bypass FastAPI's slow default JSON serialization for large results
     # and perform serialization outside of the thread lock to prevent blocking event loops.
-    return Response(content=json.dumps(data), media_type="application/json")
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        json_str = executor.submit(json.dumps, data).result()
+    return Response(content=json_str, media_type="application/json")
 
 @app.post("/update_action")
 def update_action(req: UpdateActionRequest):
