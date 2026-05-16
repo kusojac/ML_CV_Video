@@ -102,7 +102,7 @@ def test_preprocess_yolo_input_value_scaling():
     output_half = preprocess_yolo_input(image_half)
     assert np.allclose(output_half, 127 / 255.0)
 
-from frame_utilities import postprocess_yolo_output
+from frame_utilities import postprocess_yolo_output, postprocess_yolo_ball, postprocess_yolo_coco
 
 def test_postprocess_yolo_output_ball_below_threshold():
     # Arrange: output shape (1, 5, 100), all confidences below 0.25
@@ -110,7 +110,7 @@ def test_postprocess_yolo_output_ball_below_threshold():
     output[0, 4, :] = 0.1
 
     # Act
-    boxes, scores, class_ids = postprocess_yolo_output(
+    boxes, scores, class_ids = postprocess_yolo_ball(
         output,
         original_img_shape=(1080, 1920),
         input_size=(640, 640),
@@ -128,7 +128,7 @@ def test_postprocess_yolo_output_coco_below_threshold():
     output[0, 4:, :] = 0.1
 
     # Act
-    boxes, scores, class_ids = postprocess_yolo_output(
+    boxes, scores, class_ids = postprocess_yolo_coco(
         output,
         original_img_shape=(1080, 1920),
         input_size=(640, 640),
@@ -147,7 +147,7 @@ def test_postprocess_yolo_output_ball_valid():
     output[0, :, 0] = [320, 320, 50, 50, 0.9]
 
     # Act
-    boxes, scores, class_ids = postprocess_yolo_output(
+    boxes, scores, class_ids = postprocess_yolo_ball(
         output,
         original_img_shape=(1080, 1920),
         input_size=(640, 640),
@@ -175,7 +175,7 @@ def test_postprocess_yolo_output_coco_valid():
     output[0, 4, 0] = 0.9 # class 0 score 0.9
 
     # Act
-    boxes, scores, class_ids = postprocess_yolo_output(
+    boxes, scores, class_ids = postprocess_yolo_coco(
         output,
         original_img_shape=(1080, 1920),
         input_size=(640, 640),
@@ -201,7 +201,7 @@ def test_postprocess_yolo_output_coco_target_class_id():
     output[0, 5, 1] = 0.8 # class 1 score 0.8
 
     # Act
-    boxes, scores, class_ids = postprocess_yolo_output(
+    boxes, scores, class_ids = postprocess_yolo_coco(
         output,
         original_img_shape=(1080, 1920),
         input_size=(640, 640),
