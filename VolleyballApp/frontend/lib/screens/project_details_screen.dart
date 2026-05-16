@@ -689,6 +689,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                     top: 0,
                     right: 0,
                     child: PopupMenuButton<String>(
+                      tooltip: 'Opcje artefaktu',
                       onSelected: (value) {
                         if (value == 'edit') {
                           _editArtifact(artifact);
