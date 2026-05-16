@@ -358,7 +358,28 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
           // Siatka artefaktów
           Expanded(
             child: _filteredArtifacts.isEmpty
-                ? const Center(child: Text('Brak powiązanych artefaktów.'))
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.videocam_off, size: 64, color: Colors.white30),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Brak powiązanych artefaktów',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Podepnij lub zaimportuj artefakt, aby go przeanalizować.',
+                          style: TextStyle(color: Colors.white54),
+                        ),
+                      ],
+                    ),
+                  )
                 : GridView.builder(
                     padding: const EdgeInsets.all(16),
                     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
