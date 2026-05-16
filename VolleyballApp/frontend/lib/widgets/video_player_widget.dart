@@ -92,6 +92,11 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   // Kontroler przewijania osi czasu
   final ScrollController _timelineScrollController = ScrollController();
 
+  // Tryb przewijania kursorem po obszarze wideo
+  bool _scrubMode = false;
+  double? _scrubDragStartX;
+  double? _scrubDragStartMs;
+
   @override
   void initState() {
     super.initState();
@@ -1102,6 +1107,55 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         children: [
                           Video(controller: _controller),
                           _buildVideoBoundingBoxOverlay(size, videoW, videoH),
+                          // Nakładka scrub mode
+                          if (_scrubMode)
+                            MouseRegion(
+                              cursor: SystemMouseCursors.resizeLeftRight,
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onPanStart: (d) {
+                                  _scrubDragStartX = d.localPosition.dx;
+                                  _scrubDragStartMs = _currentPos.inMilliseconds.toDouble();
+                                },
+                                onPanUpdate: (d) {
+                                  if (_scrubDragStartX == null || _scrubDragStartMs == null) return;
+                                  // Czułość: 1px = 200ms (nastrojalna)
+                                  final deltaPx = d.localPosition.dx - _scrubDragStartX!;
+                                  const sensitivity = 200.0; // ms na piksel
+                                  final newMs = (_scrubDragStartMs! + deltaPx * sensitivity)
+                                      .clamp(0.0, _totalDuration.inMilliseconds.toDouble());
+                                  _seekToMs(newMs);
+                                },
+                                onPanEnd: (_) {
+                                  _scrubDragStartX = null;
+                                  _scrubDragStartMs = null;
+                                },
+                                child: Container(
+                                  color: Colors.transparent,
+                                  child: Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black54,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.swap_horiz, color: Colors.cyanAccent, size: 14),
+                                            SizedBox(width: 6),
+                                            Text('Tryb scrubbing aktywny', style: TextStyle(color: Colors.cyanAccent, fontSize: 11)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       );
                     },
@@ -1164,7 +1218,50 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                       _seekToMs(newMs.toDouble());
                     },
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 8),
+                  // Przełącznik trybu scrubbing
+                  Tooltip(
+                    message: _scrubMode
+                        ? 'Wyłącz scrubbing (przewijanie myszą po wideo)'
+                        : 'Włącz scrubbing (przewijanie myszą po wideo)',
+                    child: GestureDetector(
+                      onTap: () => setState(() => _scrubMode = !_scrubMode),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: _scrubMode
+                              ? Colors.cyanAccent.withValues(alpha: 0.2)
+                              : Colors.white.withValues(alpha: 0.07),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _scrubMode ? Colors.cyanAccent : Colors.white24,
+                            width: _scrubMode ? 1.5 : 1.0,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.swap_horiz,
+                              color: _scrubMode ? Colors.cyanAccent : Colors.white54,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Scrubbing',
+                              style: TextStyle(
+                                color: _scrubMode ? Colors.cyanAccent : Colors.white54,
+                                fontSize: 11,
+                                fontWeight: _scrubMode ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   // Hint trybu edycji
                   if (widget.isEditMode)
                     Container(
