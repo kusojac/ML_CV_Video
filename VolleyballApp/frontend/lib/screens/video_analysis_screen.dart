@@ -55,8 +55,8 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   ArtifactModel? _currentPlaylistArtifact;
 
   // Filtrowanie
-  String _filterType = 'All';
-  String _filterPlayer = 'All';
+  List<String> _selectedActionTypes = [];
+  List<String> _selectedPlayers = [];
   bool _isolateSelected = false;
 
   List<ActionModel> get _filteredActions {
@@ -64,8 +64,8 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       if (_isEditMode && _isolateSelected && _selectedAction != null) {
         if (a.id != _selectedAction!.id) return false;
       }
-      if (_filterType != 'All' && a.type != _filterType) return false;
-      if (_filterPlayer != 'All' && a.playerId != _filterPlayer) return false;
+      if (_selectedActionTypes.isNotEmpty && !_selectedActionTypes.contains(a.type)) return false;
+      if (_selectedPlayers.isNotEmpty && !_selectedPlayers.contains(a.playerId)) return false;
       return true;
     }).toList();
   }
@@ -935,10 +935,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               isPlayingPlaylist: _isPlayingPlaylist,
               loopPlaylist: _loopPlaylist,
               isEditMode: _isEditMode,
-              filterType: _filterType,
-              filterPlayer: _filterPlayer,
-              onFilterTypeChanged: (v) => setState(() => _filterType = v),
-              onFilterPlayerChanged: (v) => setState(() => _filterPlayer = v),
+              selectedActionTypes: _selectedActionTypes,
+              selectedPlayers: _selectedPlayers,
+              onSelectedActionTypesChanged: (v) => setState(() => _selectedActionTypes = v),
+              onSelectedPlayersChanged: (v) => setState(() => _selectedPlayers = v),
               isolateSelected: _isolateSelected,
               onIsolateSelectedChanged: (v) => setState(() => _isolateSelected = v),
               onPlaylistChanged: (newPlaylist) => setState(() => _playlist = newPlaylist),

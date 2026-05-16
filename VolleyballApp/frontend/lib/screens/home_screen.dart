@@ -15,6 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<ProjectModel> _filteredProjects = [];
   String _sortOption = 'date_desc';
+  List<String> _selectedFilterTags = [];
 
   @override
   void initState() {
@@ -48,6 +49,12 @@ class _HomeScreenState extends State<HomeScreen> {
             (tag) => tag.toLowerCase().contains(query),
           );
           return nameMatch || descMatch || tagMatch;
+        }).toList();
+      }
+
+      if (_selectedFilterTags.isNotEmpty) {
+        filtered = filtered.where((project) {
+          return project.tags.any((t) => _selectedFilterTags.contains(t));
         }).toList();
       }
 
@@ -253,7 +260,44 @@ class _HomeScreenState extends State<HomeScreen> {
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               title: const Text('Wyszukaj i sortuj'),
-              leading: const Icon(Icons.tune),
+              leading: Icon(
+                Icons.tune,
+                color: (_selectedFilterTags.isNotEmpty || _searchController.text.isNotEmpty)
+                    ? Colors.purpleAccent
+                    : null,
+              ),
+              subtitle: Builder(builder: (context) {
+                final parts = <String>[];
+                if (_searchController.text.isNotEmpty) parts.add('"${_searchController.text}"');
+                for (final t in _selectedFilterTags) { parts.add('#$t'); }
+                if (parts.isEmpty) return const SizedBox.shrink();
+                return Text(
+                  parts.join(' · '),
+                  style: const TextStyle(color: Colors.purpleAccent, fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                );
+              }),
+              trailing: _selectedFilterTags.isNotEmpty
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.purpleAccent.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.purpleAccent),
+                          ),
+                          child: Text(
+                            '${_selectedFilterTags.length}',
+                            style: const TextStyle(color: Colors.purpleAccent, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const Icon(Icons.expand_more),
+                      ],
+                    )
+                  : null,
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               children: [
                 Row(
@@ -306,6 +350,66 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A2A2A),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          hint: const Text('Dodaj filtr tagu...', style: TextStyle(color: Colors.white70)),
+                          dropdownColor: const Color(0xFF2E2E2E),
+                          style: const TextStyle(color: Colors.white),
+                          value: null,
+                          icon: const Icon(Icons.sell, color: Colors.white70, size: 20),
+                          items: _dataService.projects
+                              .expand((p) => p.tags)
+                              .toSet()
+                              .where((tag) => !_selectedFilterTags.contains(tag))
+                              .map((tag) => DropdownMenuItem(value: tag, child: Text(tag)))
+                              .toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                _selectedFilterTags.add(val);
+                                _filterProjects();
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (_selectedFilterTags.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: 8.0,
+                        runSpacing: 4.0,
+                        children: _selectedFilterTags.map((tag) {
+                          return InputChip(
+                            label: Text(tag, style: const TextStyle(fontSize: 12)),
+                            backgroundColor: Colors.purple.withValues(alpha: 0.3),
+                            deleteIcon: const Icon(Icons.close, size: 16),
+                            onDeleted: () {
+                              setState(() {
+                                _selectedFilterTags.remove(tag);
+                                _filterProjects();
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

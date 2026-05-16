@@ -9,10 +9,10 @@ class ActionSidebar extends StatefulWidget {
   final ValueChanged<bool> onEditModeChanged;
   final ValueChanged<ActionModel> onActionSelected;
   final ValueChanged<ActionModel> onActionUpdated;
-  final String filterType;
-  final String filterPlayer;
-  final ValueChanged<String> onFilterTypeChanged;
-  final ValueChanged<String> onFilterPlayerChanged;
+  final List<String> selectedActionTypes;
+  final List<String> selectedPlayers;
+  final ValueChanged<List<String>> onSelectedActionTypesChanged;
+  final ValueChanged<List<String>> onSelectedPlayersChanged;
   final bool isolateSelected;
   final ValueChanged<bool> onIsolateSelectedChanged;
 
@@ -42,10 +42,10 @@ class ActionSidebar extends StatefulWidget {
     required this.onEditModeChanged,
     required this.onActionSelected,
     required this.onActionUpdated,
-    required this.filterType,
-    required this.filterPlayer,
-    required this.onFilterTypeChanged,
-    required this.onFilterPlayerChanged,
+    required this.selectedActionTypes,
+    required this.selectedPlayers,
+    required this.onSelectedActionTypesChanged,
+    required this.onSelectedPlayersChanged,
     required this.isolateSelected,
     required this.onIsolateSelectedChanged,
     this.playlist,
@@ -77,8 +77,8 @@ class _ActionSidebarState extends State<ActionSidebar> {
 
   List<ActionModel> get _filteredActions {
     final filtered = widget.actions.where((a) {
-      if (widget.filterType != 'All' && a.type != widget.filterType) return false;
-      if (widget.filterPlayer != 'All' && a.playerId != widget.filterPlayer) return false;
+      if (widget.selectedActionTypes.isNotEmpty && !widget.selectedActionTypes.contains(a.type)) return false;
+      if (widget.selectedPlayers.isNotEmpty && !widget.selectedPlayers.contains(a.playerId)) return false;
       return true;
     }).toList();
 
@@ -187,45 +187,146 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                 child: ExpansionTile(
                   title: const Text('Filtry i sortowanie', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                  leading: const Icon(Icons.filter_list, size: 20),
+                  leading: Icon(
+                    Icons.filter_list,
+                    size: 20,
+                    color: (widget.selectedActionTypes.isNotEmpty || widget.selectedPlayers.isNotEmpty)
+                        ? Colors.purpleAccent
+                        : Colors.white70,
+                  ),
+                  subtitle: Builder(builder: (context) {
+                    final parts = <String>[];
+                    for (final t in widget.selectedActionTypes) { parts.add('Akcja: $t'); }
+                    for (final p in widget.selectedPlayers) { parts.add('Gracz: $p'); }
+                    if (parts.isEmpty) return const SizedBox.shrink();
+                    return Text(
+                      parts.join(' · '),
+                      style: const TextStyle(color: Colors.purpleAccent, fontSize: 11),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  }),
+                  trailing: () {
+                    final count = widget.selectedActionTypes.length + widget.selectedPlayers.length;
+                    if (count == 0) return const Icon(Icons.expand_more, color: Colors.white70);
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.purpleAccent.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.purpleAccent),
+                          ),
+                          child: Text('$count', style: const TextStyle(color: Colors.purpleAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.expand_more, color: Colors.purpleAccent),
+                      ],
+                    );
+                  }(),
                   iconColor: Colors.purpleAccent,
                   collapsedIconColor: Colors.white70,
                   tilePadding: EdgeInsets.zero,
                   childrenPadding: const EdgeInsets.only(bottom: 8.0),
                   children: [
-                    DropdownButtonFormField<String>(
-                      initialValue: actionTypes.contains(widget.filterType) ? widget.filterType : 'All',
-                      dropdownColor: const Color(0xFF2E2E2E),
-                      decoration: const InputDecoration(
-                        labelText: 'Filter by Action',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                        labelStyle: TextStyle(color: Colors.white70),
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                      items: ['All', ...actionTypes.toList()..sort()]
-                          .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                      onChanged: (v) {
-                        widget.onFilterTypeChanged(v ?? 'All');
-                      },
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2A2A2A),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white24),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                hint: const Text('Filtruj akcje...', style: TextStyle(color: Colors.white70)),
+                                dropdownColor: const Color(0xFF2E2E2E),
+                                isExpanded: true,
+                                style: const TextStyle(color: Colors.white),
+                                value: null,
+                                items: actionTypes
+                                    .where((t) => !widget.selectedActionTypes.contains(t))
+                                    .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                                onChanged: (v) {
+                                  if (v != null) {
+                                    final newList = List<String>.from(widget.selectedActionTypes)..add(v);
+                                    widget.onSelectedActionTypesChanged(newList);
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      initialValue: playerIds.contains(widget.filterPlayer) ? widget.filterPlayer : 'All',
-                      dropdownColor: const Color(0xFF2E2E2E),
-                      decoration: const InputDecoration(
-                        labelText: 'Filter by Player #',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                        labelStyle: TextStyle(color: Colors.white70),
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                      items: ['All', ...playerIds.toList()..sort()]
-                          .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                      onChanged: (v) {
-                        widget.onFilterPlayerChanged(v ?? 'All');
-                      },
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2A2A2A),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white24),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                hint: const Text('Filtruj graczy...', style: TextStyle(color: Colors.white70)),
+                                dropdownColor: const Color(0xFF2E2E2E),
+                                isExpanded: true,
+                                style: const TextStyle(color: Colors.white),
+                                value: null,
+                                items: playerIds
+                                    .where((t) => !widget.selectedPlayers.contains(t))
+                                    .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                                onChanged: (v) {
+                                  if (v != null) {
+                                    final newList = List<String>.from(widget.selectedPlayers)..add(v);
+                                    widget.onSelectedPlayersChanged(newList);
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
+                    if (widget.selectedActionTypes.isNotEmpty || widget.selectedPlayers.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Wrap(
+                            spacing: 8.0,
+                            runSpacing: 4.0,
+                            children: [
+                              ...widget.selectedActionTypes.map((t) => InputChip(
+                                label: Text('Akcja: $t', style: const TextStyle(fontSize: 12)),
+                                backgroundColor: Colors.purple.withValues(alpha: 0.3),
+                                deleteIcon: const Icon(Icons.close, size: 16),
+                                onDeleted: () {
+                                  final newList = List<String>.from(widget.selectedActionTypes)..remove(t);
+                                  widget.onSelectedActionTypesChanged(newList);
+                                },
+                              )),
+                              ...widget.selectedPlayers.map((p) => InputChip(
+                                label: Text('Gracz: $p', style: const TextStyle(fontSize: 12)),
+                                backgroundColor: Colors.cyan.withValues(alpha: 0.3),
+                                deleteIcon: const Icon(Icons.close, size: 16),
+                                onDeleted: () {
+                                  final newList = List<String>.from(widget.selectedPlayers)..remove(p);
+                                  widget.onSelectedPlayersChanged(newList);
+                                },
+                              )),
+                            ],
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 12),
                     InputDecorator(
                       decoration: const InputDecoration(

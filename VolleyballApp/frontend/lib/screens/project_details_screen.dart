@@ -22,6 +22,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   List<ArtifactModel> _projectArtifacts = [];
   List<ArtifactModel> _filteredArtifacts = [];
   String _sortOption = 'date_desc';
+  
+  List<ArtifactType> _selectedTypes = [];
+  List<String> _selectedCategories = [];
+  List<String> _selectedTags = [];
+  List<String> _selectedTeams = [];
 
   @override
   void initState() {
@@ -61,6 +66,19 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
           final descMatch = a.description.toLowerCase().contains(query);
           return titleMatch || tagMatch || descMatch;
         }).toList();
+      }
+
+      if (_selectedTypes.isNotEmpty) {
+        filtered = filtered.where((a) => _selectedTypes.contains(a.type)).toList();
+      }
+      if (_selectedCategories.isNotEmpty) {
+        filtered = filtered.where((a) => a.videoCategory != null && _selectedCategories.contains(a.videoCategory!)).toList();
+      }
+      if (_selectedTags.isNotEmpty) {
+        filtered = filtered.where((a) => a.tags.any((t) => _selectedTags.contains(t))).toList();
+      }
+      if (_selectedTeams.isNotEmpty) {
+        filtered = filtered.where((a) => (a.teamA != null && _selectedTeams.contains(a.teamA!.name)) || (a.teamB != null && _selectedTeams.contains(a.teamB!.name))).toList();
       }
 
       if (_sortOption == 'title_asc') {
@@ -329,6 +347,42 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     ).then((_) => _loadArtifacts());
   }
 
+  Widget _buildFilterDropdown<T>(String label, Set<T> allItems, List<T> selectedItems, ValueChanged<T> onSelected, String Function(T) labelBuilder) {
+    final available = allItems.where((item) => !selectedItems.contains(item)).toList();
+    if (available.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2A2A),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          hint: Text('Filtruj: $label', style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          dropdownColor: const Color(0xFF2E2E2E),
+          style: const TextStyle(color: Colors.white, fontSize: 13),
+          value: null,
+          icon: const Icon(Icons.add_circle_outline, color: Colors.white70, size: 16),
+          items: available.map((item) => DropdownMenuItem(value: item, child: Text(labelBuilder(item)))).toList(),
+          onChanged: (val) {
+            if (val != null) onSelected(val);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, VoidCallback onDeleted) {
+    return InputChip(
+      label: Text(label, style: const TextStyle(fontSize: 12)),
+      backgroundColor: Colors.purple.withValues(alpha: 0.3),
+      deleteIcon: const Icon(Icons.close, size: 16),
+      onDeleted: onDeleted,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -380,7 +434,49 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               title: const Text('Wyszukaj i sortuj artefakty'),
-              leading: const Icon(Icons.filter_list),
+              leading: Icon(
+                Icons.filter_list,
+                color: (_selectedTypes.isNotEmpty || _selectedCategories.isNotEmpty || _selectedTags.isNotEmpty || _selectedTeams.isNotEmpty || _searchController.text.isNotEmpty)
+                    ? Colors.purpleAccent
+                    : null,
+              ),
+              subtitle: Builder(builder: (context) {
+                final parts = <String>[];
+                if (_searchController.text.isNotEmpty) parts.add('"${_searchController.text}"');
+                for (final t in _selectedTypes) { parts.add('Typ: ${t.name}'); }
+                for (final c in _selectedCategories) { parts.add(c); }
+                for (final t in _selectedTags) { parts.add('#$t'); }
+                for (final team in _selectedTeams) { parts.add(team); }
+                if (parts.isEmpty) return const SizedBox.shrink();
+                return Text(
+                  parts.join(' · '),
+                  style: const TextStyle(color: Colors.purpleAccent, fontSize: 12),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                );
+              }),
+              trailing: () {
+                final count = _selectedTypes.length + _selectedCategories.length + _selectedTags.length + _selectedTeams.length;
+                if (count == 0) return null;
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.purpleAccent.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.purpleAccent),
+                      ),
+                      child: Text(
+                        '$count',
+                        style: const TextStyle(color: Colors.purpleAccent, fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const Icon(Icons.expand_more),
+                  ],
+                );
+              }(),
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               children: [
                 Row(
@@ -436,6 +532,54 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterDropdown<ArtifactType>('Typ', _projectArtifacts.map((a) => a.type).toSet(), _selectedTypes, (val) {
+                        setState(() { _selectedTypes.add(val); _filterArtifacts(); });
+                      }, (type) => type.name),
+                      const SizedBox(width: 8),
+                      _buildFilterDropdown<String>('Kategoria', _projectArtifacts.map((a) => a.videoCategory).whereType<String>().toSet(), _selectedCategories, (val) {
+                        setState(() { _selectedCategories.add(val); _filterArtifacts(); });
+                      }, (str) => str),
+                      const SizedBox(width: 8),
+                      _buildFilterDropdown<String>('Tagi', _projectArtifacts.expand((a) => a.tags).toSet(), _selectedTags, (val) {
+                        setState(() { _selectedTags.add(val); _filterArtifacts(); });
+                      }, (str) => str),
+                      const SizedBox(width: 8),
+                      _buildFilterDropdown<String>('Drużyna', _projectArtifacts.expand((a) => [a.teamA?.name, a.teamB?.name]).whereType<String>().toSet(), _selectedTeams, (val) {
+                        setState(() { _selectedTeams.add(val); _filterArtifacts(); });
+                      }, (str) => str),
+                    ],
+                  ),
+                ),
+                if (_selectedTypes.isNotEmpty || _selectedCategories.isNotEmpty || _selectedTags.isNotEmpty || _selectedTeams.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: 8.0,
+                        runSpacing: 4.0,
+                        children: [
+                          ..._selectedTypes.map((t) => _buildFilterChip('Typ: ${t.name}', () {
+                            setState(() { _selectedTypes.remove(t); _filterArtifacts(); });
+                          })),
+                          ..._selectedCategories.map((c) => _buildFilterChip('Kat: $c', () {
+                            setState(() { _selectedCategories.remove(c); _filterArtifacts(); });
+                          })),
+                          ..._selectedTags.map((t) => _buildFilterChip('Tag: $t', () {
+                            setState(() { _selectedTags.remove(t); _filterArtifacts(); });
+                          })),
+                          ..._selectedTeams.map((team) => _buildFilterChip('Drużyna: $team', () {
+                            setState(() { _selectedTeams.remove(team); _filterArtifacts(); });
+                          })),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
