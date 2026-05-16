@@ -3,7 +3,7 @@ import os
 import onnxruntime
 import mediapipe as mp
 import numpy as np
-from frame_utilities import preprocess_yolo_input, postprocess_yolo_output, pad_frame_to_square
+from frame_utilities import preprocess_yolo_input, postprocess_yolo_output, postprocess_yolo_ball, postprocess_yolo_coco, pad_frame_to_square
 
 class VolleyballAnalyticsEngine:
     def __init__(self, models_dir):
@@ -29,7 +29,7 @@ class VolleyballAnalyticsEngine:
     def _detect_objects(self, yolo_input, original_shape):
         # 1. Detect Ball
         ball_outs = self.session_vb.run([self.output_name_vb], {self.input_name_vb: yolo_input})
-        ball_boxes, ball_scores, _ = postprocess_yolo_output(ball_outs[0], original_shape, conf_threshold=0.5)
+        ball_boxes, ball_scores, _ = postprocess_yolo_ball(ball_outs[0], original_shape, conf_threshold=0.5)
 
         detected_ball_box = None
         closest_person_box = None
@@ -37,7 +37,7 @@ class VolleyballAnalyticsEngine:
         if len(ball_boxes) > 0:
             # 2. Detect Persons
             coco_outs = self.session_coco.run([self.output_name_coco], {self.input_name_coco: yolo_input})
-            coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_output(
+            coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_coco(
                 coco_outs[0], original_shape, conf_threshold=0.5, target_class_id=0
             )
 
