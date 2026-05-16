@@ -21,6 +21,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<ArtifactModel> _projectArtifacts = [];
   List<ArtifactModel> _filteredArtifacts = [];
+  String _sortOption = 'date_desc';
 
   @override
   void initState() {
@@ -50,16 +51,51 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   void _filterArtifacts() {
     final query = _searchController.text.toLowerCase();
     setState(() {
+      List<ArtifactModel> filtered;
       if (query.isEmpty) {
-        _filteredArtifacts = List.from(_projectArtifacts);
+        filtered = List.from(_projectArtifacts);
       } else {
-        _filteredArtifacts = _projectArtifacts.where((a) {
+        filtered = _projectArtifacts.where((a) {
           final titleMatch = a.title.toLowerCase().contains(query);
           final tagMatch = a.tags.any((tag) => tag.toLowerCase().contains(query));
           final descMatch = a.description.toLowerCase().contains(query);
           return titleMatch || tagMatch || descMatch;
         }).toList();
       }
+
+      if (_sortOption == 'title_asc') {
+        filtered.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+      } else if (_sortOption == 'title_desc') {
+        filtered.sort((a, b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()));
+      } else if (_sortOption == 'date_asc') {
+        filtered.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      } else if (_sortOption == 'date_desc') {
+        filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      } else if (_sortOption == 'type') {
+        filtered.sort((a, b) {
+          final typeComp = a.type.index.compareTo(b.type.index);
+          if (typeComp != 0) return typeComp;
+          return b.createdAt.compareTo(a.createdAt);
+        });
+      } else if (_sortOption == 'category') {
+        filtered.sort((a, b) {
+          final catA = a.videoCategory ?? 'Z'; // by default put nulls at the end
+          final catB = b.videoCategory ?? 'Z';
+          final comp = catA.compareTo(catB);
+          if (comp != 0) return comp;
+          return b.createdAt.compareTo(a.createdAt);
+        });
+      } else if (_sortOption == 'team') {
+        filtered.sort((a, b) {
+          final teamA = a.teamA?.name ?? 'Z';
+          final teamB = b.teamA?.name ?? 'Z';
+          final comp = teamA.compareTo(teamB);
+          if (comp != 0) return comp;
+          return b.createdAt.compareTo(a.createdAt);
+        });
+      }
+
+      _filteredArtifacts = filtered;
     });
   }
 
@@ -339,20 +375,61 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
               ],
             ),
           ),
-          // Pasek filtrowania artefaktów
+          // Pasek filtrowania i sortowania artefaktów
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Filtruj artefakty...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Filtruj artefakty...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                      fillColor: const Color(0xFF2A2A2A),
+                    ),
+                  ),
                 ),
-                filled: true,
-                fillColor: const Color(0xFF2A2A2A),
-              ),
+                const SizedBox(width: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A2A2A),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _sortOption,
+                      icon: const Icon(Icons.sort, color: Colors.white70),
+                      dropdownColor: const Color(0xFF2E2E2E),
+                      style: const TextStyle(color: Colors.white),
+                      items: const [
+                        DropdownMenuItem(value: 'date_desc', child: Text('Najnowsze')),
+                        DropdownMenuItem(value: 'date_asc', child: Text('Najstarsze')),
+                        DropdownMenuItem(value: 'title_asc', child: Text('Nazwa (A-Z)')),
+                        DropdownMenuItem(value: 'title_desc', child: Text('Nazwa (Z-A)')),
+                        DropdownMenuItem(value: 'type', child: Text('Typ artefaktu')),
+                        DropdownMenuItem(value: 'category', child: Text('Kategoria')),
+                        DropdownMenuItem(value: 'team', child: Text('Drużyna')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() {
+                            _sortOption = val;
+                            _filterArtifacts();
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           // Siatka artefaktów

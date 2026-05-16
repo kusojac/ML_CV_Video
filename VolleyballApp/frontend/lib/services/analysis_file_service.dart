@@ -66,6 +66,14 @@ class AnalysisFileService {
     await _writeJson(path, playlist);
   }
 
+  /// Zapisuje playlistę do podanej ścieżki
+  static Future<void> savePlaylistToPath(
+    String path,
+    List<ActionModel> playlist,
+  ) async {
+    await _writeJson(path, playlist);
+  }
+
   /// Zapisuje playlistę ze ścieżką z okna dialogowego
   static Future<String?> savePlaylistAs({
     required String videoPath,

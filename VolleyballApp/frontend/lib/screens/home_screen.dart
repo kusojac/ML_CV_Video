@@ -14,6 +14,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ProjectDataService _dataService = ProjectDataService();
   final TextEditingController _searchController = TextEditingController();
   List<ProjectModel> _filteredProjects = [];
+  String _sortOption = 'date_desc';
 
   @override
   void initState() {
@@ -36,10 +37,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void _filterProjects() {
     final query = _searchController.text.toLowerCase();
     setState(() {
+      List<ProjectModel> filtered;
       if (query.isEmpty) {
-        _filteredProjects = _dataService.projects.toList();
+        filtered = _dataService.projects.toList();
       } else {
-        _filteredProjects = _dataService.projects.where((project) {
+        filtered = _dataService.projects.where((project) {
           final nameMatch = project.name.toLowerCase().contains(query);
           final descMatch = project.description.toLowerCase().contains(query);
           final tagMatch = project.tags.any(
@@ -48,6 +50,18 @@ class _HomeScreenState extends State<HomeScreen> {
           return nameMatch || descMatch || tagMatch;
         }).toList();
       }
+
+      if (_sortOption == 'name_asc') {
+        filtered.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      } else if (_sortOption == 'name_desc') {
+        filtered.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+      } else if (_sortOption == 'date_asc') {
+        filtered.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      } else if (_sortOption == 'date_desc') {
+        filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      }
+
+      _filteredProjects = filtered;
     });
   }
 
@@ -230,6 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               children: [
                 Expanded(
+                  flex: 2,
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
@@ -240,6 +255,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       filled: true,
                       fillColor: const Color(0xFF2A2A2A),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A2A2A),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _sortOption,
+                      icon: const Icon(Icons.sort, color: Colors.white70),
+                      dropdownColor: const Color(0xFF2E2E2E),
+                      style: const TextStyle(color: Colors.white),
+                      items: const [
+                        DropdownMenuItem(value: 'date_desc', child: Text('Najnowsze')),
+                        DropdownMenuItem(value: 'date_asc', child: Text('Najstarsze')),
+                        DropdownMenuItem(value: 'name_asc', child: Text('Nazwa (A-Z)')),
+                        DropdownMenuItem(value: 'name_desc', child: Text('Nazwa (Z-A)')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() {
+                            _sortOption = val;
+                            _filterProjects();
+                          });
+                        }
+                      },
                     ),
                   ),
                 ),

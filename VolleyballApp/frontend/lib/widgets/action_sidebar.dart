@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/action_model.dart';
+import '../models/artifact_model.dart';
 
 class ActionSidebar extends StatefulWidget {
   final List<ActionModel> actions;
@@ -28,6 +29,11 @@ class ActionSidebar extends StatefulWidget {
   final VoidCallback? onActionAdded;
   final int initialTabIndex;
 
+  final List<ArtifactModel>? availablePlaylists;
+  final String? currentPlaylistId;
+  final ValueChanged<String>? onPlaylistSelected;
+  final ValueChanged<String>? onCreateNewPlaylist;
+
   const ActionSidebar({
     super.key,
     required this.actions,
@@ -54,6 +60,10 @@ class ActionSidebar extends StatefulWidget {
     this.onActionDeleted,
     this.onActionAdded,
     this.initialTabIndex = 0,
+    this.availablePlaylists,
+    this.currentPlaylistId,
+    this.onPlaylistSelected,
+    this.onCreateNewPlaylist,
   });
 
   @override
@@ -63,13 +73,40 @@ class ActionSidebar extends StatefulWidget {
 class _ActionSidebarState extends State<ActionSidebar> {
   final ScrollController _scrollController = ScrollController();
   final Map<String, GlobalKey> _itemKeys = {};
+  String _sortOption = 'time_asc';
 
   List<ActionModel> get _filteredActions {
-    return widget.actions.where((a) {
+    final filtered = widget.actions.where((a) {
       if (widget.filterType != 'All' && a.type != widget.filterType) return false;
       if (widget.filterPlayer != 'All' && a.playerId != widget.filterPlayer) return false;
       return true;
     }).toList();
+
+    if (_sortOption == 'time_asc') {
+      filtered.sort((a, b) => a.startMs.compareTo(b.startMs));
+    } else if (_sortOption == 'time_desc') {
+      filtered.sort((a, b) => b.startMs.compareTo(a.startMs));
+    } else if (_sortOption == 'type') {
+      filtered.sort((a, b) {
+        int comp = a.type.compareTo(b.type);
+        if (comp == 0) return a.startMs.compareTo(b.startMs);
+        return comp;
+      });
+    } else if (_sortOption == 'player') {
+      filtered.sort((a, b) {
+        int comp = a.playerId.compareTo(b.playerId);
+        if (comp == 0) return a.startMs.compareTo(b.startMs);
+        return comp;
+      });
+    } else if (_sortOption == 'confidence') {
+      filtered.sort((a, b) {
+        int comp = b.confidence.compareTo(a.confidence); // malejąco
+        if (comp == 0) return a.startMs.compareTo(b.startMs);
+        return comp;
+      });
+    }
+
+    return filtered;
   }
 
   @override
@@ -179,6 +216,37 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 onChanged: (v) {
                   widget.onFilterPlayerChanged(v ?? 'All');
                 },
+              ),
+              const SizedBox(height: 12),
+              InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Sortuj po',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                  labelStyle: TextStyle(color: Colors.white70),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _sortOption,
+                    dropdownColor: const Color(0xFF2E2E2E),
+                    isExpanded: true,
+                    style: const TextStyle(color: Colors.white),
+                    items: const [
+                      DropdownMenuItem(value: 'time_asc', child: Text('Czas (rosnąco)')),
+                      DropdownMenuItem(value: 'time_desc', child: Text('Czas (malejąco)')),
+                      DropdownMenuItem(value: 'type', child: Text('Typ akcji')),
+                      DropdownMenuItem(value: 'player', child: Text('Zawodnik')),
+                      DropdownMenuItem(value: 'confidence', child: Text('Pewność (malejąco)')),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) {
+                        setState(() {
+                          _sortOption = v;
+                        });
+                      }
+                    },
+                  ),
+                ),
               ),
               if (widget.isEditMode)
                 Padding(
@@ -382,6 +450,40 @@ class _ActionSidebarState extends State<ActionSidebar> {
             // ── ZAKŁADKA 2: Playlista ──
             Column(
               children: [
+                // ── Menedżer wielu playlist ──
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  color: const Color(0xFF222222),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            isExpanded: true,
+                            dropdownColor: const Color(0xFF2A2A3E),
+                            value: widget.currentPlaylistId,
+                            hint: const Text('Wybierz lub utwórz playlistę', style: TextStyle(color: Colors.white54, fontSize: 13)),
+                            icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
+                            items: widget.availablePlaylists?.map((artifact) {
+                              return DropdownMenuItem<String>(
+                                value: artifact.id,
+                                child: Text(artifact.title, style: const TextStyle(color: Colors.white)),
+                              );
+                            }).toList() ?? [],
+                            onChanged: (val) {
+                              if (val != null) widget.onPlaylistSelected?.call(val);
+                            },
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add_box, color: Colors.purpleAccent),
+                        tooltip: 'Utwórz nową playlistę',
+                        onPressed: () => _showCreatePlaylistDialog(context),
+                      ),
+                    ],
+                  ),
+                ),
                 if (!widget.isEditMode)
                   Padding(
                     padding: const EdgeInsets.all(8.0),
@@ -582,6 +684,44 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 Navigator.pop(context);
               },
               child: const Text('Save', style: TextStyle(color: Colors.purpleAccent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showCreatePlaylistDialog(BuildContext context) {
+    final nameController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2A2A),
+          title: const Text('Nowa playlista', style: TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: nameController,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Nazwa playlisty',
+              labelStyle: TextStyle(color: Colors.white70),
+              enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.purpleAccent)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+            ),
+            TextButton(
+              onPressed: () {
+                if (nameController.text.trim().isNotEmpty) {
+                  widget.onCreateNewPlaylist?.call(nameController.text.trim());
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Utwórz', style: TextStyle(color: Colors.purpleAccent)),
             ),
           ],
         );
