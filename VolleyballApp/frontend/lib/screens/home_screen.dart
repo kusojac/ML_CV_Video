@@ -534,10 +534,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildProjectTile(ProjectModel project) {
     return Card(
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 4,
-      color: const Color(0xFF1E1E24),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -557,17 +553,39 @@ class _HomeScreenState extends State<HomeScreen> {
                 fit: StackFit.expand,
                 children: [
                   Container(
-                    color: Colors.grey[800],
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.grey[850]!, Colors.grey[900]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
                     child: project.imagePath != null
                         ? Image.network(
                             project.imagePath!,
                             fit: BoxFit.cover,
                           ) // W przyszłości np. File(imagePath)
                         : const Icon(
-                            Icons.folder_copy,
-                            size: 64,
-                            color: Colors.white54,
+                            Icons.folder_special,
+                            size: 72,
+                            color: Colors.white24,
                           ),
+                  ),
+                  // Mroczny gradient od dołu, aby tekst/ikony były czytelne
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.6),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: const [0.6, 1.0],
+                        ),
+                      ),
+                    ),
                   ),
                   Positioned(
                     top: 8,
@@ -575,15 +593,29 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blueAccent),
-                          tooltip: 'Edytuj projekt',
-                          onPressed: () => _editProjectDialog(project),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.redAccent),
-                          tooltip: 'Usuń projekt',
-                          onPressed: () => _deleteProject(project),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black45,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.blueAccent, size: 20),
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(8),
+                                tooltip: 'Edytuj projekt',
+                                onPressed: () => _editProjectDialog(project),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.redAccent, size: 20),
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(8),
+                                tooltip: 'Usuń projekt',
+                                onPressed: () => _deleteProject(project),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -595,7 +627,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -604,19 +636,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        letterSpacing: 0.3,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Expanded(
                       child: Text(
                         project.description.isNotEmpty
                             ? project.description
                             : 'Brak opisu.',
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: Colors.white70,
+                          height: 1.4,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -626,20 +660,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (project.tags.isNotEmpty)
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: Row(
+                        child: Wrap(
+                          spacing: 6,
                           children: project.tags.map((tag) {
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 4.0),
-                              child: Chip(
-                                label: Text(
-                                  tag,
-                                  style: const TextStyle(fontSize: 10),
-                                ),
-                                visualDensity: VisualDensity.compact,
-                                backgroundColor: Colors.purple.withValues(
-                                  alpha: 0.3,
-                                ),
+                            return Chip(
+                              label: Text(
+                                tag,
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
                               ),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             );
                           }).toList(),
                         ),

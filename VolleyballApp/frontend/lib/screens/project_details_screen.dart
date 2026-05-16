@@ -630,10 +630,6 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
 
   Widget _buildArtifactTile(ArtifactModel artifact) {
     return Card(
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      color: const Color(0xFF25252D),
       child: InkWell(
         onTap: () => _openArtifact(artifact),
         child: Column(
@@ -646,10 +642,31 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                 fit: StackFit.expand,
                 children: [
                   Container(
-                    color: Colors.black26,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.grey[850]!, Colors.grey[900]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
                     child: artifact.thumbnailPath != null
                         ? Image.file(File(artifact.thumbnailPath!), fit: BoxFit.cover)
                         : Icon(_getIconForArtifact(artifact.type), size: 48, color: _getColorForArtifact(artifact.type).withValues(alpha: 0.5)),
+                  ),
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.5),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: const [0.5, 1.0],
+                        ),
+                      ),
+                    ),
                   ),
                   Positioned(
                     top: 8,
@@ -658,27 +675,29 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: _getColorForArtifact(artifact.type),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(6),
+                            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
                           ),
                           child: Text(
                             artifact.type.name.toUpperCase(),
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.5),
                           ),
                         ),
                         if (artifact.videoCategory != null) ...[
                           const SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: artifact.videoCategory == 'Mecz' ? Colors.redAccent : Colors.teal,
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
                             ),
                             child: Text(
                               artifact.videoCategory!.toUpperCase(),
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.5),
                             ),
                           ),
                         ],
@@ -686,26 +705,42 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                     ),
                   ),
                   Positioned(
-                    top: 0,
-                    right: 0,
-                    child: PopupMenuButton<String>(
-                      onSelected: (value) {
-                        if (value == 'edit') {
-                          _editArtifact(artifact);
-                        } else if (value == 'unlink') {
-                          _unlinkArtifact(artifact);
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Text('Edytuj szczegóły'),
-                        ),
-                        const PopupMenuItem(
-                          value: 'unlink',
-                          child: Text('Odłącz od projektu'),
-                        ),
-                      ],
+                    top: 4,
+                    right: 4,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black45,
+                        shape: BoxShape.circle,
+                      ),
+                      child: PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert, color: Colors.white, size: 20),
+                        padding: EdgeInsets.zero,
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            _editArtifact(artifact);
+                          } else if (value == 'unlink') {
+                            _unlinkArtifact(artifact);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(children: [
+                                Icon(Icons.edit, size: 18, color: Colors.blueAccent),
+                                SizedBox(width: 8),
+                                Text('Edytuj szczegóły'),
+                            ]),
+                          ),
+                          const PopupMenuItem(
+                            value: 'unlink',
+                            child: Row(children: [
+                                Icon(Icons.link_off, size: 18, color: Colors.orangeAccent),
+                                SizedBox(width: 8),
+                                Text('Odłącz od projektu'),
+                            ]),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -715,21 +750,21 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       artifact.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 0.2),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Expanded(
                       child: Text(
                         artifact.description,
-                        style: const TextStyle(fontSize: 11, color: Colors.white70),
+                        style: const TextStyle(fontSize: 12, color: Colors.white70, height: 1.3),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
