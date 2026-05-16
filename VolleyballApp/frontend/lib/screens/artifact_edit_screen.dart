@@ -19,6 +19,7 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
   String? _videoCategory;
   late TeamMetadata _teamA;
   late TeamMetadata _teamB;
+  bool _isDirty = false;
 
   @override
   void initState() {
@@ -29,7 +30,6 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
     
     _videoCategory = widget.artifact.videoCategory;
     
-    // Inicjalizacja drużyn (klonowanie, by nie zmieniać referencji bez "Zapisz")
     _teamA = widget.artifact.teamA != null 
         ? TeamMetadata.fromJson(widget.artifact.teamA!.toJson()) 
         : TeamMetadata(name: 'Gospodarze');
@@ -37,6 +37,14 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
     _teamB = widget.artifact.teamB != null 
         ? TeamMetadata.fromJson(widget.artifact.teamB!.toJson()) 
         : TeamMetadata(name: 'Goście');
+
+    _titleController.addListener(_markDirty);
+    _descController.addListener(_markDirty);
+    _tagsController.addListener(_markDirty);
+  }
+
+  void _markDirty() {
+    if (!_isDirty) setState(() => _isDirty = true);
   }
 
   @override
@@ -64,13 +72,54 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
       widget.artifact.teamB = _teamB;
     } else if (_videoCategory == 'Trening') {
       widget.artifact.teamA = _teamA;
-      widget.artifact.teamB = null; // Dla treningu tylko jedna drużyna
+      widget.artifact.teamB = null;
     } else {
       widget.artifact.teamA = null;
       widget.artifact.teamB = null;
     }
 
     Navigator.pop(context, widget.artifact);
+  }
+
+  Future<bool> _onWillPop() async {
+    if (!_isDirty) return true;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E24),
+        icon: const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 36),
+        title: const Text('Niezapisane zmiany', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Masz niezapisane zmiany w edytowanych metadanych. Co chcesz zrobić?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, 'cancel'),
+            child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, 'discard'),
+            child: const Text('Odrzuć zmiany', style: TextStyle(color: Colors.orangeAccent)),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.save, size: 16),
+            label: const Text('Zapisz i wyjdź'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            onPressed: () => Navigator.pop(ctx, 'save'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == 'save') {
+      _save();
+      return false;
+    } else if (result == 'discard') {
+      return true;
+    }
+    return false;
   }
 
   void _addPlayer(TeamMetadata team) {
@@ -81,54 +130,57 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
         final numCtrl = TextEditingController();
         String position = 'Przyjmujący';
 
-        return AlertDialog(
-          title: const Text('Dodaj zawodnika'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Imię i nazwisko'),
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: const Text('Dodaj zawodnika'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: 'Imię i nazwisko'),
+                ),
+                TextField(
+                  controller: numCtrl,
+                  decoration: const InputDecoration(labelText: 'Numer'),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: position,
+                  decoration: const InputDecoration(labelText: 'Pozycja'),
+                  items: ['Rozgrywający', 'Przyjmujący', 'Atakujący', 'Środkowy', 'Libero']
+                      .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setDialogState(() => position = v);
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Anuluj'),
               ),
-              TextField(
-                controller: numCtrl,
-                decoration: const InputDecoration(labelText: 'Numer'),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: position,
-                decoration: const InputDecoration(labelText: 'Pozycja'),
-                items: ['Rozgrywający', 'Przyjmujący', 'Atakujący', 'Środkowy', 'Libero']
-                    .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) position = v;
+              ElevatedButton(
+                onPressed: () {
+                  if (nameCtrl.text.isNotEmpty) {
+                    setState(() {
+                      team.players.add(PlayerMetadata(
+                        name: nameCtrl.text.trim(),
+                        number: numCtrl.text.trim(),
+                        position: position,
+                      ));
+                      _isDirty = true;
+                    });
+                    Navigator.pop(context);
+                  }
                 },
+                child: const Text('Dodaj'),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Anuluj'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameCtrl.text.isNotEmpty) {
-                  setState(() {
-                    team.players.add(PlayerMetadata(
-                      name: nameCtrl.text.trim(),
-                      number: numCtrl.text.trim(),
-                      position: position,
-                    ));
-                  });
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Dodaj'),
-            ),
-          ],
         );
       },
     );
@@ -149,7 +201,10 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
                   child: TextFormField(
                     initialValue: team.name,
                     decoration: InputDecoration(labelText: title),
-                    onChanged: (v) => team.name = v,
+                    onChanged: (v) {
+                      team.name = v;
+                      _markDirty();
+                    },
                   ),
                 ),
                 IconButton(
@@ -176,7 +231,10 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
                 trailing: IconButton(
                   icon: const Icon(Icons.remove_circle, color: Colors.redAccent, size: 20),
                   onPressed: () {
-                    setState(() => team.players.removeAt(idx));
+                    setState(() {
+                      team.players.removeAt(idx);
+                      _isDirty = true;
+                    });
                   },
                 ),
               );
@@ -189,75 +247,97 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edycja szczegółów wideo'),
-        actions: [
-          TextButton.icon(
-            icon: const Icon(Icons.save, color: Colors.white),
-            label: const Text('Zapisz', style: TextStyle(color: Colors.white)),
-            onPressed: _save,
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Podstawowe dane
-            const Text('Podstawowe informacje', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Tytuł wideo', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _descController,
-              decoration: const InputDecoration(labelText: 'Opis', border: OutlineInputBorder()),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _tagsController,
-              decoration: const InputDecoration(
-                labelText: 'Tagi (oddzielone przecinkami)',
-                border: OutlineInputBorder(),
-                hintText: 'np. JanKowalski, finał, atak',
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final canLeave = await _onWillPop();
+        if (canLeave && context.mounted) {
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Edycja szczegółów wideo'),
+          actions: [
+            if (_isDirty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 4),
+                child: Tooltip(
+                  message: 'Niezapisane zmiany',
+                  child: Icon(Icons.circle, color: Colors.orangeAccent, size: 10),
+                ),
               ),
+            IconButton(
+              icon: Icon(
+                Icons.save_rounded,
+                color: _isDirty ? Colors.orangeAccent : Colors.white38,
+              ),
+              tooltip: _isDirty ? 'Zapisz zmiany' : 'Brak zmian do zapisu',
+              onPressed: _isDirty ? _save : null,
             ),
-            const SizedBox(height: 24),
-            
-            // Kategoria wideo
-            const Text('Kategoria', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            SegmentedButton<String?>(
-              segments: const [
-                ButtonSegment(value: null, label: Text('Brak')),
-                ButtonSegment(value: 'Trening', label: Text('Trening')),
-                ButtonSegment(value: 'Mecz', label: Text('Mecz')),
-              ],
-              selected: {_videoCategory},
-              onSelectionChanged: (Set<String?> newSelection) {
-                setState(() {
-                  _videoCategory = newSelection.first;
-                });
-              },
-            ),
-            const SizedBox(height: 24),
-
-            // Drużyny i zawodnicy
-            if (_videoCategory == 'Trening') ...[
-              const Text('Zawodnicy / Drużyna (Trening)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              _buildTeamSection(_teamA, 'Nazwa grupy / drużyny'),
-            ] else if (_videoCategory == 'Mecz') ...[
-              const Text('Drużyny (Mecz)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              _buildTeamSection(_teamA, 'Drużyna A (np. Gospodarze)'),
-              _buildTeamSection(_teamB, 'Drużyna B (np. Goście)'),
-            ],
+            const SizedBox(width: 8),
           ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Podstawowe dane
+              const Text('Podstawowe informacje', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _titleController,
+                decoration: const InputDecoration(labelText: 'Tytuł wideo', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _descController,
+                decoration: const InputDecoration(labelText: 'Opis', border: OutlineInputBorder()),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _tagsController,
+                decoration: const InputDecoration(
+                  labelText: 'Tagi (oddzielone przecinkami)',
+                  border: OutlineInputBorder(),
+                  hintText: 'np. JanKowalski, finał, atak',
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Kategoria wideo
+              const Text('Kategoria', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              SegmentedButton<String?>(
+                segments: const [
+                  ButtonSegment(value: null, label: Text('Brak')),
+                  ButtonSegment(value: 'Trening', label: Text('Trening')),
+                  ButtonSegment(value: 'Mecz', label: Text('Mecz')),
+                ],
+                selected: {_videoCategory},
+                onSelectionChanged: (Set<String?> newSelection) {
+                  setState(() {
+                    _videoCategory = newSelection.first;
+                    _isDirty = true;
+                  });
+                },
+              ),
+              const SizedBox(height: 24),
+
+              // Drużyny i zawodnicy
+              if (_videoCategory == 'Trening') ...[
+                const Text('Zawodnicy / Drużyna (Trening)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                _buildTeamSection(_teamA, 'Nazwa grupy / drużyny'),
+              ] else if (_videoCategory == 'Mecz') ...[
+                const Text('Drużyny (Mecz)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                _buildTeamSection(_teamA, 'Drużyna A (np. Gospodarze)'),
+                _buildTeamSection(_teamB, 'Drużyna B (np. Goście)'),
+              ],
+            ],
+          ),
         ),
       ),
     );

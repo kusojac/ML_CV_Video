@@ -23,10 +23,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   List<ArtifactModel> _filteredArtifacts = [];
   String _sortOption = 'date_desc';
   
-  List<ArtifactType> _selectedTypes = [];
-  List<String> _selectedCategories = [];
-  List<String> _selectedTags = [];
-  List<String> _selectedTeams = [];
+  final List<ArtifactType> _selectedTypes = [];
+  final List<String> _selectedCategories = [];
+  final List<String> _selectedTags = [];
+  final List<String> _selectedTeams = [];
 
   @override
   void initState() {

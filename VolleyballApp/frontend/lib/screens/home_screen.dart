@@ -15,7 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<ProjectModel> _filteredProjects = [];
   String _sortOption = 'date_desc';
-  List<String> _selectedFilterTags = [];
+  final List<String> _selectedFilterTags = [];
 
   @override
   void initState() {

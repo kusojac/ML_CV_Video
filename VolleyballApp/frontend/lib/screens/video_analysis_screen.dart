@@ -607,26 +607,27 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: const Color(0xFF1E1E24),
+          icon: const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 36),
           title: const Text('Niezapisane zmiany',
               style: TextStyle(color: Colors.white)),
           content: const Text(
-            'Masz niezapisane zmiany. Czy na pewno chcesz je odrzucić?',
+            'Masz niezapisane zmiany akcji. Czy na pewno chcesz je odrzucić?',
             style: TextStyle(color: Colors.white70),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child:
-                  const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Odrzuć',
+              child: const Text('Odrzuć zmiany',
                   style: TextStyle(color: Colors.orangeAccent)),
             ),
           ],
         ),
       );
+
 
   @override
   Widget build(BuildContext context) {
