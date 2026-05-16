@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/project_model.dart';
 import '../services/project_data_service.dart';
 import 'project_details_screen.dart';
+import '../widgets/graph_view.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ProjectModel> _filteredProjects = [];
   String _sortOption = 'date_desc';
   final List<String> _selectedFilterTags = [];
+  bool _isGraphView = false;
 
   @override
   void initState() {
@@ -240,12 +242,65 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Widget _viewToggleBtn({
+    required IconData icon,
+    required String tooltip,
+    required bool active,
+    required VoidCallback onTap,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: active ? Colors.deepPurpleAccent : Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: active ? Colors.white : Colors.white54,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Zbiór Projektów'),
         actions: [
+          // Toggle widok: kafelki / graf
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _viewToggleBtn(
+                  icon: Icons.grid_view,
+                  tooltip: 'Widok kafelek',
+                  active: !_isGraphView,
+                  onTap: () => setState(() => _isGraphView = false),
+                ),
+                _viewToggleBtn(
+                  icon: Icons.account_tree,
+                  tooltip: 'Widok grafowy',
+                  active: _isGraphView,
+                  onTap: () => setState(() => _isGraphView = true),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 4),
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Nowy Projekt',
@@ -414,48 +469,63 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Expanded(
-            child: _filteredProjects.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.folder_open,
-                          size: 64,
-                          color: Colors.white30,
+            child: _isGraphView
+                ? GraphView(
+                    projects: _filteredProjects,
+                    onRefresh: _filterProjects,
+                    onProjectTap: (project) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProjectDetailsScreen(project: project),
                         ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Brak projektów',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Dodaj nowy projekt, aby rozpocząć pracę.',
-                          style: TextStyle(color: Colors.white54),
-                        ),
-                      ],
-                    ),
-                  )
-                : GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate:
-                        const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 400,
-                          childAspectRatio: 0.8,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
-                    itemCount: _filteredProjects.length,
-                    itemBuilder: (context, index) {
-                      final project = _filteredProjects[index];
-                      return _buildProjectTile(project);
+                      ).then((_) => _filterProjects());
                     },
-                  ),
+                    onProjectEdit: (project) => _editProjectDialog(project),
+                    onProjectDelete: (project) => _deleteProject(project),
+                  )
+                : _filteredProjects.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.folder_open,
+                              size: 64,
+                              color: Colors.white30,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Brak projektów',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white70,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Dodaj nowy projekt, aby rozpocząć pracę.',
+                              style: TextStyle(color: Colors.white54),
+                            ),
+                          ],
+                        ),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate:
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 400,
+                              childAspectRatio: 0.8,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                        itemCount: _filteredProjects.length,
+                        itemBuilder: (context, index) {
+                          final project = _filteredProjects[index];
+                          return _buildProjectTile(project);
+                        },
+                      ),
           ),
         ],
       ),

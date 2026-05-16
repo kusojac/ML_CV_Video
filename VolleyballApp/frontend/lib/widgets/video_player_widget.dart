@@ -97,6 +97,16 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   double? _scrubDragStartX;
   double? _scrubDragStartMs;
 
+  // Prędkość odtwarzania
+  double _playbackRate = 1.0;
+
+  static const List<double> _kRates = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0];
+
+  void _setRate(double rate) {
+    _player.setRate(rate);
+    setState(() => _playbackRate = rate);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1067,6 +1077,106 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     );
   }
 
+  // ─── Kontrola prędkości ─────────────────────────────────────────────────────
+
+  Widget _buildSpeedControl() {
+    final isSlowMo = _playbackRate < 1.0;
+    final isNormal = _playbackRate == 1.0;
+
+    return PopupMenuButton<double>(
+      tooltip: 'Prędkość odtwarzania',
+      color: const Color(0xFF1E1E2E),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      offset: const Offset(0, -200),
+      onSelected: _setRate,
+      itemBuilder: (_) => _kRates.map((rate) {
+        final isSelected = rate == _playbackRate;
+        String label;
+        if (rate == 1.0) {
+          label = '${rate}x (normalna)';
+        } else if (rate < 1.0) {
+          label = '$rate× (zwolnione)';
+        } else {
+          label = '$rate× (przyspieszone)';
+        }
+        return PopupMenuItem<double>(
+          value: rate,
+          child: Row(
+            children: [
+              Icon(
+                isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                size: 16,
+                color: isSelected
+                    ? (rate < 1.0 ? Colors.cyanAccent : rate > 1.0 ? Colors.orangeAccent : Colors.greenAccent)
+                    : Colors.white38,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isNormal
+              ? Colors.white.withValues(alpha: 0.07)
+              : isSlowMo
+                  ? Colors.cyanAccent.withValues(alpha: 0.15)
+                  : Colors.orangeAccent.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isNormal
+                ? Colors.white24
+                : isSlowMo
+                    ? Colors.cyanAccent
+                    : Colors.orangeAccent,
+            width: isNormal ? 1.0 : 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSlowMo
+                  ? Icons.slow_motion_video
+                  : isNormal
+                      ? Icons.speed
+                      : Icons.fast_forward,
+              size: 15,
+              color: isNormal
+                  ? Colors.white54
+                  : isSlowMo
+                      ? Colors.cyanAccent
+                      : Colors.orangeAccent,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              '$_playbackRate×',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isNormal ? FontWeight.normal : FontWeight.bold,
+                color: isNormal
+                    ? Colors.white54
+                    : isSlowMo
+                        ? Colors.cyanAccent
+                        : Colors.orangeAccent,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
@@ -1261,6 +1371,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  // Kontrola prędkości odtwarzania
+                  _buildSpeedControl(),
                   const SizedBox(width: 8),
                   // Hint trybu edycji
                   if (widget.isEditMode)
