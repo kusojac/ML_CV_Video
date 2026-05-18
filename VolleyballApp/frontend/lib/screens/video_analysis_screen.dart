@@ -752,7 +752,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           else if (_actions.isEmpty)
             TextButton.icon(
               icon: const Icon(Icons.analytics, color: Colors.purpleAccent),
-              label: const Text('Analyze Video',
+              label: const Text('Analizuj wideo',
                   style: TextStyle(color: Colors.white)),
               onPressed: _startAnalysis,
             ),
