@@ -1,18 +1,13 @@
 import cv2
 import pandas as pd
 import numpy as np
-import os
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 
-def extract_volleyball_ultra_sensitive(video_path, output_video, output_csv):
-    print("KROK 1: Analiza wysokiej czułości (Raw Motion Detection)...")
-    cap = cv2.VideoCapture(video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    
+def _calculate_motion_data(cap, height):
     motion_data = []
     ret, prev_frame = cap.read()
+    if not ret:
+        return motion_data
     
     # --- DEFINE ROI (Region of Interest) ---
     # Wycinamy górę (sufit) i dół (kibice/ławki), zostawiamy środek gdzie jest boisko
@@ -46,9 +41,9 @@ def extract_volleyball_ultra_sensitive(video_path, output_video, output_csv):
         if frame_count % 1000 == 0:
             print(f" Analiza: {frame_count} klatek...")
 
-    cap.release()
+    return motion_data
 
-    print("KROK 2: Algorytm progu adaptacyjnego...")
+def _detect_action_periods(motion_data, fps):
     series = pd.Series(motion_data)
     
     # Bardzo krótkie wygładzanie (0.5s), żeby nie zgubić szybkich akcji (serw w siatkę)
@@ -95,11 +90,9 @@ def extract_volleyball_ultra_sensitive(video_path, output_video, output_csv):
                 curr = next_p
         merged.append(curr)
 
-    # Zapis CSV
-    df = pd.DataFrame(merged)
-    df.to_csv(output_csv, index=False)
-    
-    # KROK 3: Generowanie Wideo
+    return merged
+
+def _render_highlights(video_path, merged, output_video, fps):
     print(f" Wykryto {len(merged)} potencjalnych akcji. Renderowanie...")
     try:
         with VideoFileClip(video_path) as video:
@@ -111,6 +104,25 @@ def extract_volleyball_ultra_sensitive(video_path, output_video, output_csv):
                 for c in clips: c.close()
     except Exception as e:
         print(f"Błąd renderowania: {e}")
+
+def extract_volleyball_ultra_sensitive(video_path, output_video, output_csv):
+    print("KROK 1: Analiza wysokiej czułości (Raw Motion Detection)...")
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+    motion_data = _calculate_motion_data(cap, height)
+    cap.release()
+
+    print("KROK 2: Algorytm progu adaptacyjnego...")
+    merged = _detect_action_periods(motion_data, fps)
+
+    # Zapis CSV
+    df = pd.DataFrame(merged)
+    df.to_csv(output_csv, index=False)
+
+    # KROK 3: Generowanie Wideo
+    _render_highlights(video_path, merged, output_video, fps)
 
 if __name__ == "__main__":
     INPUT = "ATJSW_Volley_Concept_Katowice_MlodzikSet2_VID20260110123022.mp4"
