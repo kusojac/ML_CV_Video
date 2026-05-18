@@ -705,42 +705,27 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                     ),
                   ),
                   Positioned(
-                    top: 4,
-                    right: 4,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black45,
-                        shape: BoxShape.circle,
-                      ),
-                      child: PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert, color: Colors.white, size: 20),
-                        padding: EdgeInsets.zero,
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            _editArtifact(artifact);
-                          } else if (value == 'unlink') {
-                            _unlinkArtifact(artifact);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 'edit',
-                            child: Row(children: [
-                                Icon(Icons.edit, size: 18, color: Colors.blueAccent),
-                                SizedBox(width: 8),
-                                Text('Edytuj szczegóły'),
-                            ]),
-                          ),
-                          const PopupMenuItem(
-                            value: 'unlink',
-                            child: Row(children: [
-                                Icon(Icons.link_off, size: 18, color: Colors.orangeAccent),
-                                SizedBox(width: 8),
-                                Text('Odłącz od projektu'),
-                            ]),
-                          ),
-                        ],
-                      ),
+                    top: 0,
+                    right: 0,
+                    child: PopupMenuButton<String>(
+                      tooltip: 'Opcje artefaktu',
+                      onSelected: (value) {
+                        if (value == 'edit') {
+                          _editArtifact(artifact);
+                        } else if (value == 'unlink') {
+                          _unlinkArtifact(artifact);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Text('Edytuj szczegóły'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'unlink',
+                          child: Text('Odłącz od projektu'),
+                        ),
+                      ],
                     ),
                   ),
                 ],

@@ -26,7 +26,7 @@ def test_process_video_task_error_handling():
         process_video_task(job_id, video_path)
 
     assert analysis_jobs[job_id]["status"] == "error"
-    assert analysis_jobs[job_id]["error"] == "Test error processing video"
+    assert analysis_jobs[job_id]["error"] == "An internal error occurred during processing."
 
 def test_process_video_task_success(tmp_path):
     job_id = "test_job_success"

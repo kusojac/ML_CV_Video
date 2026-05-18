@@ -229,6 +229,7 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
                 title: Text(p.name),
                 subtitle: Text(p.position),
                 trailing: IconButton(
+                  tooltip: 'Usuń zawodnika',
                   icon: const Icon(Icons.remove_circle, color: Colors.redAccent, size: 20),
                   onPressed: () {
                     setState(() {
