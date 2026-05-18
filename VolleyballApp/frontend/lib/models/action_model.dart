@@ -3,7 +3,8 @@ class ActionModel {
   String type;
   double startMs;
   double endMs;
-  List<double> playerBox; // [x, y, w, h] or similar. Our backend gives [x_min, y_min, x_max, y_max].
+  List<double>
+  playerBox; // [x, y, w, h] or similar. Our backend gives [x_min, y_min, x_max, y_max].
   String playerId;
   double confidence;
 
@@ -23,7 +24,9 @@ class ActionModel {
       type: json['type'],
       startMs: (json['start_ms'] as num).toDouble(),
       endMs: (json['end_ms'] as num).toDouble(),
-      playerBox: (json['player_box'] as List).map((e) => (e as num).toDouble()).toList(),
+      playerBox: (json['player_box'] as List)
+          .map((e) => (e as num).toDouble())
+          .toList(),
       playerId: json['player_id'] ?? 'Unknown',
       confidence: (json['confidence'] as num).toDouble(),
     );

@@ -43,7 +43,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _filteredProjects = _dataService.projects.where((project) {
           final nameMatch = project.name.toLowerCase().contains(query);
           final descMatch = project.description.toLowerCase().contains(query);
-          final tagMatch = project.tags.any((tag) => tag.toLowerCase().contains(query));
+          final tagMatch = project.tags.any(
+            (tag) => tag.toLowerCase().contains(query),
+          );
           return nameMatch || descMatch || tagMatch;
         }).toList();
       }
@@ -66,7 +68,9 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Nazwa projektu'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nazwa projektu',
+                  ),
                 ),
                 TextField(
                   controller: descController,
@@ -124,7 +128,9 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Usuń projekt'),
-        content: Text('Czy na pewno chcesz usunąć projekt "${project.name}"?\nArtefakty wciąż pozostaną w bazie globalnej.'),
+        content: Text(
+          'Czy na pewno chcesz usunąć projekt "${project.name}"?\nArtefakty wciąż pozostaną w bazie globalnej.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -148,9 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Zbiór Projektów'),
-      ),
+      appBar: AppBar(title: const Text('Zbiór Projektów')),
       body: Column(
         children: [
           Padding(
@@ -177,7 +181,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: const Icon(Icons.add),
                   label: const Text('Nowy Projekt'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -188,15 +195,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Expanded(
             child: _filteredProjects.isEmpty
-                ? const Center(child: Text('Brak projektów. Dodaj nowy projekt.'))
+                ? const Center(
+                    child: Text('Brak projektów. Dodaj nowy projekt.'),
+                  )
                 : GridView.builder(
                     padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 400,
-                      childAspectRatio: 0.8,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 400,
+                          childAspectRatio: 0.8,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
                     itemCount: _filteredProjects.length,
                     itemBuilder: (context, index) {
                       final project = _filteredProjects[index];
@@ -236,8 +246,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     color: Colors.grey[800],
                     child: project.imagePath != null
-                        ? Image.network(project.imagePath!, fit: BoxFit.cover) // W przyszłości np. File(imagePath)
-                        : const Icon(Icons.folder_copy, size: 64, color: Colors.white54),
+                        ? Image.network(
+                            project.imagePath!,
+                            fit: BoxFit.cover,
+                          ) // W przyszłości np. File(imagePath)
+                        : const Icon(
+                            Icons.folder_copy,
+                            size: 64,
+                            color: Colors.white54,
+                          ),
                   ),
                   Positioned(
                     top: 8,
@@ -260,15 +277,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text(
                       project.name,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Expanded(
                       child: Text(
-                        project.description.isNotEmpty ? project.description : 'Brak opisu.',
-                        style: const TextStyle(fontSize: 12, color: Colors.white70),
+                        project.description.isNotEmpty
+                            ? project.description
+                            : 'Brak opisu.',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -282,9 +307,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             return Padding(
                               padding: const EdgeInsets.only(right: 4.0),
                               child: Chip(
-                                label: Text(tag, style: const TextStyle(fontSize: 10)),
+                                label: Text(
+                                  tag,
+                                  style: const TextStyle(fontSize: 10),
+                                ),
                                 visualDensity: VisualDensity.compact,
-                                backgroundColor: Colors.purple.withValues(alpha: 0.3),
+                                backgroundColor: Colors.purple.withValues(
+                                  alpha: 0.3,
+                                ),
                               ),
                             );
                           }).toList(),

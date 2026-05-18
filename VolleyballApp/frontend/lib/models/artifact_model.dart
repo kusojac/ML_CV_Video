@@ -1,10 +1,6 @@
 import 'package:uuid/uuid.dart';
 
-enum ArtifactType {
-  video,
-  playlist,
-  action,
-}
+enum ArtifactType { video, playlist, action }
 
 class ArtifactModel {
   String id;
@@ -12,12 +8,13 @@ class ArtifactModel {
   String title;
   String description;
   List<String> tags;
-  String filePath; // Zależnie od typu: plik wideo, plik JSON playlisty, lub referencja JSON akcji
+  String
+  filePath; // Zależnie od typu: plik wideo, plik JSON playlisty, lub referencja JSON akcji
   String? thumbnailPath;
   DateTime createdAt;
-  
+
   // W przypadku typu "action" lub "playlist", wskazanie na plik wideo bazowy
-  String? sourceVideoPath; 
+  String? sourceVideoPath;
 
   ArtifactModel({
     String? id,
@@ -29,9 +26,9 @@ class ArtifactModel {
     this.thumbnailPath,
     DateTime? createdAt,
     this.sourceVideoPath,
-  })  : id = id ?? const Uuid().v4(),
-        createdAt = createdAt ?? DateTime.now(),
-        tags = tags ?? [];
+  }) : id = id ?? const Uuid().v4(),
+       createdAt = createdAt ?? DateTime.now(),
+       tags = tags ?? [];
 
   factory ArtifactModel.fromJson(Map<String, dynamic> json) {
     return ArtifactModel(

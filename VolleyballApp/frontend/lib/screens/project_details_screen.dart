@@ -54,7 +54,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       } else {
         _filteredArtifacts = _projectArtifacts.where((a) {
           final titleMatch = a.title.toLowerCase().contains(query);
-          final tagMatch = a.tags.any((tag) => tag.toLowerCase().contains(query));
+          final tagMatch = a.tags.any(
+            (tag) => tag.toLowerCase().contains(query),
+          );
           final descMatch = a.description.toLowerCase().contains(query);
           return titleMatch || tagMatch || descMatch;
         }).toList();
@@ -80,8 +82,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       );
 
       await _dataService.createArtifact(newArtifact);
-      await _dataService.linkArtifactToProject(widget.project.id, newArtifact.id);
-      
+      await _dataService.linkArtifactToProject(
+        widget.project.id,
+        newArtifact.id,
+      );
+
       _loadArtifacts();
     }
   }
@@ -89,7 +94,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   // Otwarcie dialogu z listą WSZYSTKICH artefaktów w bazie, aby dodać je do obecnego projektu
   Future<void> _linkExistingArtifactDialog() async {
     final allArtifacts = _dataService.artifacts;
-    final unlinkedArtifacts = allArtifacts.where((a) => !widget.project.artifactIds.contains(a.id)).toList();
+    final unlinkedArtifacts = allArtifacts
+        .where((a) => !widget.project.artifactIds.contains(a.id))
+        .toList();
 
     if (unlinkedArtifacts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -162,14 +169,18 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Odłącz artefakt'),
-        content: Text('Czy na pewno chcesz odłączyć artefakt "${artifact.title}" od tego projektu?\nNie zostanie on usunięty z dysku.'),
+        content: Text(
+          'Czy na pewno chcesz odłączyć artefakt "${artifact.title}" od tego projektu?\nNie zostanie on usunięty z dysku.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Anuluj'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orangeAccent,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Odłącz', style: TextStyle(color: Colors.white)),
           ),
@@ -178,7 +189,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     );
 
     if (confirm == true) {
-      await _dataService.unlinkArtifactFromProject(widget.project.id, artifact.id);
+      await _dataService.unlinkArtifactFromProject(
+        widget.project.id,
+        artifact.id,
+      );
       _loadArtifacts();
     }
   }
@@ -188,9 +202,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     // Obecnie zakładamy, że VideoAnalysisScreen obsługuje główny wideo
     // Dla playlist / akcji powinniśmy przekazać context
     String videoToOpen = artifact.filePath;
-    if (artifact.type == ArtifactType.playlist || artifact.type == ArtifactType.action) {
-      if (artifact.sourceVideoPath != null && artifact.sourceVideoPath!.isNotEmpty) {
-         videoToOpen = artifact.sourceVideoPath!;
+    if (artifact.type == ArtifactType.playlist ||
+        artifact.type == ArtifactType.action) {
+      if (artifact.sourceVideoPath != null &&
+          artifact.sourceVideoPath!.isNotEmpty) {
+        videoToOpen = artifact.sourceVideoPath!;
       }
     }
 
@@ -233,15 +249,24 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.project.description, style: const TextStyle(fontSize: 16)),
+                Text(
+                  widget.project.description,
+                  style: const TextStyle(fontSize: 16),
+                ),
                 const SizedBox(height: 8),
                 if (widget.project.tags.isNotEmpty)
                   Wrap(
                     spacing: 8,
-                    children: widget.project.tags.map((tag) => Chip(
-                      label: Text(tag),
-                      backgroundColor: Colors.purple.withValues(alpha: 0.3),
-                    )).toList(),
+                    children: widget.project.tags
+                        .map(
+                          (tag) => Chip(
+                            label: Text(tag),
+                            backgroundColor: Colors.purple.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                        )
+                        .toList(),
                   ),
               ],
             ),
@@ -268,12 +293,13 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                 ? const Center(child: Text('Brak powiązanych artefaktów.'))
                 : GridView.builder(
                     padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 250,
-                      childAspectRatio: 0.85,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 250,
+                          childAspectRatio: 0.85,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
                     itemCount: _filteredArtifacts.length,
                     itemBuilder: (context, index) {
                       final artifact = _filteredArtifacts[index];
@@ -306,21 +332,37 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                   Container(
                     color: Colors.black26,
                     child: artifact.thumbnailPath != null
-                        ? Image.file(File(artifact.thumbnailPath!), fit: BoxFit.cover)
-                        : Icon(_getIconForArtifact(artifact.type), size: 48, color: _getColorForArtifact(artifact.type).withValues(alpha: 0.5)),
+                        ? Image.file(
+                            File(artifact.thumbnailPath!),
+                            fit: BoxFit.cover,
+                          )
+                        : Icon(
+                            _getIconForArtifact(artifact.type),
+                            size: 48,
+                            color: _getColorForArtifact(
+                              artifact.type,
+                            ).withValues(alpha: 0.5),
+                          ),
                   ),
                   Positioned(
                     top: 8,
                     left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: _getColorForArtifact(artifact.type),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         artifact.type.name.toUpperCase(),
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -354,7 +396,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                   children: [
                     Text(
                       artifact.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -362,7 +407,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                     Expanded(
                       child: Text(
                         artifact.description,
-                        style: const TextStyle(fontSize: 11, color: Colors.white70),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.white70,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),

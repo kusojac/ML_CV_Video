@@ -82,13 +82,13 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   String? _hoveredActionId;
 
   // Zaznaczanie zakresu na timeline
-  double? _rangeStartMs;   // punkt startowy zaznaczenia (ms)
-  double? _rangeEndMs;     // punkt końcowy zaznaczenia (ms)
+  double? _rangeStartMs; // punkt startowy zaznaczenia (ms)
+  double? _rangeEndMs; // punkt końcowy zaznaczenia (ms)
   bool _isDraggingRange = false;
 
   // Poziom przybliżenia (zoom) osi czasu
   double _zoomLevel = 1.0;
-  
+
   // Kontroler przewijania osi czasu
   final ScrollController _timelineScrollController = ScrollController();
 
@@ -134,8 +134,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     super.dispose();
   }
 
-  void _seekToMs(double ms) =>
-      _player.seek(Duration(milliseconds: ms.round()));
+  void _seekToMs(double ms) => _player.seek(Duration(milliseconds: ms.round()));
 
   // ─── Potwierdzenie nowej akcji ─────────────────────────────────────────────
 
@@ -156,15 +155,21 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: const Color(0xFF1E1E2E),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Row(
             children: [
-              const Icon(Icons.add_circle_outline,
-                  color: Colors.purpleAccent, size: 22),
+              const Icon(
+                Icons.add_circle_outline,
+                color: Colors.purpleAccent,
+                size: 22,
+              ),
               const SizedBox(width: 10),
-              const Text('Nowa akcja',
-                  style: TextStyle(color: Colors.white, fontSize: 17)),
+              const Text(
+                'Nowa akcja',
+                style: TextStyle(color: Colors.white, fontSize: 17),
+              ),
             ],
           ),
           content: Column(
@@ -174,7 +179,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
               // Zakres czasu
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 10),
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withAlpha(13),
                   borderRadius: BorderRadius.circular(10),
@@ -185,34 +192,41 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Początek',
-                            style: TextStyle(
-                                color: Colors.white54, fontSize: 11)),
+                        const Text(
+                          'Początek',
+                          style: TextStyle(color: Colors.white54, fontSize: 11),
+                        ),
                         Text(
                           _fmtMs(startMs),
                           style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'monospace',
-                              fontSize: 15),
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                            fontSize: 15,
+                          ),
                         ),
                       ],
                     ),
-                    const Icon(Icons.arrow_forward,
-                        color: Colors.white38, size: 16),
+                    const Icon(
+                      Icons.arrow_forward,
+                      color: Colors.white38,
+                      size: 16,
+                    ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('Koniec',
-                            style: TextStyle(
-                                color: Colors.white54, fontSize: 11)),
+                        const Text(
+                          'Koniec',
+                          style: TextStyle(color: Colors.white54, fontSize: 11),
+                        ),
                         Text(
                           _fmtMs(endMs),
                           style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'monospace',
-                              fontSize: 15),
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                            fontSize: 15,
+                          ),
                         ),
                       ],
                     ),
@@ -220,8 +234,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('Typ akcji',
-                  style: TextStyle(color: Colors.white70, fontSize: 13)),
+              const Text(
+                'Typ akcji',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
               const SizedBox(height: 8),
               // Przyciski wyboru typu
               Wrap(
@@ -230,30 +246,35 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                 children: kVolleyballActions.map((type) {
                   final isChosen = type == selectedType;
                   final col = _actionColor(type);
-                  return GestureDetector(
-                    onTap: () => setDialogState(() => selectedType = type),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isChosen
-                            ? col.withAlpha(51)
-                            : Colors.white.withAlpha(13),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isChosen ? col : Colors.white24,
-                          width: isChosen ? 2 : 1,
+                  return MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => setDialogState(() => selectedType = type),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
                         ),
-                      ),
-                      child: Text(
-                        type,
-                        style: TextStyle(
-                          color: isChosen ? col : Colors.white70,
-                          fontWeight: isChosen
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          fontSize: 13,
+                        decoration: BoxDecoration(
+                          color: isChosen
+                              ? col.withAlpha(51)
+                              : Colors.white.withAlpha(13),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isChosen ? col : Colors.white24,
+                            width: isChosen ? 2 : 1,
+                          ),
+                        ),
+                        child: Text(
+                          type,
+                          style: TextStyle(
+                            color: isChosen ? col : Colors.white70,
+                            fontWeight: isChosen
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ),
@@ -265,15 +286,18 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Anuluj',
-                  style: TextStyle(color: Colors.white38)),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white38),
+              ),
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purpleAccent,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               icon: const Icon(Icons.check, size: 16),
               label: const Text('Dodaj'),
@@ -303,8 +327,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     final h = d.inHours;
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    final mil =
-        (d.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(2, '0');
+    final mil = (d.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(
+      2,
+      '0',
+    );
     return h > 0 ? '$h:$m:$s.$mil' : '$m:$s.$mil';
   }
 
@@ -320,11 +346,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     for (final action in widget.actions) {
       final startFrac = (action.startMs / totalMs).clamp(0.0, 1.0);
       final endFrac = (action.endMs / totalMs).clamp(0.0, 1.0);
-      final w =
-          ((endFrac - startFrac) * timelineWidth).clamp(2.0, timelineWidth);
+      final w = ((endFrac - startFrac) * timelineWidth).clamp(
+        2.0,
+        timelineWidth,
+      );
       final color = _actionColor(action.type);
       final isSelected = widget.selectedAction?.id == action.id;
-      final isInPlaylist = widget.playlistActions?.any((a) => a.id == action.id) ?? false;
+      final isInPlaylist =
+          widget.playlistActions?.any((a) => a.id == action.id) ?? false;
 
       markers.add(
         Positioned(
@@ -341,26 +370,34 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             },
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onHorizontalDragUpdate: widget.isEditMode ? (details) {
+              onHorizontalDragUpdate: widget.isEditMode
+                  ? (details) {
                       final msDelta =
                           (details.primaryDelta ?? 0) / timelineWidth * totalMs;
-                      final newStart =
-                          (action.startMs + msDelta).clamp(0.0, totalMs);
-                      final newEnd =
-                          (action.endMs + msDelta).clamp(newStart, totalMs);
-                          
+                      final newStart = (action.startMs + msDelta).clamp(
+                        0.0,
+                        totalMs,
+                      );
+                      final newEnd = (action.endMs + msDelta).clamp(
+                        newStart,
+                        totalMs,
+                      );
+
                       _seekToMs(newStart); // Podgląd
-                      
-                      widget.onActionUpdated?.call(ActionModel(
-                        id: action.id,
-                        type: action.type,
-                        startMs: newStart,
-                        endMs: newEnd,
-                        playerBox: action.playerBox,
-                        playerId: action.playerId,
-                        confidence: action.confidence,
-                      ));
-                    } : null,
+
+                      widget.onActionUpdated?.call(
+                        ActionModel(
+                          id: action.id,
+                          type: action.type,
+                          startMs: newStart,
+                          endMs: newEnd,
+                          playerBox: action.playerBox,
+                          playerId: action.playerId,
+                          confidence: action.confidence,
+                        ),
+                      );
+                    }
+                  : null,
               onTap: () {
                 _seekToMs(action.startMs);
                 widget.onActionSelected?.call(action);
@@ -374,138 +411,186 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                   // Blok akcji
                   Container(
                     decoration: BoxDecoration(
-                      color: color.withAlpha(widget.isEditMode || _hoveredActionId == action.id ? 204 : 153),
-                      borderRadius: BorderRadius.circular(widget.isEditMode ? 6 : 3),
+                      color: color.withAlpha(
+                        widget.isEditMode || _hoveredActionId == action.id
+                            ? 204
+                            : 153,
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        widget.isEditMode ? 6 : 3,
+                      ),
                       border: isSelected
                           ? Border.all(color: Colors.white, width: 2)
                           : isInPlaylist
-                              ? Border.all(color: Colors.white, width: 1.5)
-                              : (_hoveredActionId == action.id
-                                  ? Border.all(color: Colors.white70, width: 2)
-                                  : (widget.isEditMode
-                                      ? Border.all(color: Colors.white54, width: 1)
+                          ? Border.all(color: Colors.white, width: 1.5)
+                          : (_hoveredActionId == action.id
+                                ? Border.all(color: Colors.white70, width: 2)
+                                : (widget.isEditMode
+                                      ? Border.all(
+                                          color: Colors.white54,
+                                          width: 1,
+                                        )
                                       : null)),
                     ),
                   ),
-                // Nazwa akcji (jeśli wystarczająco szeroka)
-                if (w > 30)
-                  Center(
-                    child: Text(
-                      action.type.substring(0, action.type.length.clamp(0, 3)),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withAlpha(180),
-                            blurRadius: 2,
-                          ),
-                        ],
+                  // Nazwa akcji (jeśli wystarczająco szeroka)
+                  if (w > 30)
+                    Center(
+                      child: Text(
+                        action.type.substring(
+                          0,
+                          action.type.length.clamp(0, 3),
+                        ),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withAlpha(180),
+                              blurRadius: 2,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                // Uchwyt lewej krawędzi
-                if (widget.isEditMode) // Pokazuj uchwyty tylko w trybie edycji
-                  Positioned(
-                    left: -6, // Wystaje poza krawędź bloku, by łatwiej było złapać
-                    top: 0,
-                    bottom: 0,
-                    width: 16,
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.resizeLeftRight,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onHorizontalDragUpdate: (details) {
-                          final msDelta =
-                              (details.primaryDelta ?? 0) / timelineWidth * totalMs;
-                          final newStart =
-                              (action.startMs + msDelta).clamp(0.0, action.endMs - 100);
-                          
-                          _seekToMs(newStart); // Podgląd
-                          
-                          widget.onActionUpdated?.call(ActionModel(
-                            id: action.id,
-                            type: action.type,
-                            startMs: newStart,
-                            endMs: action.endMs,
-                            playerBox: action.playerBox,
-                            playerId: action.playerId,
-                            confidence: action.confidence,
-                          ));
-                        },
-                        child: Center(
-                          child: Container(
-                            height: double.infinity,
-                            width: 8,
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.white : Colors.white70,
-                              borderRadius: BorderRadius.circular(4),
-                              boxShadow: const [
-                                BoxShadow(color: Colors.black45, blurRadius: 2, spreadRadius: 1)
-                              ],
-                            ),
-                            child: const Center(
-                              child: Icon(Icons.chevron_left, size: 10, color: Colors.black87),
+                  // Uchwyt lewej krawędzi
+                  if (widget
+                      .isEditMode) // Pokazuj uchwyty tylko w trybie edycji
+                    Positioned(
+                      left:
+                          -6, // Wystaje poza krawędź bloku, by łatwiej było złapać
+                      top: 0,
+                      bottom: 0,
+                      width: 16,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.resizeLeftRight,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onHorizontalDragUpdate: (details) {
+                            final msDelta =
+                                (details.primaryDelta ?? 0) /
+                                timelineWidth *
+                                totalMs;
+                            final newStart = (action.startMs + msDelta).clamp(
+                              0.0,
+                              action.endMs - 100,
+                            );
+
+                            _seekToMs(newStart); // Podgląd
+
+                            widget.onActionUpdated?.call(
+                              ActionModel(
+                                id: action.id,
+                                type: action.type,
+                                startMs: newStart,
+                                endMs: action.endMs,
+                                playerBox: action.playerBox,
+                                playerId: action.playerId,
+                                confidence: action.confidence,
+                              ),
+                            );
+                          },
+                          child: Center(
+                            child: Container(
+                              height: double.infinity,
+                              width: 8,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.white70,
+                                borderRadius: BorderRadius.circular(4),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black45,
+                                    blurRadius: 2,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.chevron_left,
+                                  size: 10,
+                                  color: Colors.black87,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                // Uchwyt prawej krawędzi
-                if (widget.isEditMode) // Pokazuj uchwyty tylko w trybie edycji
-                  Positioned(
-                    right: -6,
-                    top: 0,
-                    bottom: 0,
-                    width: 16,
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.resizeLeftRight,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onHorizontalDragUpdate: (details) {
-                          final msDelta =
-                              (details.primaryDelta ?? 0) / timelineWidth * totalMs;
-                          final newEnd =
-                              (action.endMs + msDelta).clamp(action.startMs + 100, totalMs);
-                          
-                          _seekToMs(newEnd); // Podgląd
-                          
-                          widget.onActionUpdated?.call(ActionModel(
-                            id: action.id,
-                            type: action.type,
-                            startMs: action.startMs,
-                            endMs: newEnd,
-                            playerBox: action.playerBox,
-                            playerId: action.playerId,
-                            confidence: action.confidence,
-                          ));
-                        },
-                        child: Center(
-                          child: Container(
-                            height: double.infinity,
-                            width: 8,
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.white : Colors.white70,
-                              borderRadius: BorderRadius.circular(4),
-                              boxShadow: const [
-                                BoxShadow(color: Colors.black45, blurRadius: 2, spreadRadius: 1)
-                              ],
-                            ),
-                            child: const Center(
-                              child: Icon(Icons.chevron_right, size: 10, color: Colors.black87),
+                  // Uchwyt prawej krawędzi
+                  if (widget
+                      .isEditMode) // Pokazuj uchwyty tylko w trybie edycji
+                    Positioned(
+                      right: -6,
+                      top: 0,
+                      bottom: 0,
+                      width: 16,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.resizeLeftRight,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onHorizontalDragUpdate: (details) {
+                            final msDelta =
+                                (details.primaryDelta ?? 0) /
+                                timelineWidth *
+                                totalMs;
+                            final newEnd = (action.endMs + msDelta).clamp(
+                              action.startMs + 100,
+                              totalMs,
+                            );
+
+                            _seekToMs(newEnd); // Podgląd
+
+                            widget.onActionUpdated?.call(
+                              ActionModel(
+                                id: action.id,
+                                type: action.type,
+                                startMs: action.startMs,
+                                endMs: newEnd,
+                                playerBox: action.playerBox,
+                                playerId: action.playerId,
+                                confidence: action.confidence,
+                              ),
+                            );
+                          },
+                          child: Center(
+                            child: Container(
+                              height: double.infinity,
+                              width: 8,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.white70,
+                                borderRadius: BorderRadius.circular(4),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black45,
+                                    blurRadius: 2,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.chevron_right,
+                                  size: 10,
+                                  color: Colors.black87,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ));
+      );
     }
 
     // Podgląd zaznaczanego zakresu (podczas drag)
@@ -530,10 +615,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             decoration: BoxDecoration(
               color: Colors.purpleAccent.withAlpha(80),
               borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: Colors.purpleAccent,
-                width: 1.5,
-              ),
+              border: Border.all(color: Colors.purpleAccent, width: 1.5),
             ),
           ),
         ),
@@ -574,8 +656,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         final pos = snapshot.data ?? Duration.zero;
         final total = _totalDuration;
         final totalMs = total.inMilliseconds.toDouble();
-        final progress =
-            totalMs > 0 ? pos.inMilliseconds / totalMs : 0.0;
+        final progress = totalMs > 0 ? pos.inMilliseconds / totalMs : 0.0;
 
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -590,56 +671,85 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                     Text(
                       _fmtMs(pos.inMilliseconds.toDouble()),
                       style: const TextStyle(
-                          color: Colors.white54,
-                          fontSize: 11,
-                          fontFamily: 'monospace'),
+                        color: Colors.white54,
+                        fontSize: 11,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                     if (widget.isEditMode)
                       Row(
                         children: [
-                          const Icon(Icons.touch_app,
-                              color: Colors.purpleAccent, size: 12),
+                          const Icon(
+                            Icons.touch_app,
+                            color: Colors.purpleAccent,
+                            size: 12,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             _rangeStartMs != null && _rangeEndMs != null
                                 ? '${_fmtMs(_rangeStartMs!.clamp(0.0, totalMs))} → '
-                                    '${_fmtMs(_rangeEndMs!.clamp(0.0, totalMs))}'
+                                      '${_fmtMs(_rangeEndMs!.clamp(0.0, totalMs))}'
                                 : 'Przeciągnij aby dodać akcję',
                             style: const TextStyle(
-                                color: Colors.purpleAccent,
-                                fontSize: 11,
-                                fontFamily: 'monospace'),
+                              color: Colors.purpleAccent,
+                              fontSize: 11,
+                              fontFamily: 'monospace',
+                            ),
                           ),
                         ],
                       ),
                     Row(
                       children: [
                         if (_zoomLevel > 1.0)
-                          Text('Zoom: ${_zoomLevel.toStringAsFixed(1)}x',
-                              style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                          Text(
+                            'Zoom: ${_zoomLevel.toStringAsFixed(1)}x',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 10,
+                            ),
+                          ),
                         if (_zoomLevel > 1.0) const SizedBox(width: 8),
                         IconButton(
-                          icon: const Icon(Icons.zoom_out, color: Colors.white54, size: 14),
+                          icon: const Icon(
+                            Icons.zoom_out,
+                            color: Colors.white54,
+                            size: 14,
+                          ),
                           tooltip: 'Oddal / Zoom out',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          onPressed: () => setState(() => _zoomLevel = (_zoomLevel - 0.5).clamp(1.0, 10.0)),
+                          onPressed: () => setState(
+                            () => _zoomLevel = (_zoomLevel - 0.5).clamp(
+                              1.0,
+                              10.0,
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         IconButton(
-                          icon: const Icon(Icons.zoom_in, color: Colors.white54, size: 14),
+                          icon: const Icon(
+                            Icons.zoom_in,
+                            color: Colors.white54,
+                            size: 14,
+                          ),
                           tooltip: 'Przybliż / Zoom in',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          onPressed: () => setState(() => _zoomLevel = (_zoomLevel + 0.5).clamp(1.0, 10.0)),
+                          onPressed: () => setState(
+                            () => _zoomLevel = (_zoomLevel + 0.5).clamp(
+                              1.0,
+                              10.0,
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Text(
                           _fmtMs(totalMs),
                           style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 11,
-                              fontFamily: 'monospace'),
+                            color: Colors.white54,
+                            fontSize: 11,
+                            fontFamily: 'monospace',
+                          ),
                         ),
                       ],
                     ),
@@ -654,112 +764,114 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                   child: SingleChildScrollView(
                     controller: _timelineScrollController,
                     scrollDirection: Axis.horizontal,
-                    physics: _isDraggingRange ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    // ── Ruch / przewijanie (bez edit mode) ───────────────────
-                    onHorizontalDragUpdate: widget.isEditMode
-                        ? null
-                        : (details) {
-                            final rel =
-                                (details.localPosition.dx / timelineWidth)
-                                    .clamp(0.0, 1.0);
-                            _seekToMs(rel * totalMs);
-                          },
-                  // ── Tap bez edit: seek ─────────────────────────────────
-                  onTapUp: widget.isEditMode
-                      ? null
-                      : (details) {
-                          final rel =
-                              (details.localPosition.dx / timelineWidth)
-                                  .clamp(0.0, 1.0);
-                          _seekToMs(rel * totalMs);
-                        },
-                  // ── Drag w edit: zaznaczenie zakresu ──────────────────
-                  onPanStart: widget.isEditMode
-                      ? (details) {
-                          final ms =
-                              (details.localPosition.dx / timelineWidth)
+                    physics: _isDraggingRange
+                        ? const NeverScrollableScrollPhysics()
+                        : const ClampingScrollPhysics(),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      // ── Ruch / przewijanie (bez edit mode) ───────────────────
+                      onHorizontalDragUpdate: widget.isEditMode
+                          ? null
+                          : (details) {
+                              final rel =
+                                  (details.localPosition.dx / timelineWidth)
+                                      .clamp(0.0, 1.0);
+                              _seekToMs(rel * totalMs);
+                            },
+                      // ── Tap bez edit: seek ─────────────────────────────────
+                      onTapUp: widget.isEditMode
+                          ? null
+                          : (details) {
+                              final rel =
+                                  (details.localPosition.dx / timelineWidth)
+                                      .clamp(0.0, 1.0);
+                              _seekToMs(rel * totalMs);
+                            },
+                      // ── Drag w edit: zaznaczenie zakresu ──────────────────
+                      onPanStart: widget.isEditMode
+                          ? (details) {
+                              final ms =
+                                  (details.localPosition.dx / timelineWidth)
                                       .clamp(0.0, 1.0) *
                                   totalMs;
-                          setState(() {
-                            _rangeStartMs = ms;
-                            _rangeEndMs = ms;
-                            _isDraggingRange = true;
-                          });
-                          _seekToMs(ms);
-                        }
-                      : null,
-                  onPanUpdate: widget.isEditMode
-                      ? (details) {
-                          final ms =
-                              (details.localPosition.dx / timelineWidth)
+                              setState(() {
+                                _rangeStartMs = ms;
+                                _rangeEndMs = ms;
+                                _isDraggingRange = true;
+                              });
+                              _seekToMs(ms);
+                            }
+                          : null,
+                      onPanUpdate: widget.isEditMode
+                          ? (details) {
+                              final ms =
+                                  (details.localPosition.dx / timelineWidth)
                                       .clamp(0.0, 1.0) *
                                   totalMs;
-                          setState(() => _rangeEndMs = ms);
-                          _seekToMs(ms);
-                        }
-                      : null,
-                  onPanEnd: widget.isEditMode
-                      ? (_) async {
-                          final start = _rangeStartMs;
-                          final end = _rangeEndMs;
-                          setState(() {
-                            _isDraggingRange = false;
-                            _rangeStartMs = null;
-                            _rangeEndMs = null;
-                          });
-                          if (start != null && end != null) {
-                            await _confirmNewAction(start, end);
-                          }
-                        }
-                      : null,
-                    child: SizedBox(
-                      height: 36,
-                      width: timelineWidth,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          // Tło (track)
-                          Positioned.fill(
-                            child: Container(
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: Colors.white12,
-                                borderRadius: BorderRadius.circular(14),
+                              setState(() => _rangeEndMs = ms);
+                              _seekToMs(ms);
+                            }
+                          : null,
+                      onPanEnd: widget.isEditMode
+                          ? (_) async {
+                              final start = _rangeStartMs;
+                              final end = _rangeEndMs;
+                              setState(() {
+                                _isDraggingRange = false;
+                                _rangeStartMs = null;
+                                _rangeEndMs = null;
+                              });
+                              if (start != null && end != null) {
+                                await _confirmNewAction(start, end);
+                              }
+                            }
+                          : null,
+                      child: SizedBox(
+                        height: 36,
+                        width: timelineWidth,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            // Tło (track)
+                            Positioned.fill(
+                              child: Container(
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: Colors.white12,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                               ),
                             ),
-                          ),
-                          // Odtworzona część
-                          Positioned(
-                            left: 0,
-                            top: 0,
-                            bottom: 0,
-                            width: (timelineWidth * progress.clamp(0.0, 1.0))
-                                .clamp(0.0, timelineWidth),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.deepPurpleAccent,
-                                borderRadius: BorderRadius.circular(14),
+                            // Odtworzona część
+                            Positioned(
+                              left: 0,
+                              top: 0,
+                              bottom: 0,
+                              width: (timelineWidth * progress.clamp(0.0, 1.0))
+                                  .clamp(0.0, timelineWidth),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.deepPurpleAccent,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
                               ),
                             ),
-                          ),
-                          // Markery akcji
-                          Positioned.fill(
-                            child: _buildTimelineMarkers(timelineWidth),
-                          ),
-                          // Głowica (playhead) — linia pionowa
-                          Positioned(
-                            left: (timelineWidth * progress.clamp(0.0, 1.0))
-                                .clamp(0.0, timelineWidth - 2),
-                            top: -4,
-                            bottom: -4,
-                            width: 2,
-                            child: Container(color: Colors.white),
-                          ),
-                        ],
+                            // Markery akcji
+                            Positioned.fill(
+                              child: _buildTimelineMarkers(timelineWidth),
+                            ),
+                            // Głowica (playhead) — linia pionowa
+                            Positioned(
+                              left: (timelineWidth * progress.clamp(0.0, 1.0))
+                                  .clamp(0.0, timelineWidth - 2),
+                              top: -4,
+                              bottom: -4,
+                              width: 2,
+                              child: Container(color: Colors.white),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
                     ),
                   ),
                 ),
@@ -773,7 +885,11 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
   // ─── Bounding box na wideo ────────────────────────────────────────────────
 
-  Widget _buildVideoBoundingBoxOverlay(Size size, double videoW, double videoH) {
+  Widget _buildVideoBoundingBoxOverlay(
+    Size size,
+    double videoW,
+    double videoH,
+  ) {
     if (!widget.isEditMode || widget.selectedAction == null) {
       return const SizedBox.shrink();
     }
@@ -784,15 +900,17 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
           behavior: HitTestBehavior.opaque,
           onTap: () {
             // Czyszczenie fokusu po kliknięciu
-            widget.onActionUpdated?.call(ActionModel(
-              id: widget.selectedAction!.id,
-              type: widget.selectedAction!.type,
-              startMs: widget.selectedAction!.startMs,
-              endMs: widget.selectedAction!.endMs,
-              playerBox: [0.0, 0.0, 0.0, 0.0],
-              playerId: widget.selectedAction!.playerId,
-              confidence: widget.selectedAction!.confidence,
-            ));
+            widget.onActionUpdated?.call(
+              ActionModel(
+                id: widget.selectedAction!.id,
+                type: widget.selectedAction!.type,
+                startMs: widget.selectedAction!.startMs,
+                endMs: widget.selectedAction!.endMs,
+                playerBox: [0.0, 0.0, 0.0, 0.0],
+                playerId: widget.selectedAction!.playerId,
+                confidence: widget.selectedAction!.confidence,
+              ),
+            );
           },
           onPanStart: (d) => setState(() {
             _dragStart = d.localPosition;
@@ -806,20 +924,22 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
               final x2 = _dragCurrent!.dx / size.width * videoW;
               final y2 = _dragCurrent!.dy / size.height * videoH;
               if ((x2 - x1).abs() > 10 && (y2 - y1).abs() > 10) {
-                widget.onActionUpdated?.call(ActionModel(
-                  id: widget.selectedAction!.id,
-                  type: widget.selectedAction!.type,
-                  startMs: widget.selectedAction!.startMs,
-                  endMs: widget.selectedAction!.endMs,
-                  playerBox: [
-                    x1 < x2 ? x1 : x2,
-                    y1 < y2 ? y1 : y2,
-                    x1 > x2 ? x1 : x2,
-                    y1 > y2 ? y1 : y2,
-                  ],
-                  playerId: widget.selectedAction!.playerId,
-                  confidence: widget.selectedAction!.confidence,
-                ));
+                widget.onActionUpdated?.call(
+                  ActionModel(
+                    id: widget.selectedAction!.id,
+                    type: widget.selectedAction!.type,
+                    startMs: widget.selectedAction!.startMs,
+                    endMs: widget.selectedAction!.endMs,
+                    playerBox: [
+                      x1 < x2 ? x1 : x2,
+                      y1 < y2 ? y1 : y2,
+                      x1 > x2 ? x1 : x2,
+                      y1 > y2 ? y1 : y2,
+                    ],
+                    playerId: widget.selectedAction!.playerId,
+                    confidence: widget.selectedAction!.confidence,
+                  ),
+                );
               }
             }
             setState(() {
@@ -853,16 +973,18 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
           Positioned(
             left: widget.selectedAction!.playerBox[0] / videoW * size.width,
             top: widget.selectedAction!.playerBox[1] / videoH * size.height,
-            width: ((widget.selectedAction!.playerBox[2] -
-                        widget.selectedAction!.playerBox[0]) /
-                    videoW *
-                    size.width)
-                .abs(),
-            height: ((widget.selectedAction!.playerBox[3] -
-                        widget.selectedAction!.playerBox[1]) /
-                    videoH *
-                    size.height)
-                .abs(),
+            width:
+                ((widget.selectedAction!.playerBox[2] -
+                            widget.selectedAction!.playerBox[0]) /
+                        videoW *
+                        size.width)
+                    .abs(),
+            height:
+                ((widget.selectedAction!.playerBox[3] -
+                            widget.selectedAction!.playerBox[1]) /
+                        videoH *
+                        size.height)
+                    .abs(),
             child: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -898,24 +1020,31 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         final dx = d.delta.dx / size.width * videoW;
                         final dy = d.delta.dy / size.height * videoH;
                         final b = widget.selectedAction!.playerBox;
-                        widget.onActionUpdated?.call(ActionModel(
-                          id: widget.selectedAction!.id,
-                          type: widget.selectedAction!.type,
-                          startMs: widget.selectedAction!.startMs,
-                          endMs: widget.selectedAction!.endMs,
-                          playerBox: [
-                            (b[0] + dx).clamp(0.0, b[2] - 10.0),
-                            (b[1] + dy).clamp(0.0, b[3] - 10.0),
-                            b[2],
-                            b[3]
-                          ],
-                          playerId: widget.selectedAction!.playerId,
-                          confidence: widget.selectedAction!.confidence,
-                        ));
+                        widget.onActionUpdated?.call(
+                          ActionModel(
+                            id: widget.selectedAction!.id,
+                            type: widget.selectedAction!.type,
+                            startMs: widget.selectedAction!.startMs,
+                            endMs: widget.selectedAction!.endMs,
+                            playerBox: [
+                              (b[0] + dx).clamp(0.0, b[2] - 10.0),
+                              (b[1] + dy).clamp(0.0, b[3] - 10.0),
+                              b[2],
+                              b[3],
+                            ],
+                            playerId: widget.selectedAction!.playerId,
+                            confidence: widget.selectedAction!.confidence,
+                          ),
+                        );
                       },
                       child: Container(
-                        width: 16, height: 16,
-                        decoration: BoxDecoration(color: Colors.greenAccent, border: Border.all(color: Colors.black), shape: BoxShape.circle),
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Colors.greenAccent,
+                          border: Border.all(color: Colors.black),
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
                   ),
@@ -931,24 +1060,31 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         final dx = d.delta.dx / size.width * videoW;
                         final dy = d.delta.dy / size.height * videoH;
                         final b = widget.selectedAction!.playerBox;
-                        widget.onActionUpdated?.call(ActionModel(
-                          id: widget.selectedAction!.id,
-                          type: widget.selectedAction!.type,
-                          startMs: widget.selectedAction!.startMs,
-                          endMs: widget.selectedAction!.endMs,
-                          playerBox: [
-                            b[0],
-                            (b[1] + dy).clamp(0.0, b[3] - 10.0),
-                            (b[2] + dx).clamp(b[0] + 10.0, videoW),
-                            b[3]
-                          ],
-                          playerId: widget.selectedAction!.playerId,
-                          confidence: widget.selectedAction!.confidence,
-                        ));
+                        widget.onActionUpdated?.call(
+                          ActionModel(
+                            id: widget.selectedAction!.id,
+                            type: widget.selectedAction!.type,
+                            startMs: widget.selectedAction!.startMs,
+                            endMs: widget.selectedAction!.endMs,
+                            playerBox: [
+                              b[0],
+                              (b[1] + dy).clamp(0.0, b[3] - 10.0),
+                              (b[2] + dx).clamp(b[0] + 10.0, videoW),
+                              b[3],
+                            ],
+                            playerId: widget.selectedAction!.playerId,
+                            confidence: widget.selectedAction!.confidence,
+                          ),
+                        );
                       },
                       child: Container(
-                        width: 16, height: 16,
-                        decoration: BoxDecoration(color: Colors.greenAccent, border: Border.all(color: Colors.black), shape: BoxShape.circle),
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Colors.greenAccent,
+                          border: Border.all(color: Colors.black),
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
                   ),
@@ -964,24 +1100,31 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         final dx = d.delta.dx / size.width * videoW;
                         final dy = d.delta.dy / size.height * videoH;
                         final b = widget.selectedAction!.playerBox;
-                        widget.onActionUpdated?.call(ActionModel(
-                          id: widget.selectedAction!.id,
-                          type: widget.selectedAction!.type,
-                          startMs: widget.selectedAction!.startMs,
-                          endMs: widget.selectedAction!.endMs,
-                          playerBox: [
-                            (b[0] + dx).clamp(0.0, b[2] - 10.0),
-                            b[1],
-                            b[2],
-                            (b[3] + dy).clamp(b[1] + 10.0, videoH)
-                          ],
-                          playerId: widget.selectedAction!.playerId,
-                          confidence: widget.selectedAction!.confidence,
-                        ));
+                        widget.onActionUpdated?.call(
+                          ActionModel(
+                            id: widget.selectedAction!.id,
+                            type: widget.selectedAction!.type,
+                            startMs: widget.selectedAction!.startMs,
+                            endMs: widget.selectedAction!.endMs,
+                            playerBox: [
+                              (b[0] + dx).clamp(0.0, b[2] - 10.0),
+                              b[1],
+                              b[2],
+                              (b[3] + dy).clamp(b[1] + 10.0, videoH),
+                            ],
+                            playerId: widget.selectedAction!.playerId,
+                            confidence: widget.selectedAction!.confidence,
+                          ),
+                        );
                       },
                       child: Container(
-                        width: 16, height: 16,
-                        decoration: BoxDecoration(color: Colors.greenAccent, border: Border.all(color: Colors.black), shape: BoxShape.circle),
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Colors.greenAccent,
+                          border: Border.all(color: Colors.black),
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
                   ),
@@ -997,24 +1140,31 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         final dx = d.delta.dx / size.width * videoW;
                         final dy = d.delta.dy / size.height * videoH;
                         final b = widget.selectedAction!.playerBox;
-                        widget.onActionUpdated?.call(ActionModel(
-                          id: widget.selectedAction!.id,
-                          type: widget.selectedAction!.type,
-                          startMs: widget.selectedAction!.startMs,
-                          endMs: widget.selectedAction!.endMs,
-                          playerBox: [
-                            b[0],
-                            b[1],
-                            (b[2] + dx).clamp(b[0] + 10.0, videoW),
-                            (b[3] + dy).clamp(b[1] + 10.0, videoH)
-                          ],
-                          playerId: widget.selectedAction!.playerId,
-                          confidence: widget.selectedAction!.confidence,
-                        ));
+                        widget.onActionUpdated?.call(
+                          ActionModel(
+                            id: widget.selectedAction!.id,
+                            type: widget.selectedAction!.type,
+                            startMs: widget.selectedAction!.startMs,
+                            endMs: widget.selectedAction!.endMs,
+                            playerBox: [
+                              b[0],
+                              b[1],
+                              (b[2] + dx).clamp(b[0] + 10.0, videoW),
+                              (b[3] + dy).clamp(b[1] + 10.0, videoH),
+                            ],
+                            playerId: widget.selectedAction!.playerId,
+                            confidence: widget.selectedAction!.confidence,
+                          ),
+                        );
                       },
                       child: Container(
-                        width: 16, height: 16,
-                        decoration: BoxDecoration(color: Colors.greenAccent, border: Border.all(color: Colors.black), shape: BoxShape.circle),
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: Colors.greenAccent,
+                          border: Border.all(color: Colors.black),
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
                   ),
@@ -1037,8 +1187,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
           children: [
             CircularProgressIndicator(color: Colors.deepPurpleAccent),
             SizedBox(height: 12),
-            Text('Ładowanie wideo...',
-                style: TextStyle(color: Colors.white54)),
+            Text('Ładowanie wideo...', style: TextStyle(color: Colors.white54)),
           ],
         ),
       );
@@ -1079,8 +1228,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         // ── Kontrolki ─────────────────────────────────────────────────────
         Container(
           color: const Color(0xFF1A1A28),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1091,12 +1239,17 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                 children: [
                   // Cofnij 5 s
                   IconButton(
-                    icon: const Icon(Icons.replay_5,
-                        color: Colors.white70, size: 22),
+                    icon: const Icon(
+                      Icons.replay_5,
+                      color: Colors.white70,
+                      size: 22,
+                    ),
                     tooltip: 'Cofnij 5 sekund / Rewind 5 seconds',
                     onPressed: () {
-                      final newMs = (_currentPos.inMilliseconds - 5000)
-                          .clamp(0, _totalDuration.inMilliseconds);
+                      final newMs = (_currentPos.inMilliseconds - 5000).clamp(
+                        0,
+                        _totalDuration.inMilliseconds,
+                      );
                       _seekToMs(newMs.toDouble());
                     },
                   ),
@@ -1112,19 +1265,26 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         size: 30,
                         color: Colors.white,
                       ),
-                      tooltip: _isPlaying ? 'Pauza / Pause' : 'Odtwarzaj / Play',
+                      tooltip: _isPlaying
+                          ? 'Pauza / Pause'
+                          : 'Odtwarzaj / Play',
                       onPressed: () =>
                           _isPlaying ? _player.pause() : _player.play(),
                     ),
                   ),
                   // Do przodu 5 s
                   IconButton(
-                    icon: const Icon(Icons.forward_5,
-                        color: Colors.white70, size: 22),
+                    icon: const Icon(
+                      Icons.forward_5,
+                      color: Colors.white70,
+                      size: 22,
+                    ),
                     tooltip: 'Do przodu 5 sekund / Forward 5 seconds',
                     onPressed: () {
-                      final newMs = (_currentPos.inMilliseconds + 5000)
-                          .clamp(0, _totalDuration.inMilliseconds);
+                      final newMs = (_currentPos.inMilliseconds + 5000).clamp(
+                        0,
+                        _totalDuration.inMilliseconds,
+                      );
                       _seekToMs(newMs.toDouble());
                     },
                   ),
@@ -1133,23 +1293,31 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                   if (widget.isEditMode)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.purpleAccent.withAlpha(40),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                            color: Colors.purpleAccent.withAlpha(100)),
+                          color: Colors.purpleAccent.withAlpha(100),
+                        ),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.draw,
-                              color: Colors.purpleAccent, size: 14),
+                          Icon(
+                            Icons.draw,
+                            color: Colors.purpleAccent,
+                            size: 14,
+                          ),
                           SizedBox(width: 6),
                           Text(
                             'Tryb edycji: przeciągnij na osi czasu',
                             style: TextStyle(
-                                color: Colors.purpleAccent, fontSize: 11),
+                              color: Colors.purpleAccent,
+                              fontSize: 11,
+                            ),
                           ),
                         ],
                       ),

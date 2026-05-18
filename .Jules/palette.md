@@ -8,3 +8,6 @@
 ## 2024-05-11 - Visually Structured Empty States
 **Learning:** Leaving blank spaces for empty lists (like an empty Column or ReorderableListView) looks like a bug and leaves users confused about the current state or next steps.
 **Action:** Always provide a visually structured empty state using a clear Icon, a bold title explaining the state, and a subtle subtitle offering guidance or a call-to-action when lists or dynamic content areas are empty.
+## 2025-05-15 - Add hover cursors to interactive elements
+**Learning:** In Flutter desktop applications, interactive elements like `GestureDetector` or `InkWell` often do not change the cursor to a pointing hand on hover automatically (unlike standard web links). This makes the interface feel unresponsive.
+**Action:** Wrap such elements in `MouseRegion(cursor: SystemMouseCursors.click)` to explicitly provide visual feedback for clickability on hover.

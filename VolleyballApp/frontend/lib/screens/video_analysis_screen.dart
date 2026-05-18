@@ -18,8 +18,8 @@ class VideoAnalysisScreen extends StatefulWidget {
   final String? projectId;
 
   const VideoAnalysisScreen({
-    super.key, 
-    required this.videoPath, 
+    super.key,
+    required this.videoPath,
     this.analyticsService,
     this.projectId,
   });
@@ -66,12 +66,12 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       return true;
     }).toList();
   }
-  
+
   // Pozycja okienka PIP (Player Focus)
   double _focusPlayerTop = 16.0;
   double _focusPlayerRight = 16.0;
   double _focusPlayerWidth = 200.0;
-  
+
   bool _isUpdatingFocus = false;
 
   @override
@@ -91,12 +91,21 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           // Move to next action
           _currentPlaylistIndex++;
           if (_currentPlaylistIndex < _playlist.length) {
-            _videoController?.player.seek(Duration(milliseconds: _playlist[_currentPlaylistIndex].startMs.round()));
+            _videoController?.player.seek(
+              Duration(
+                milliseconds: _playlist[_currentPlaylistIndex].startMs.round(),
+              ),
+            );
           } else {
             // End of playlist
             if (_loopPlaylist) {
               _currentPlaylistIndex = 0;
-              _videoController?.player.seek(Duration(milliseconds: _playlist[_currentPlaylistIndex].startMs.round()));
+              _videoController?.player.seek(
+                Duration(
+                  milliseconds: _playlist[_currentPlaylistIndex].startMs
+                      .round(),
+                ),
+              );
             } else {
               _isPlayingPlaylist = false;
               _videoController?.player.pause();
@@ -110,7 +119,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
 
   Future<void> _checkExistingAnalysis() async {
     // First try reading the local JSON directly (fast, no network)
-    final base = widget.videoPath.substring(0, widget.videoPath.lastIndexOf('.'));
+    final base = widget.videoPath.substring(
+      0,
+      widget.videoPath.lastIndexOf('.'),
+    );
     final localFile = File('${base}_analysis.json');
     if (localFile.existsSync()) {
       try {
@@ -120,7 +132,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
             .map((v) => ActionModel.fromJson(v))
             .toList();
         if (mounted) {
-          setState(() { _actions = actions; });
+          setState(() {
+            _actions = actions;
+          });
         }
         return;
       } catch (_) {}
@@ -129,7 +143,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     try {
       final results = await _analyticsService.getResults(widget.videoPath);
       if (mounted) {
-        setState(() { _actions = results; });
+        setState(() {
+          _actions = results;
+        });
       }
     } catch (e) {
       // Not analyzed yet – that's fine
@@ -157,7 +173,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         _isAnalyzing = false;
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -186,7 +204,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           _etaSeconds = null;
         });
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Analysis failed in backend.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Analysis failed in backend.')),
+        );
       } else {
         setState(() {
           _analysisProgress = progress;
@@ -209,7 +229,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       _selectedAction = action;
     });
     if (_videoController != null) {
-      _videoController!.player.seek(Duration(milliseconds: action.startMs.round()));
+      _videoController!.player.seek(
+        Duration(milliseconds: action.startMs.round()),
+      );
     }
   }
 
@@ -256,23 +278,26 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       );
       await ProjectDataService().createArtifact(artifact);
       if (widget.projectId != null) {
-        await ProjectDataService().linkArtifactToProject(widget.projectId!, artifact.id);
+        await ProjectDataService().linkArtifactToProject(
+          widget.projectId!,
+          artifact.id,
+        );
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Analiza zapisana obok wideo i dodana do artefaktów.'),
-          action: SnackBarAction(
-            label: 'OK',
-            onPressed: () {},
+          content: const Text(
+            'Analiza zapisana obok wideo i dodana do artefaktów.',
           ),
+          action: SnackBarAction(label: 'OK', onPressed: () {}),
           backgroundColor: const Color(0xFF1B5E20),
         ),
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Błąd zapisu: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Błąd zapisu: $e')));
       }
     }
   }
@@ -292,14 +317,17 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Zapisano: ${savedPath.split(Platform.pathSeparator).last}'),
+          content: Text(
+            'Zapisano: ${savedPath.split(Platform.pathSeparator).last}',
+          ),
           backgroundColor: const Color(0xFF1B5E20),
         ),
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Błąd zapisu: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Błąd zapisu: $e')));
       }
     }
   }
@@ -333,8 +361,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Błąd odczytu: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Błąd odczytu: $e')));
       }
     }
   }
@@ -347,8 +376,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         videoPath: widget.videoPath,
         playlist: _playlist,
       );
-      
-      final path = AnalysisFileService.defaultPlaylistJsonPath(widget.videoPath);
+
+      final path = AnalysisFileService.defaultPlaylistJsonPath(
+        widget.videoPath,
+      );
       final fileName = path.split(Platform.pathSeparator).last;
       final artifact = ArtifactModel(
         type: ArtifactType.playlist,
@@ -359,7 +390,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       );
       await ProjectDataService().createArtifact(artifact);
       if (widget.projectId != null) {
-        await ProjectDataService().linkArtifactToProject(widget.projectId!, artifact.id);
+        await ProjectDataService().linkArtifactToProject(
+          widget.projectId!,
+          artifact.id,
+        );
       }
 
       if (!mounted) return;
@@ -371,7 +405,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd zapisu playlisty: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Błąd zapisu playlisty: $e')));
       }
     }
   }
@@ -383,7 +419,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         playlist: _playlist,
       );
       if (savedPath == null) return;
-      
+
       final fileName = savedPath.split(Platform.pathSeparator).last;
       final artifact = ArtifactModel(
         type: ArtifactType.playlist,
@@ -394,19 +430,26 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       );
       await ProjectDataService().createArtifact(artifact);
       if (widget.projectId != null) {
-        await ProjectDataService().linkArtifactToProject(widget.projectId!, artifact.id);
+        await ProjectDataService().linkArtifactToProject(
+          widget.projectId!,
+          artifact.id,
+        );
       }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Zapisano playlistę: $fileName i dodano jako artefakt.'),
+          content: Text(
+            'Zapisano playlistę: $fileName i dodano jako artefakt.',
+          ),
           backgroundColor: const Color(0xFF1B5E20),
         ),
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd zapisu playlisty: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Błąd zapisu playlisty: $e')));
       }
     }
   }
@@ -429,7 +472,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd odczytu playlisty: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Błąd odczytu playlisty: $e')));
       }
     }
   }
@@ -441,7 +486,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E24),
-        title: const Text('Usuń analizę', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Usuń analizę',
+          style: TextStyle(color: Colors.white),
+        ),
         content: const Text(
           'Czy na pewno chcesz usunąć wszystkie wyniki analizy?\n'
           'Plik JSON zostanie skasowany z dysku.',
@@ -450,11 +498,17 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Anuluj',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Usuń', style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              'Usuń',
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),
@@ -477,8 +531,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Błąd usuwania: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Błąd usuwania: $e')));
       }
     }
   }
@@ -486,29 +541,32 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   // ─── Pomocnicze ─────────────────────────────────────────────────────────────
 
   Future<bool?> _confirmDiscardChanges() => showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF1E1E24),
-          title: const Text('Niezapisane zmiany',
-              style: TextStyle(color: Colors.white)),
-          content: const Text(
-            'Masz niezapisane zmiany. Czy na pewno chcesz je odrzucić?',
-            style: TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child:
-                  const Text('Anuluj', style: TextStyle(color: Colors.white54)),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Odrzuć',
-                  style: TextStyle(color: Colors.orangeAccent)),
-            ),
-          ],
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: const Color(0xFF1E1E24),
+      title: const Text(
+        'Niezapisane zmiany',
+        style: TextStyle(color: Colors.white),
+      ),
+      content: const Text(
+        'Masz niezapisane zmiany. Czy na pewno chcesz je odrzucić?',
+        style: TextStyle(color: Colors.white70),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
         ),
-      );
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: const Text(
+            'Odrzuć',
+            style: TextStyle(color: Colors.orangeAccent),
+          ),
+        ),
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -518,8 +576,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Video Analytics Dashboard',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            const Text(
+              'Video Analytics Dashboard',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
             if (_loadedFromPath != null)
               Text(
                 _loadedFromPath!.split(Platform.pathSeparator).last,
@@ -537,7 +597,11 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                 padding: EdgeInsets.symmetric(vertical: 18, horizontal: 4),
                 child: Tooltip(
                   message: 'Niezapisane zmiany',
-                  child: Icon(Icons.circle, color: Colors.orangeAccent, size: 10),
+                  child: Icon(
+                    Icons.circle,
+                    color: Colors.orangeAccent,
+                    size: 10,
+                  ),
                 ),
               ),
             // Menu zapisu
@@ -545,7 +609,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               tooltip: 'Opcje zapisu',
               icon: Icon(
                 Icons.save_alt,
-                color: _hasUnsavedChanges ? Colors.orangeAccent : Colors.greenAccent,
+                color: _hasUnsavedChanges
+                    ? Colors.orangeAccent
+                    : Colors.greenAccent,
                 size: 22,
               ),
               color: const Color(0xFF2A2A3E),
@@ -557,28 +623,51 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               itemBuilder: (_) => [
                 const PopupMenuItem(
                   value: 'save',
-                  child: Row(children: [
-                    Icon(Icons.save, color: Colors.greenAccent, size: 18),
-                    SizedBox(width: 10),
-                    Text('Zapisz obok wideo', style: TextStyle(color: Colors.white)),
-                  ]),
+                  child: Row(
+                    children: [
+                      Icon(Icons.save, color: Colors.greenAccent, size: 18),
+                      SizedBox(width: 10),
+                      Text(
+                        'Zapisz obok wideo',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
                 ),
                 const PopupMenuItem(
                   value: 'save_as',
-                  child: Row(children: [
-                    Icon(Icons.save_as, color: Colors.lightBlueAccent, size: 18),
-                    SizedBox(width: 10),
-                    Text('Zapisz jako...', style: TextStyle(color: Colors.white)),
-                  ]),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.save_as,
+                        color: Colors.lightBlueAccent,
+                        size: 18,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'Zapisz jako...',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
                 ),
                 const PopupMenuDivider(),
                 const PopupMenuItem(
                   value: 'delete',
-                  child: Row(children: [
-                    Icon(Icons.delete_forever, color: Colors.redAccent, size: 18),
-                    SizedBox(width: 10),
-                    Text('Usuń analizę', style: TextStyle(color: Colors.redAccent)),
-                  ]),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.delete_forever,
+                        color: Colors.redAccent,
+                        size: 18,
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'Usuń analizę',
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -586,7 +675,11 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           ],
           // ── Przycisk wczytaj z pliku (zawsze widoczny) ──────────────────
           IconButton(
-            icon: const Icon(Icons.folder_open, color: Colors.amberAccent, size: 22),
+            icon: const Icon(
+              Icons.folder_open,
+              color: Colors.amberAccent,
+              size: 22,
+            ),
             tooltip: 'Wczytaj wyniki z pliku JSON...',
             onPressed: _loadFromFile,
           ),
@@ -613,18 +706,24 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                     Text(
                       '${(_analysisProgress * 100).toInt()}%',
                       style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13),
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(width: 10),
-                    const Icon(Icons.timer_outlined,
-                        size: 14, color: Colors.white54),
+                    const Icon(
+                      Icons.timer_outlined,
+                      size: 14,
+                      color: Colors.white54,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       _formatEta(_etaSeconds),
-                      style:
-                          const TextStyle(color: Colors.white54, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -633,8 +732,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           else if (_actions.isEmpty)
             TextButton.icon(
               icon: const Icon(Icons.analytics, color: Colors.purpleAccent),
-              label: const Text('Analyze Video',
-                  style: TextStyle(color: Colors.white)),
+              label: const Text(
+                'Analyze Video',
+                style: TextStyle(color: Colors.white),
+              ),
               onPressed: _startAnalysis,
             ),
         ],
@@ -657,7 +758,11 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                             color: Colors.black,
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
-                              BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 5))
+                              BoxShadow(
+                                color: Colors.black45,
+                                blurRadius: 10,
+                                offset: Offset(0, 5),
+                              ),
                             ],
                           ),
                           child: ClipRRect(
@@ -670,11 +775,16 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                     playlistActions: _playlist,
                                     isEditMode: _isEditMode,
                                     onPositionChanged: _onPositionChanged,
-                                    onControllerReady: (controller) => _videoController = controller,
+                                    onControllerReady: (controller) =>
+                                        _videoController = controller,
                                     onActionPlaylistToggled: (action) {
                                       setState(() {
-                                        if (_playlist.any((a) => a.id == action.id)) {
-                                          _playlist.removeWhere((a) => a.id == action.id);
+                                        if (_playlist.any(
+                                          (a) => a.id == action.id,
+                                        )) {
+                                          _playlist.removeWhere(
+                                            (a) => a.id == action.id,
+                                          );
                                         } else {
                                           _playlist.add(action);
                                         }
@@ -682,11 +792,14 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                     },
                                     onActionSelected: _onActionSelected,
                                     onActionUpdated: (action) {
-                                      final idx = _actions.indexWhere((a) => a.id == action.id);
+                                      final idx = _actions.indexWhere(
+                                        (a) => a.id == action.id,
+                                      );
                                       if (idx != -1) {
                                         setState(() {
                                           _actions[idx] = action;
-                                          if (_selectedAction?.id == action.id) {
+                                          if (_selectedAction?.id ==
+                                              action.id) {
                                             _selectedAction = action;
                                           }
                                         });
@@ -698,36 +811,60 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                     onActionAdded: (action) {
                                       setState(() {
                                         _actions.add(action);
-                                        _actions.sort((a, b) => a.startMs.compareTo(b.startMs));
+                                        _actions.sort(
+                                          (a, b) =>
+                                              a.startMs.compareTo(b.startMs),
+                                        );
                                       });
                                     },
                                   )
                                 : Center(
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        const Icon(Icons.video_file, color: Colors.white30, size: 64),
+                                        const Icon(
+                                          Icons.video_file,
+                                          color: Colors.white30,
+                                          size: 64,
+                                        ),
                                         const SizedBox(height: 16),
                                         const Text(
                                           'Wideo nie jest załadowane',
-                                          style: TextStyle(color: Colors.white54, fontSize: 16),
+                                          style: TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 16,
+                                          ),
                                         ),
                                         const SizedBox(height: 8),
                                         const Text(
                                           'Duże pliki wideo ładują się kilkadziesiąt sekund.',
-                                          style: TextStyle(color: Colors.white30, fontSize: 12),
+                                          style: TextStyle(
+                                            color: Colors.white30,
+                                            fontSize: 12,
+                                          ),
                                           textAlign: TextAlign.center,
                                         ),
                                         const SizedBox(height: 20),
                                         ElevatedButton.icon(
-                                          icon: const Icon(Icons.play_circle_outline),
-                                          label: const Text('Załaduj i odtwórz wideo'),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.deepPurpleAccent,
-                                            foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                          icon: const Icon(
+                                            Icons.play_circle_outline,
                                           ),
-                                          onPressed: () => setState(() => _videoLoaded = true),
+                                          label: const Text(
+                                            'Załaduj i odtwórz wideo',
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                Colors.deepPurpleAccent,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 24,
+                                              vertical: 12,
+                                            ),
+                                          ),
+                                          onPressed: () => setState(
+                                            () => _videoLoaded = true,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -773,12 +910,16 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                   bottom: -10,
                                   left: -10,
                                   child: MouseRegion(
-                                    cursor: SystemMouseCursors.resizeUpRightDownLeft,
+                                    cursor: SystemMouseCursors
+                                        .resizeUpRightDownLeft,
                                     child: GestureDetector(
                                       onPanUpdate: (details) {
                                         setState(() {
                                           // delta.dx ujemna => ruch w lewo => szerokość rośnie
-                                          _focusPlayerWidth = (_focusPlayerWidth - details.delta.dx).clamp(100.0, 800.0);
+                                          _focusPlayerWidth =
+                                              (_focusPlayerWidth -
+                                                      details.delta.dx)
+                                                  .clamp(100.0, 800.0);
                                         });
                                       },
                                       child: Container(
@@ -786,9 +927,18 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                         decoration: const BoxDecoration(
                                           color: Colors.purpleAccent,
                                           shape: BoxShape.circle,
-                                          boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 4)],
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black54,
+                                              blurRadius: 4,
+                                            ),
+                                          ],
                                         ),
-                                        child: const Icon(Icons.open_in_full, size: 16, color: Colors.white),
+                                        child: const Icon(
+                                          Icons.open_in_full,
+                                          size: 16,
+                                          color: Colors.white,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -822,9 +972,12 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               onFilterTypeChanged: (v) => setState(() => _filterType = v),
               onFilterPlayerChanged: (v) => setState(() => _filterPlayer = v),
               isolateSelected: _isolateSelected,
-              onIsolateSelectedChanged: (v) => setState(() => _isolateSelected = v),
-              onPlaylistChanged: (newPlaylist) => setState(() => _playlist = newPlaylist),
-              onLoopPlaylistChanged: (val) => setState(() => _loopPlaylist = val),
+              onIsolateSelectedChanged: (v) =>
+                  setState(() => _isolateSelected = v),
+              onPlaylistChanged: (newPlaylist) =>
+                  setState(() => _playlist = newPlaylist),
+              onLoopPlaylistChanged: (val) =>
+                  setState(() => _loopPlaylist = val),
               onSavePlaylist: _savePlaylist,
               onSavePlaylistAs: _savePlaylistAs,
               onLoadPlaylist: _loadPlaylist,
@@ -848,7 +1001,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                   _isPlayingPlaylist = !_isPlayingPlaylist;
                   if (_isPlayingPlaylist) {
                     _currentPlaylistIndex = 0;
-                    _videoController?.player.seek(Duration(milliseconds: _playlist[0].startMs.round()));
+                    _videoController?.player.seek(
+                      Duration(milliseconds: _playlist[0].startMs.round()),
+                    );
                     _videoController?.player.play();
                   } else {
                     _videoController?.player.pause();
@@ -861,16 +1016,23 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               onActionSelected: _onActionSelected,
               onActionUpdated: (updatedAction) async {
                 try {
-                  await _analyticsService.updateAction(widget.videoPath, updatedAction);
-                  final idx = _actions.indexWhere((a) => a.id == updatedAction.id);
+                  await _analyticsService.updateAction(
+                    widget.videoPath,
+                    updatedAction,
+                  );
+                  final idx = _actions.indexWhere(
+                    (a) => a.id == updatedAction.id,
+                  );
                   if (idx != -1) {
                     setState(() {
                       _actions[idx] = updatedAction;
                     });
                   }
-                } catch(e) {
-                   if (!mounted) return;
-                   ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    SnackBar(content: Text('Failed to update: $e')),
+                  );
                 }
               },
             ),

@@ -49,14 +49,18 @@ class ProjectDataService {
       if (await pFile.exists()) {
         final String contents = await pFile.readAsString();
         final List<dynamic> jsonList = jsonDecode(contents);
-        _projects = jsonList.map((json) => ProjectModel.fromJson(json)).toList();
+        _projects = jsonList
+            .map((json) => ProjectModel.fromJson(json))
+            .toList();
       }
 
       final aFile = await _artifactsFile;
       if (await aFile.exists()) {
         final String contents = await aFile.readAsString();
         final List<dynamic> jsonList = jsonDecode(contents);
-        _artifacts = jsonList.map((json) => ArtifactModel.fromJson(json)).toList();
+        _artifacts = jsonList
+            .map((json) => ArtifactModel.fromJson(json))
+            .toList();
       }
     } catch (e) {
       print('Błąd ładowania danych projektów: \$e');
@@ -66,11 +70,15 @@ class ProjectDataService {
   Future<void> _saveData() async {
     try {
       final pFile = await _projectsFile;
-      final String pContents = jsonEncode(_projects.map((p) => p.toJson()).toList());
+      final String pContents = jsonEncode(
+        _projects.map((p) => p.toJson()).toList(),
+      );
       await pFile.writeAsString(pContents);
 
       final aFile = await _artifactsFile;
-      final String aContents = jsonEncode(_artifacts.map((a) => a.toJson()).toList());
+      final String aContents = jsonEncode(
+        _artifacts.map((a) => a.toJson()).toList(),
+      );
       await aFile.writeAsString(aContents);
     } catch (e) {
       print('Błąd zapisu danych projektów: \$e');
@@ -141,7 +149,10 @@ class ProjectDataService {
 
   // --- Powiązania ---
 
-  Future<void> linkArtifactToProject(String projectId, String artifactId) async {
+  Future<void> linkArtifactToProject(
+    String projectId,
+    String artifactId,
+  ) async {
     final project = getProjectById(projectId);
     if (project != null && !project.artifactIds.contains(artifactId)) {
       project.artifactIds.add(artifactId);
@@ -149,7 +160,10 @@ class ProjectDataService {
     }
   }
 
-  Future<void> unlinkArtifactFromProject(String projectId, String artifactId) async {
+  Future<void> unlinkArtifactFromProject(
+    String projectId,
+    String artifactId,
+  ) async {
     final project = getProjectById(projectId);
     if (project != null && project.artifactIds.contains(artifactId)) {
       project.artifactIds.remove(artifactId);
