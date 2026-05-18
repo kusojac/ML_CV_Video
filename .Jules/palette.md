@@ -16,3 +16,6 @@
 **Learning:** Replaced plain text empty state in `home_screen.dart` with a structured empty state including an icon, title, and clear instructions. Added `tooltip` to the delete button in the project tile to ensure screen reader users understand the action. This aligns with our existing Palette guidelines.
 **Action:** Consistently apply these UX and accessibility improvements across the app's components to ensure a cohesive and user-friendly experience.
 ## 2024-05-16 - Visually Structured Empty States\n**Learning:** Replacing plain text empty states with visually structured components (combining an Icon, title, and descriptive subtitle) significantly improves user guidance and aligns with modern design patterns, even in complex desktop UIs like Flutter.\n**Action:** Always prefer structured empty states with clear calls to action over simple text messages when a data grid or list is empty.
+## 2026-05-18 - Add missing tooltips to IconButtons
+**Learning:** Icon-only elements like `IconButton` in Flutter must have a `tooltip` property for screen readers and better UX context. Missing this property reduces accessibility for users.
+**Action:** Continuously audit `IconButton` widgets across the app and inject `tooltip` with a localized descriptive string where missing.
