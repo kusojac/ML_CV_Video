@@ -432,27 +432,29 @@ class _ActionSidebarState extends State<ActionSidebar> {
                   key: key,
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Card(
-                    color: isSelected ? const Color(0xFF2A2A35) : const Color(0xFF1E1E24),
-                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                    color: isSelected ? const Color(0xFF323242) : const Color(0xFF25252D),
+                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     elevation: isSelected ? 4 : 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                       side: BorderSide(
-                        color: isSelected ? accentColor.withValues(alpha: 0.8) : Colors.transparent,
+                        color: isSelected ? accentColor.withValues(alpha: 0.6) : Colors.transparent,
                         width: 1.5,
                       ),
                     ),
                     child: InkWell(
                       onTap: () => widget.onActionSelected(action),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                       child: Padding(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         child: Row(
                           children: [
                             if (!widget.isEditMode && widget.playlist != null)
                               Checkbox(
                                 value: widget.playlist!.any((a) => a.id == action.id),
-                                activeColor: Colors.purpleAccent,
+                                activeColor: accentColor,
+                                checkColor: Colors.black87,
+                                side: BorderSide(color: Colors.white54),
                                 onChanged: (val) {
                                   if (val == true) {
                                     widget.onPlaylistChanged?.call([...widget.playlist!, action]);
@@ -710,21 +712,49 @@ class _ActionSidebarState extends State<ActionSidebar> {
 
                       return Card(
                         key: ValueKey(action.id + index.toString()),
-                        color: isSelected ? const Color(0xFF2A2A35) : const Color(0xFF1E1E24),
+                        color: isSelected ? const Color(0xFF323242) : const Color(0xFF25252D),
                         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        child: ListTile(
-                          onTap: () => widget.onActionSelected(action),
-                          leading: Icon(Icons.drag_handle, color: Colors.white30),
-                          title: Text(action.type, style: TextStyle(color: accentColor, fontWeight: FontWeight.bold)),
-                          subtitle: Text('Player: ${action.playerId}', style: const TextStyle(color: Colors.white54)),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
-                            tooltip: 'Usuń z playlisty / Remove from playlist',
-                            onPressed: () {
-                              final newPlaylist = List<ActionModel>.from(widget.playlist!);
-                              newPlaylist.removeAt(index);
-                              widget.onPlaylistChanged?.call(newPlaylist);
-                            },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: isSelected ? accentColor.withValues(alpha: 0.5) : Colors.transparent,
+                            width: 1,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: ListTile(
+                            onTap: () => widget.onActionSelected(action),
+                            leading: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.drag_handle, color: Colors.white30, size: 20),
+                                const SizedBox(width: 8),
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: accentColor.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text('${index + 1}', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 10)),
+                                ),
+                              ],
+                            ),
+                            title: Text(action.type, style: TextStyle(color: accentColor, fontWeight: FontWeight.w600, fontSize: 14)),
+                            subtitle: Text('Start: ${(action.startMs / 1000).toStringAsFixed(1)}s  |  Player: ${action.playerId}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent, size: 20),
+                              tooltip: 'Usuń z playlisty',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () {
+                                final newPlaylist = List<ActionModel>.from(widget.playlist!);
+                                newPlaylist.removeAt(index);
+                                widget.onPlaylistChanged?.call(newPlaylist);
+                              },
+                            ),
                           ),
                         ),
                       );
