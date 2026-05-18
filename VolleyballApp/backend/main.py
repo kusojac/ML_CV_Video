@@ -2,7 +2,9 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="google.protobuf")
 import json
 import time
+import logging
 import asyncio
+import logging
 import os
 import uuid
 import threading
@@ -105,8 +107,9 @@ def process_video_task(job_id: str, video_path: str):
         analysis_jobs[job_id]["result"] = result
         analysis_jobs[job_id]["json_path"] = json_path
     except Exception as e:
+        logging.error(f"Error processing video task {job_id}: {e}")
         analysis_jobs[job_id]["status"] = "error"
-        analysis_jobs[job_id]["error"] = str(e)
+        analysis_jobs[job_id]["error"] = "An internal error occurred during processing."
 
 
 @app.post("/analyze")
