@@ -15,3 +15,6 @@ MLCV test_analysis.json
 MLCV test.mp4
 20260328_094545_analysis.json
 VolleyballApp/frontend/build/windows/
+VolleyballApp/frontend/.dart_tool/
+VolleyballApp/frontend/build/
+VolleyballApp/frontend/windows/flutter/ephemeral/
