@@ -153,18 +153,13 @@ def get_results(video_path: str = Query(..., max_length=2048)):
                 with open(json_path, 'r') as f:
                     data = json.load(f)
 
-                _parsed_json_cache[json_path] = data
-                _action_dict_cache[json_path] = {
-                    action["id"]: action for action in data.get("actions", [])
-                }
-            except FileNotFoundError:
-                raise HTTPException(status_code=404, detail="Analysis results not found.")
-            except json.JSONDecodeError:
-                raise HTTPException(status_code=500, detail="Invalid JSON format in analysis results.")
-
-    # ⚡ Bolt Optimization: Bypass FastAPI's slow default JSON serialization for large results
-    # and perform serialization outside of the thread lock to prevent blocking event loops.
-    return Response(content=json.dumps(data), media_type="application/json")
+            _parsed_json_cache[json_path] = data
+            _action_dict_cache[json_path] = {
+                action["id"]: action for action in data.get("actions", [])
+            }
+            return data
+        except FileNotFoundError:
+            raise HTTPException(status_code=404, detail="Analysis results not found.")
 
 @app.post("/update_action")
 def update_action(req: UpdateActionRequest):

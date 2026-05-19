@@ -49,6 +49,23 @@ def test_get_results_not_found():
     response = client.get("/results?video_path=dummy_nonexistent.mp4")
     assert response.status_code == 404
 
+def test_get_results_invalid_json():
+    """Test that requesting results with an invalid JSON file returns 500."""
+    video_path = "dummy_invalid.mp4"
+    json_path = "dummy_invalid_analysis.json"
+
+    # Create invalid JSON
+    with open(json_path, "w") as f:
+        f.write("{invalid_json:")
+
+    try:
+        response = client.get(f"/results?video_path={video_path}")
+        assert response.status_code == 500
+        assert response.json()["detail"] == "Error decoding analysis results."
+    finally:
+        if os.path.exists(json_path):
+            os.remove(json_path)
+
 def test_analyze_video_path_traversal():
     """Test path traversal is blocked in analyze endpoint"""
     response = client.post("/analyze", json={"video_path": "../../../etc/passwd"})
