@@ -23,18 +23,6 @@
 **Vulnerability:** The FastAPI backend had its CORS middleware configured with `allow_origins=["*"]`, meaning it would accept cross-origin requests from any domain.
 **Learning:** In a local desktop architecture (like this Flutter app talking to a local Python backend), having an open CORS policy allows any malicious website a user visits to send requests to the local backend service (e.g., `http://localhost:8000`) and trigger local actions or access local files.
 **Prevention:** Use an explicit list of allowed local origins (e.g., `http://localhost:8001`, `http://127.0.0.1:8001`) via environment variables rather than a wildcard `*`.
-## 2025-05-08 - Unauthorized Network Exposure via 0.0.0.0
-**Vulnerability:** The FastAPI backend using Uvicorn was configured to bind to all network interfaces (`0.0.0.0`), exposing the local desktop application's backend to the entire local network (or public network if not firewalled).
-**Learning:** Local desktop applications typically only need to communicate between their local frontend and backend components. Binding to `0.0.0.0` unnecessarily expands the attack surface, potentially allowing anyone on the network to interact with the backend API.
-**Prevention:** Always bind local application backends strictly to the loopback interface (`127.0.0.1` or `localhost`) unless external network access is an explicit and authenticated requirement.
-## 2025-05-18 - [Fix insecure network binding exposing local backend]
-**Vulnerability:** The FastAPI backend bound to `0.0.0.0` in `main.py` (`uvicorn.run(app, host="0.0.0.0", port=8000)`). Since this is a local desktop application with an unauthenticated API, binding to all interfaces exposed it to the entire local network, meaning any unauthorized device on the same network could access local data or trigger actions.
-**Learning:** For desktop applications using local REST/RPC backends, blindly copying web server defaults (like binding to `0.0.0.0` or `*`) is extremely dangerous as it bypasses local boundaries.
-**Prevention:** Always ensure local backend APIs explicitly bind to the loopback interface (`127.0.0.1` or `localhost`) unless intentionally serving a remote frontend.
-## 2025-02-28 - Local Backend Bound to All Network Interfaces
-**Vulnerability:** The FastAPI backend service was configured to bind to `0.0.0.0`, exposing the local desktop application's backend to the entire local network rather than just the host machine.
-**Learning:** For local desktop applications, binding backend services to all interfaces (`0.0.0.0`) creates an unintended network attack surface, allowing anyone on the same network to potentially access the API endpoints and local files.
-**Prevention:** Always bind local-only desktop backend services strictly to the loopback interface (`127.0.0.1`) to ensure they are only accessible from the host machine itself.
 
 ## 2025-05-14 - Fix Server Bind to All Interfaces
 **Vulnerability:** The FastAPI backend was configured to bind to "0.0.0.0", exposing the local API to the entire network.
@@ -67,3 +55,20 @@
 **Vulnerability:** The FastAPI endpoints endpoints (`/analyze`, `/results`, `/update_action`, `/job/{job_id}`) accepted arbitrary string inputs (e.g. `video_path`, `action_id`) through Pydantic models and query/path parameters without any `max_length` bounds. An attacker could exploit this by sending requests with exceptionally large strings, forcing the backend to allocate large amounts of memory and crash due to memory exhaustion (Denial of Service).
 **Learning:** By default, Pydantic `str` types and FastAPI string parameters have unbounded lengths. This poses a silent DoS risk in API boundaries parsing unbounded incoming JSON and URL requests.
 **Prevention:** Always enforce strict `max_length` constraints on string inputs using `pydantic.Field` for model attributes and `fastapi.Query`/`fastapi.Path` for route parameters to limit memory allocation.
+
+## 2026-05-15 - Missing Security Headers in FastAPI Response
+**Vulnerability:** The FastAPI backend did not include standard security headers in its HTTP responses. This leaves API endpoints vulnerable to several web-based attacks (e.g., MIME sniffing, clickjacking, XSS), which reduces defense-in-depth even for local desktop or basic APIs.
+**Learning:** Default framework configurations (like bare FastAPI) do not typically add fundamental security headers automatically. Relying solely on CORS middleware leaves gaps in defense-in-depth protection for other common browser-based attack vectors.
+**Prevention:** Implement a global middleware that automatically injects fundamental security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security`, and `X-XSS-Protection`) to enforce defense-in-depth across all endpoints.
+## 2026-05-17 - Fix Information Leakage in Background Task Errors
+**Vulnerability:** The `process_video_task` in FastAPI previously captured raw exception objects from the engine and returned them verbatim via the `/job/{job_id}` unauthenticated status endpoint. This allowed attackers to induce failures and extract internal application details like paths, ML engine structures, or stack traces.
+**Learning:** In asynchronous or background task endpoints, returning unhandled exception strings directly to the client is a form of information leakage. These APIs should only return sanitized state.
+**Prevention:** Catch expected or unexpected exceptions in background threads, log the actual raw error to a secure internal log (using `logging.error`), and mutate the job state with a generic, safe string like 'An internal error occurred'.
+
+## 2024-05-04 - Insecure Deserialization via pickle.load
+
+**Vulnerability:** The application used `pickle.load` to load a Random Forest model (`model.p`) in `VolleyballApp/backend/engine.py`. This is an insecure deserialization vulnerability, as an attacker who can modify or replace the `model.p` file could execute arbitrary Python code when the backend server starts and instantiates the `VolleyballAnalyticsEngine` class.
+
+**Learning:** When loading machine learning models from disk, especially in an environment where the model files might be externally supplied or altered, using format-specific binary loaders like `onnxruntime` or safer serialization like `joblib` (with `safe_load=True` if applicable) should always be preferred over Python's built-in `pickle`.
+
+**Prevention:** Avoid `pickle.load` for external or untrusted data. Standardize on secure model representation formats like ONNX, which separates the model architecture and weights from general-purpose execution context, eliminating the code execution risk inherent to unpickling.
