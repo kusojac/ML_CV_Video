@@ -28,6 +28,11 @@
 ## 2024-05-15 - Defer Expensive Operations in Object Detection Pipelines
 **Learning:** Found a performance bottleneck in `VolleyballApp/backend/frame_utilities.py` where `np.argmax(class_scores, axis=1)` was executed on all anchor boxes (thousands per frame) before filtering by confidence threshold.
 **Action:** When filtering a large number of predictions based on a confidence threshold, apply the threshold mask *before* running expensive operations like `np.argmax` on the remaining high-confidence candidates to significantly improve per-frame processing speed.
+
+## 2024-05-20 - Vectorized Minimum Distance Search in Inference Loops
+**Learning:** Found an instance in `VolleyballApp/backend/engine.py` where a Python `for` loop was used to find the closest person detection to a ball detection using `get_distance_person_ball_np`. Iterating over detections in Python is a significant bottleneck compared to NumPy vectorization, especially when calculating Euclidean distances which often involve expensive `sqrt` calls.
+**Action:** Always replace Python loops with NumPy vectorized operations (broadcasting) for spatial calculations. Use squared Euclidean distance (`dist_sq = (x1-x2)**2 + (y1-y2)**2`) for finding minimums/maximums to avoid redundant square root calculations. Use NumPy boolean indexing for filtering instead of list comprehensions.
+
 ## 2024-04-29 - [Optimization of YOLO post-processing pipeline]
 **Learning:** Computing `np.argmax(class_scores, axis=1)` across all 8400 outputs of the COCO model before filtering out low-confidence boxes leads to significant unnecessary processing overhead. This was a critical bottleneck affecting the overall pipeline latency per frame.
 **Action:** Defer calculating class IDs via `np.argmax` (and zero initialization for ball models) until after applying the `valid_mask = scores > conf_threshold`. This simple reordering dramatically cuts the computation time from thousands of boxes to a few dozen without altering the result.
