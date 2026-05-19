@@ -162,3 +162,29 @@ def test_update_action_not_found_action():
     finally:
         if os.path.exists(json_path):
             os.remove(json_path)
+
+def test_job_persistence():
+    """Test that job state is maintained across JobStore re-initialization."""
+    from database import JobStore
+    import uuid
+
+    db_path = "test_jobs.db"
+    if os.path.exists(db_path):
+        os.remove(db_path)
+
+    try:
+        job_id = str(uuid.uuid4())
+        store = JobStore(db_path)
+        store.set_job(job_id, {"status": "pending", "progress": 0.0, "video_path": "test.mp4"})
+
+        # Simulate restart by creating new store instance
+        store2 = JobStore(db_path)
+        job = store2.get_job(job_id)
+
+        assert job is not None
+        assert job["status"] == "pending"
+        assert job["progress"] == 0.0
+        assert job["video_path"] == "test.mp4"
+    finally:
+        if os.path.exists(db_path):
+            os.remove(db_path)
