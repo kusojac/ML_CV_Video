@@ -23,6 +23,13 @@
 ## 2024-05-19 - Centralized Theme Usage
 **Learning:** Hardcoding generic styles like clipBehavior, shadows, and borders in multiple components creates inconsistency and bloats code. Using centralized ThemeData (e.g. CardTheme, ChipTheme) ensures uniform aesthetics across the whole application while decreasing code duplication.
 **Action:** When redesigning screens, check if properties common to many widgets can be lifted into the global MaterialApp theme.
+
+## 2024-05-18 - Missing Tooltips on Icon-Only Buttons
+**Learning:** Icon-only buttons (like `IconButton` in Flutter) lack context for screen readers and general accessibility if not paired with a `tooltip` or `semanticLabel`. In `ArtifactEditScreen`, the "remove player" button lacked this.
+**Action:** Always ensure any standalone `Icon` wrapper designed for interaction (like `IconButton` or `GestureDetector` around an `Icon`) explicitly sets the `tooltip` property.
+## 2024-05-19 - Centralized Theme Usage
+**Learning:** Hardcoding generic styles like clipBehavior, shadows, and borders in multiple components creates inconsistency and bloats code. Using centralized ThemeData (e.g. CardTheme, ChipTheme) ensures uniform aesthetics across the whole application while decreasing code duplication.
+**Action:** When redesigning screens, check if properties common to many widgets can be lifted into the global MaterialApp theme.
 ## 2025-01-16 - Add Tooltips to Icon-Only Buttons
 **Learning:** Icon-only buttons without tooltips or ARIA labels provide no context to screen readers, making the app less accessible. Adding a simple `tooltip` string properly describes the purpose of actions like "Delete" or "Remove".
 **Action:** Always include a `tooltip` or `semanticLabel` for interactive elements containing only icons.
