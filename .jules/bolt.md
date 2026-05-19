@@ -1,3 +1,6 @@
+## 2024-05-24 - Vectorize NMS Box Coordinates Calculation
+**Learning:** Using a Python list comprehension to iterate over thousands of NumPy array rows (e.g., converting `[x1, y1, x2, y2]` to `[x1, y1, w, h]` for NMS input) creates a massive performance bottleneck. In local benchmarking, the list comprehension took ~14.7s for 1000 iterations over 8400 boxes, while a fully vectorized approach took only ~0.05s.
+**Action:** When reshaping or modifying coordinates in dense arrays (like YOLO bounding boxes), always pre-allocate with `np.empty_like()` (or `np.zeros_like()`) and use vectorized array slicing (e.g., `boxes[:, 2] = ...`) rather than iterating explicitly in Python.
 ## 2024-05-04 - Asynchronous File I/O in FastAPI
 **Learning:** In FastAPI async endpoints, using synchronous Python file I/O operations (like `open()`, `json.load()`, `json.dump()`) can block the main thread and severely hinder throughput when under load.
 **Action:** When handling I/O operations inside `async def` routes, we should always use non-blocking counterparts, such as `aiofiles` and combined with `await f.read()`/`await f.write()` instead of standard context managers.
@@ -28,12 +31,14 @@
 ## 2024-05-15 - Defer Expensive Operations in Object Detection Pipelines
 **Learning:** Found a performance bottleneck in `VolleyballApp/backend/frame_utilities.py` where `np.argmax(class_scores, axis=1)` was executed on all anchor boxes (thousands per frame) before filtering by confidence threshold.
 **Action:** When filtering a large number of predictions based on a confidence threshold, apply the threshold mask *before* running expensive operations like `np.argmax` on the remaining high-confidence candidates to significantly improve per-frame processing speed.
+
+## 2024-05-20 - Vectorized Minimum Distance Search in Inference Loops
+**Learning:** Found an instance in `VolleyballApp/backend/engine.py` where a Python `for` loop was used to find the closest person detection to a ball detection using `get_distance_person_ball_np`. Iterating over detections in Python is a significant bottleneck compared to NumPy vectorization, especially when calculating Euclidean distances which often involve expensive `sqrt` calls.
+**Action:** Always replace Python loops with NumPy vectorized operations (broadcasting) for spatial calculations. Use squared Euclidean distance (`dist_sq = (x1-x2)**2 + (y1-y2)**2`) for finding minimums/maximums to avoid redundant square root calculations. Use NumPy boolean indexing for filtering instead of list comprehensions.
+
 ## 2024-04-29 - [Optimization of YOLO post-processing pipeline]
 **Learning:** Computing `np.argmax(class_scores, axis=1)` across all 8400 outputs of the COCO model before filtering out low-confidence boxes leads to significant unnecessary processing overhead. This was a critical bottleneck affecting the overall pipeline latency per frame.
 **Action:** Defer calculating class IDs via `np.argmax` (and zero initialization for ball models) until after applying the `valid_mask = scores > conf_threshold`. This simple reordering dramatically cuts the computation time from thousands of boxes to a few dozen without altering the result.
-## 2024-05-18 - Vectorized NMS Input Preparation
-**Learning:** In the backend YOLO pipeline, preparing NMS inputs using Python list comprehensions over NumPy arrays (e.g., `[[b[0], b[1]...] for b in boxes_final]`) is a major performance bottleneck. This requires converting numpy arrays back to python objects, looping over them, and creating new lists, which is extremely slow on large amounts of boxes.
-**Action:** Replace list comprehensions for manipulating NumPy bounding box arrays with vectorized operations (e.g., `boxes_nms_input = boxes_final.copy()`, `boxes_nms_input[:, 2] = boxes_final[:, 2] - boxes_final[:, 0]`) to achieve significant speedups during NMS preparation.
 ## 2025-02-12 - YOLO Input Preprocessing Bottleneck
 **Learning:** Manual image preprocessing via explicit NumPy operations (`cv2.resize`, array slicing, type casting, division, `np.transpose`, `np.expand_dims`) incurs significant overhead, particularly in tight loops (e.g., per-frame processing for YOLO models).
 **Action:** Replace multi-step NumPy-based image preprocessing with `cv2.dnn.blobFromImage`, which handles resizing, scaling, and HWC-to-NCHW conversion in a single, highly optimized C++ pass. This simple replacement reduces preprocessing latency by ~50% with identical output.
@@ -66,3 +71,6 @@
 ## 2025-02-20 - FastAPI JSON Default Dump Performance Bottleneck
 **Learning:** Using `indent=4` in `json.dump()` or `json.dumps()` creates significant CPU and I/O overhead when serializing large JSON payloads (e.g., CV results with 500k+ elements), slowing down serialization times noticeably (e.g. 4.4s down to 3.7s for a 15MB file). Even in synchronous routes wrapped in FastAPI/Starlette's threadpool, the worker thread is unnecessarily occupied.
 **Action:** Always omit the `indent` parameter in `json.dump` for internal data storage or non-debug API responses that process large structures to optimize serialization latency and CPU usage.
+## 2024-05-12 - FastAPI Large Payload Serialization Bottleneck
+**Learning:** Returning large dictionaries directly from FastAPI endpoints triggers default Pydantic/Starlette JSON serialization. For large payloads (e.g., 500k objects), this serialization is incredibly slow compared to Python's standard `json.dumps()`. Furthermore, even if using manual serialization (`json.dumps`), executing it inside a standard synchronous route (`def`) blocks the entire threadpool/event loop due to Python's Global Interpreter Lock (GIL), causing massive latency spikes (e.g., ping times jumping from 40ms to over 3 seconds) for all concurrent users.
+**Action:** When returning large JSON-serializable payloads in FastAPI, bypass the default serialization by manually serializing the data. Most critically, to avoid blocking the event loop and thread pool due to the GIL, execute the serialization in a separate process using `concurrent.futures.ProcessPoolExecutor()` and explicitly return a `fastapi.Response(content=json_str, media_type="application/json")`.
