@@ -1,3 +1,6 @@
+## 2024-05-24 - Vectorize NMS Box Coordinates Calculation
+**Learning:** Using a Python list comprehension to iterate over thousands of NumPy array rows (e.g., converting `[x1, y1, x2, y2]` to `[x1, y1, w, h]` for NMS input) creates a massive performance bottleneck. In local benchmarking, the list comprehension took ~14.7s for 1000 iterations over 8400 boxes, while a fully vectorized approach took only ~0.05s.
+**Action:** When reshaping or modifying coordinates in dense arrays (like YOLO bounding boxes), always pre-allocate with `np.empty_like()` (or `np.zeros_like()`) and use vectorized array slicing (e.g., `boxes[:, 2] = ...`) rather than iterating explicitly in Python.
 ## 2024-05-04 - Asynchronous File I/O in FastAPI
 **Learning:** In FastAPI async endpoints, using synchronous Python file I/O operations (like `open()`, `json.load()`, `json.dump()`) can block the main thread and severely hinder throughput when under load.
 **Action:** When handling I/O operations inside `async def` routes, we should always use non-blocking counterparts, such as `aiofiles` and combined with `await f.read()`/`await f.write()` instead of standard context managers.
