@@ -18,3 +18,4 @@ VolleyballApp/frontend/build/windows/
 VolleyballApp/frontend/.dart_tool/
 VolleyballApp/frontend/build/
 VolleyballApp/frontend/windows/flutter/ephemeral/
+.vscode/settings.json
