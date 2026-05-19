@@ -1,10 +1,9 @@
 import cv2
 import os
 import onnxruntime
-import pickle
 import mediapipe as mp
 import numpy as np
-from frame_utilities import preprocess_yolo_input, postprocess_yolo_output, get_distance_person_ball_np, pad_frame_to_square
+from frame_utilities import preprocess_yolo_input, postprocess_yolo_output, postprocess_yolo_ball, postprocess_yolo_coco, pad_frame_to_square
 
 class VolleyballAnalyticsEngine:
     def __init__(self, models_dir):
@@ -168,19 +167,52 @@ class VolleyballAnalyticsEngine:
         cap.release()
         
         # Flush the last action if any
-        if current_action_type != "NONE" and current_action_start is not None:
-            results.append({
-                "id": f"action_{len(results)}",
-                "type": current_action_type,
-                "start_ms": current_action_start,
-                "end_ms": (frame_idx / fps) * 1000.0,
-                "player_box": [float(x) for x in current_action_boxes[len(current_action_boxes)//2]],
-                "player_id": "Unknown",
-                "confidence": 0.8
-            })
+        self._append_action(results, current_action_type, current_action_start, (frame_idx / fps) * 1000.0, current_action_boxes)
 
         return {
             "total_frames": total_frames,
             "fps": fps,
             "actions": results
         }
+
+    def _update_action_smoothing(self, detected_action, closest_person_box, timestamp_ms,
+                                 current_action_type, current_action_start, current_action_boxes, results):
+        if detected_action != "NONE":
+            if current_action_type == detected_action:
+                # Continue current action
+                current_action_boxes.append(closest_person_box)
+            else:
+                # Transition
+                if current_action_type != "NONE" and current_action_start is not None:
+                    # Append the finished action
+                    results.append({
+                        "id": f"action_{len(results)}",
+                        "type": current_action_type,
+                        "start_ms": current_action_start,
+                        "end_ms": timestamp_ms,
+                        # Provide the median/average box or the last box for focus
+                        "player_box": [float(x) for x in current_action_boxes[len(current_action_boxes)//2]],
+                        "player_id": "Unknown",
+                        "confidence": 0.8
+                    })
+                current_action_type = detected_action
+                current_action_start = timestamp_ms
+                current_action_boxes = [closest_person_box]
+        else:
+            if current_action_type != "NONE" and current_action_start is not None:
+                duration = timestamp_ms - current_action_start
+                # Only register if it lasted a few frames (e.g. at least 100ms) to avoid random noise flashes
+                if duration > 100:
+                    results.append({
+                        "id": f"action_{len(results)}",
+                        "type": current_action_type,
+                        "start_ms": current_action_start,
+                        "end_ms": timestamp_ms,
+                        "player_box": [float(x) for x in current_action_boxes[len(current_action_boxes)//2]],
+                        "player_id": "Unknown",
+                        "confidence": 0.8
+                    })
+                current_action_type = "NONE"
+                current_action_start = None
+                current_action_boxes = []
+        return current_action_type, current_action_start, current_action_boxes
