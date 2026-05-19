@@ -2,17 +2,21 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="google.protobuf")
 import json
 import time
+import logging
 import asyncio
+import logging
 import os
 import uuid
 import threading
-import aiofiles
+import anyio
+from anyio import Path
 from typing import Dict, Any
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Path as APIPath, Response
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from engine import VolleyballAnalyticsEngine
 from config import ALLOWED_ORIGINS
+from database import JobStore
 
 app = FastAPI(title="Volleyball Action Detection API")
 
@@ -27,28 +31,25 @@ app.add_middleware(
 # In-memory job state (In production, replace with DB/Redis)
 analysis_jobs: Dict[str, Dict[str, Any]] = {}
 
-# Caches for parsed JSON data and O(1) action lookups
-_parsed_json_cache: Dict[str, Any] = {}
-_action_dict_cache: Dict[str, Dict[str, Any]] = {}
-_file_lock = threading.Lock()
-
 MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
 engine = VolleyballAnalyticsEngine(models_dir=MODELS_DIR)
 
 class AnalyzeRequest(BaseModel):
-    video_path: str
+    video_path: str = Field(..., max_length=2048)
 
 class UpdateActionRequest(BaseModel):
-    video_path: str
-    action_id: str
-    new_type: str
+    video_path: str = Field(..., max_length=2048)
+    action_id: str = Field(..., max_length=100)
+    new_type: str = Field(..., max_length=100)
     new_start_ms: float
     new_end_ms: float
 
 def secure_path(file_path: str) -> str:
     """Validates that the given path does not contain directory traversal characters."""
     if ".." in file_path:
-        raise HTTPException(status_code=400, detail="Directory traversal is not allowed")
+        raise HTTPException(status_code=400, detail="Invalid path provided.")
+    if "\x00" in file_path:
+        raise HTTPException(status_code=400, detail="Invalid path provided.")
     return file_path
 
 def get_json_path(video_path: str) -> str:
@@ -58,20 +59,26 @@ def get_json_path(video_path: str) -> str:
 
 def process_video_task(job_id: str, video_path: str):
     try:
-        analysis_jobs[job_id]["status"] = "processing"
-        analysis_jobs[job_id]["progress"] = 0.0
-        analysis_jobs[job_id]["eta_seconds"] = None
+        job_store.update_job(job_id, {
+            "status": "processing",
+            "progress": 0.0,
+            "eta_seconds": None
+        })
         start_time = time.time()
 
         def update_progress(current_frame, total_frames):
             if total_frames > 0:
                 progress = current_frame / total_frames
-                analysis_jobs[job_id]["progress"] = round(progress, 3)
                 elapsed = time.time() - start_time
+                eta = None
                 if progress > 0:
                     total_estimated = elapsed / progress
-                    eta = max(0.0, total_estimated - elapsed)
-                    analysis_jobs[job_id]["eta_seconds"] = round(eta)
+                    eta = round(max(0.0, total_estimated - elapsed))
+
+                job_store.update_job(job_id, {
+                    "progress": round(progress, 3),
+                    "eta_seconds": eta
+                })
 
         result = engine.process_video(video_path, progress_callback=update_progress)
         
@@ -88,10 +95,12 @@ def process_video_task(job_id: str, video_path: str):
                 action["id"]: action for action in result.get("actions", [])
             }
             
-        analysis_jobs[job_id]["status"] = "completed"
-        analysis_jobs[job_id]["progress"] = 1.0
-        analysis_jobs[job_id]["result"] = result
-        analysis_jobs[job_id]["json_path"] = json_path
+        job_store.update_job(job_id, {
+            "status": "completed",
+            "progress": 1.0,
+            "result": result,
+            "json_path": json_path
+        })
     except Exception as e:
         analysis_jobs[job_id]["status"] = "error"
         analysis_jobs[job_id]["error"] = str(e)
@@ -99,22 +108,22 @@ def process_video_task(job_id: str, video_path: str):
 
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
-    safe_video_path = secure_path(request.video_path)
-    if not os.path.exists(safe_video_path):
+    validate_safe_path(request.video_path)
+    if not os.path.exists(request.video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
     json_path = get_json_path(safe_video_path)
     
     # If already processed, return it immediately
-    if os.path.exists(json_path):
+    if await asyncio.to_thread(os.path.exists, json_path):
         return {"status": "completed", "json_path": json_path}
 
     job_id = str(uuid.uuid4())
-    analysis_jobs[job_id] = {
+    job_store.set_job(job_id, {
         "status": "pending",
         "progress": 0.0,
         "video_path": safe_video_path
-    }
+    })
     background_tasks.add_task(process_video_task, job_id, safe_video_path)
     return {"job_id": job_id, "status": "pending"}
 
@@ -123,7 +132,7 @@ async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTas
 async def get_job_status(job_id: str):
     if job_id not in analysis_jobs:
         raise HTTPException(status_code=404, detail="Job not found")
-    return analysis_jobs[job_id]
+    return job
 
 
 @app.get("/ping")
@@ -132,17 +141,17 @@ async def ping():
 
 
 @app.get("/results")
-def get_results(video_path: str):
+def get_results(video_path: str = Query(..., max_length=2048)):
     video_path = secure_path(video_path)
     json_path = get_json_path(video_path)
 
     with _file_lock:
         if json_path in _parsed_json_cache:
-            return _parsed_json_cache[json_path]
-
-        try:
-            with open(json_path, 'r') as f:
-                data = json.load(f)
+            data = _parsed_json_cache[json_path]
+        else:
+            try:
+                with open(json_path, 'r') as f:
+                    data = json.load(f)
 
             _parsed_json_cache[json_path] = data
             _action_dict_cache[json_path] = {
@@ -151,6 +160,8 @@ def get_results(video_path: str):
             return data
         except FileNotFoundError:
             raise HTTPException(status_code=404, detail="Analysis results not found.")
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=500, detail="Invalid JSON format in analysis results.")
 
 @app.post("/update_action")
 def update_action(req: UpdateActionRequest):
@@ -169,6 +180,8 @@ def update_action(req: UpdateActionRequest):
                 }
             except FileNotFoundError:
                 raise HTTPException(status_code=404, detail="Analysis results not found.")
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=500, detail="Invalid JSON format in analysis results.")
 
         data = _parsed_json_cache[json_path]
         actions_dict = _action_dict_cache[json_path]
