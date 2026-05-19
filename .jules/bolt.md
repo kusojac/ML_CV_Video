@@ -62,3 +62,7 @@
 ## 2024-06-25 - In-place Array Operations for Preprocessing
 **Learning:** In hot loops like per-frame YOLO preprocessing, operations like `img_scaled = img_resized.astype(np.float32) / 255.0` are a hidden bottleneck. They perform out-of-place division, which allocates a completely new NumPy array, doubling memory allocation and slowing down the process.
 **Action:** Always use in-place operations after casting when normalizing or modifying arrays in hot loops (e.g., `img_scaled = img_resized.astype(np.float32); img_scaled /= 255.0`). This avoids allocating a new array for the result and provides a massive speedup.
+
+## 2025-02-20 - FastAPI JSON Default Dump Performance Bottleneck
+**Learning:** Using `indent=4` in `json.dump()` or `json.dumps()` creates significant CPU and I/O overhead when serializing large JSON payloads (e.g., CV results with 500k+ elements), slowing down serialization times noticeably (e.g. 4.4s down to 3.7s for a 15MB file). Even in synchronous routes wrapped in FastAPI/Starlette's threadpool, the worker thread is unnecessarily occupied.
+**Action:** Always omit the `indent` parameter in `json.dump` for internal data storage or non-debug API responses that process large structures to optimize serialization latency and CPU usage.
