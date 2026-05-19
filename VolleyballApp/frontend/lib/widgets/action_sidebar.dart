@@ -76,17 +76,11 @@ class _ActionSidebarState extends State<ActionSidebar> {
   String _sortOption = 'time_asc';
 
   List<ActionModel> get _filteredActions {
-<<<<<<< HEAD
     return widget.actions.where((a) {
       if (widget.filterType != 'All' && a.type != widget.filterType)
         return false;
       if (widget.filterPlayer != 'All' && a.playerId != widget.filterPlayer)
         return false;
-=======
-    final filtered = widget.actions.where((a) {
-      if (widget.selectedActionTypes.isNotEmpty && !widget.selectedActionTypes.contains(a.type)) return false;
-      if (widget.selectedPlayers.isNotEmpty && !widget.selectedPlayers.contains(a.playerId)) return false;
->>>>>>> origin/main
       return true;
     }).toList();
 
@@ -156,7 +150,6 @@ class _ActionSidebarState extends State<ActionSidebar> {
       initialIndex: widget.initialTabIndex,
       child: Column(
         children: [
-<<<<<<< HEAD
           Container(
             padding: const EdgeInsets.all(16),
             color: const Color(0xFF161616),
@@ -173,476 +166,6 @@ class _ActionSidebarState extends State<ActionSidebar> {
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
-=======
-        Container(
-          padding: const EdgeInsets.all(16),
-          color: const Color(0xFF161616),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Expanded(child: Text('Actions List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white), overflow: TextOverflow.ellipsis)),
-                  Row(
-                    children: [
-                      const Text('Edit', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                      Switch(
-                        value: widget.isEditMode,
-                        onChanged: widget.onEditModeChanged,
-                        activeThumbColor: Colors.purpleAccent,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              if (widget.isEditMode)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      const Text('Isolate Selected', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                      Switch(
-                        value: widget.isolateSelected,
-                        onChanged: widget.onIsolateSelectedChanged,
-                        activeThumbColor: Colors.cyanAccent,
-                      ),
-                    ],
-                  ),
-                ),
-              Theme(
-                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  title: const Text('Filtry i sortowanie', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                  leading: Icon(
-                    Icons.filter_list,
-                    size: 20,
-                    color: (widget.selectedActionTypes.isNotEmpty || widget.selectedPlayers.isNotEmpty)
-                        ? Colors.purpleAccent
-                        : Colors.white70,
-                  ),
-                  subtitle: Builder(builder: (context) {
-                    final parts = <String>[];
-                    for (final t in widget.selectedActionTypes) { parts.add('Akcja: $t'); }
-                    for (final p in widget.selectedPlayers) { parts.add('Gracz: $p'); }
-                    if (parts.isEmpty) return const SizedBox.shrink();
-                    return Text(
-                      parts.join(' · '),
-                      style: const TextStyle(color: Colors.purpleAccent, fontSize: 11),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    );
-                  }),
-                  trailing: () {
-                    final count = widget.selectedActionTypes.length + widget.selectedPlayers.length;
-                    if (count == 0) return const Icon(Icons.expand_more, color: Colors.white70);
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.purpleAccent.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.purpleAccent),
-                          ),
-                          child: Text('$count', style: const TextStyle(color: Colors.purpleAccent, fontSize: 11, fontWeight: FontWeight.bold)),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.expand_more, color: Colors.purpleAccent),
-                      ],
-                    );
-                  }(),
-                  iconColor: Colors.purpleAccent,
-                  collapsedIconColor: Colors.white70,
-                  tilePadding: EdgeInsets.zero,
-                  childrenPadding: const EdgeInsets.only(bottom: 8.0),
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A2A2A),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white24),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                hint: const Text('Filtruj akcje...', style: TextStyle(color: Colors.white70)),
-                                dropdownColor: const Color(0xFF2E2E2E),
-                                isExpanded: true,
-                                style: const TextStyle(color: Colors.white),
-                                value: null,
-                                items: actionTypes
-                                    .where((t) => !widget.selectedActionTypes.contains(t))
-                                    .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                                onChanged: (v) {
-                                  if (v != null) {
-                                    final newList = List<String>.from(widget.selectedActionTypes)..add(v);
-                                    widget.onSelectedActionTypesChanged(newList);
-                                  }
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A2A2A),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white24),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                hint: const Text('Filtruj graczy...', style: TextStyle(color: Colors.white70)),
-                                dropdownColor: const Color(0xFF2E2E2E),
-                                isExpanded: true,
-                                style: const TextStyle(color: Colors.white),
-                                value: null,
-                                items: playerIds
-                                    .where((t) => !widget.selectedPlayers.contains(t))
-                                    .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                                onChanged: (v) {
-                                  if (v != null) {
-                                    final newList = List<String>.from(widget.selectedPlayers)..add(v);
-                                    widget.onSelectedPlayersChanged(newList);
-                                  }
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (widget.selectedActionTypes.isNotEmpty || widget.selectedPlayers.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Wrap(
-                            spacing: 8.0,
-                            runSpacing: 4.0,
-                            children: [
-                              ...widget.selectedActionTypes.map((t) => InputChip(
-                                label: Text('Akcja: $t', style: const TextStyle(fontSize: 12)),
-                                backgroundColor: Colors.purple.withValues(alpha: 0.3),
-                                deleteIcon: const Icon(Icons.close, size: 16),
-                                onDeleted: () {
-                                  final newList = List<String>.from(widget.selectedActionTypes)..remove(t);
-                                  widget.onSelectedActionTypesChanged(newList);
-                                },
-                              )),
-                              ...widget.selectedPlayers.map((p) => InputChip(
-                                label: Text('Gracz: $p', style: const TextStyle(fontSize: 12)),
-                                backgroundColor: Colors.cyan.withValues(alpha: 0.3),
-                                deleteIcon: const Icon(Icons.close, size: 16),
-                                onDeleted: () {
-                                  final newList = List<String>.from(widget.selectedPlayers)..remove(p);
-                                  widget.onSelectedPlayersChanged(newList);
-                                },
-                              )),
-                            ],
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 12),
-                    InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Sortuj po',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                        labelStyle: TextStyle(color: Colors.white70),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _sortOption,
-                          dropdownColor: const Color(0xFF2E2E2E),
-                          isExpanded: true,
-                          style: const TextStyle(color: Colors.white),
-                          items: const [
-                            DropdownMenuItem(value: 'time_asc', child: Text('Czas (rosnąco)')),
-                            DropdownMenuItem(value: 'time_desc', child: Text('Czas (malejąco)')),
-                            DropdownMenuItem(value: 'type', child: Text('Typ akcji')),
-                            DropdownMenuItem(value: 'player', child: Text('Zawodnik')),
-                            DropdownMenuItem(value: 'confidence', child: Text('Pewność (malejąco)')),
-                          ],
-                          onChanged: (v) {
-                            if (v != null) {
-                              setState(() {
-                                _sortOption = v;
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (widget.isEditMode)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12.0),
-                  child: ElevatedButton.icon(
-                    onPressed: widget.onActionAdded,
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Dodaj nową akcję'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purpleAccent.withValues(alpha: 0.2),
-                      foregroundColor: Colors.purpleAccent,
-                      side: const BorderSide(color: Colors.purpleAccent),
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 12),
-              const TabBar(
-                indicatorColor: Colors.purpleAccent,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white54,
-                tabs: [
-                  Tab(text: 'Wszystkie'),
-                  Tab(text: 'Playlista'),
-                ],
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: TabBarView(
-            children: [
-              // ── ZAKŁADKA 1: Wszystkie akcje ──
-              SingleChildScrollView(
-                controller: _scrollController,
-                padding: const EdgeInsets.only(top: 8, bottom: 20),
-                child: filteredActions.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: 40.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.search_off, size: 48, color: Colors.white30),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Brak akcji',
-                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Zmień filtry lub dodaj nowe akcje.',
-                              style: TextStyle(color: Colors.white54, fontSize: 13),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      )
-                    : Column(
-              children: filteredActions.map((action) {
-                final isSelected = widget.selectedAction?.id == action.id;
-                final key = _itemKeys.putIfAbsent(action.id, () => GlobalKey());
-                
-                Color accentColor = Colors.purpleAccent;
-                if (action.type.toUpperCase() == 'BUMP') accentColor = const Color(0xFF00FFCC);
-                if (action.type.toUpperCase() == 'SET') accentColor = Colors.greenAccent;
-                if (action.type.toUpperCase().contains('SPIKE') || action.type.toUpperCase() == 'ATTACK') accentColor = const Color(0xFFFF0055);
-
-                final timestamp = Duration(milliseconds: action.startMs.round()).toString().split('.').first;
-
-                return Padding(
-                  key: key,
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Card(
-                    color: isSelected ? const Color(0xFF323242) : const Color(0xFF25252D),
-                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    elevation: isSelected ? 4 : 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: BorderSide(
-                        color: isSelected ? accentColor.withValues(alpha: 0.6) : Colors.transparent,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: InkWell(
-                      onTap: () => widget.onActionSelected(action),
-                      borderRadius: BorderRadius.circular(10),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        child: Row(
-                          children: [
-                            if (!widget.isEditMode && widget.playlist != null)
-                              Checkbox(
-                                value: widget.playlist!.any((a) => a.id == action.id),
-                                activeColor: accentColor,
-                                checkColor: Colors.black87,
-                                side: BorderSide(color: Colors.white54),
-                                onChanged: (val) {
-                                  if (val == true) {
-                                    widget.onPlaylistChanged?.call([...widget.playlist!, action]);
-                                  } else {
-                                    widget.onPlaylistChanged?.call(
-                                        widget.playlist!.where((a) => a.id != action.id).toList());
-                                  }
-                                },
-                              ),
-                            Container(
-                              width: 4,
-                              height: 36,
-                          decoration: BoxDecoration(
-                            color: accentColor,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                action.type.toUpperCase(),
-                                style: TextStyle(color: isSelected ? accentColor : Colors.white, fontWeight: FontWeight.bold, fontSize: 15, letterSpacing: 1.1),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Player: ${action.playerId}',
-                                style: const TextStyle(color: Colors.white54, fontSize: 13),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              timestamp,
-                              style: const TextStyle(color: Colors.white70, fontFamily: 'monospace', fontWeight: FontWeight.w600, fontSize: 14),
-                            ),
-                            if (widget.isEditMode)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Row(
-                                  children: [
-                                    InkWell(
-                                      onTap: () => _editAction(context, action),
-                                      child: const Row(
-                                        children: [
-                                          Text('EDIT', style: TextStyle(color: Colors.white30, fontSize: 10, fontWeight: FontWeight.bold)),
-                                          SizedBox(width: 4),
-                                          Icon(Icons.edit, color: Colors.white30, size: 14),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    InkWell(
-                                      onTap: () async {
-                                        final bool? confirm = await showDialog<bool>(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            backgroundColor: const Color(0xFF1E1E24),
-                                            title: const Text('Usuń akcję', style: TextStyle(color: Colors.white)),
-                                            content: const Text(
-                                              'Czy na pewno chcesz usunąć tę akcję?',
-                                              style: TextStyle(color: Colors.white70),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(context, false),
-                                                child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
-                                              ),
-                                              TextButton(
-                                                onPressed: () => Navigator.pop(context, true),
-                                                child: const Text('Usuń', style: TextStyle(color: Colors.redAccent)),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                        if (!mounted) return;
-                                        if (confirm == true) {
-                                          widget.onActionDeleted?.call(action);
-                                        }
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Text('DEL', style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
-                                          SizedBox(width: 4),
-                                          Icon(Icons.delete, color: Colors.redAccent, size: 14),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                );
-              }).toList(),
-            ),
-          ),
-            // ── ZAKŁADKA 2: Playlista ──
-            Column(
-              children: [
-                // ── Menedżer wielu playlist ──
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  color: const Color(0xFF222222),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            isExpanded: true,
-                            dropdownColor: const Color(0xFF2A2A3E),
-                            value: widget.currentPlaylistId,
-                            hint: const Text('Wybierz lub utwórz playlistę', style: TextStyle(color: Colors.white54, fontSize: 13)),
-                            icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-                            items: widget.availablePlaylists?.map((artifact) {
-                              return DropdownMenuItem<String>(
-                                value: artifact.id,
-                                child: Text(artifact.title, style: const TextStyle(color: Colors.white)),
-                              );
-                            }).toList() ?? [],
-                            onChanged: (val) {
-                              if (val != null) widget.onPlaylistSelected?.call(val);
-                            },
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add_box, color: Colors.purpleAccent),
-                        tooltip: 'Utwórz nową playlistę',
-                        onPressed: () => _showCreatePlaylistDialog(context),
-                      ),
-                    ],
-                  ),
-                ),
-                if (!widget.isEditMode)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: widget.loopPlaylist ?? false,
-                              activeColor: Colors.purpleAccent,
-                              onChanged: (v) => widget.onLoopPlaylistChanged?.call(v ?? false),
-                            ),
-                            const Text('Odtwarzaj w pętli', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                          ],
->>>>>>> origin/main
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -741,78 +264,6 @@ class _ActionSidebarState extends State<ActionSidebar> {
                         side: const BorderSide(color: Colors.purpleAccent),
                       ),
                     ),
-<<<<<<< HEAD
-=======
-                  )
-                else
-                  Expanded(
-                    child: ReorderableListView.builder(
-                    itemCount: widget.playlist?.length ?? 0,
-                    onReorder: (oldIndex, newIndex) {
-                      if (oldIndex < newIndex) newIndex -= 1;
-                      final currentPlaylist = List<ActionModel>.from(widget.playlist ?? []);
-                      final item = currentPlaylist.removeAt(oldIndex);
-                      currentPlaylist.insert(newIndex, item);
-                      widget.onPlaylistChanged?.call(currentPlaylist);
-                    },
-                    itemBuilder: (context, index) {
-                      final action = widget.playlist![index];
-                      Color accentColor = Colors.purpleAccent;
-                      if (action.type.toUpperCase() == 'BUMP') accentColor = const Color(0xFF00FFCC);
-                      if (action.type.toUpperCase() == 'SET') accentColor = Colors.greenAccent;
-                      if (action.type.toUpperCase().contains('SPIKE') || action.type.toUpperCase() == 'ATTACK') accentColor = const Color(0xFFFF0055);
-                      final isSelected = widget.selectedAction?.id == action.id;
-
-                      return Card(
-                        key: ValueKey(action.id + index.toString()),
-                        color: isSelected ? const Color(0xFF323242) : const Color(0xFF25252D),
-                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: BorderSide(
-                            color: isSelected ? accentColor.withValues(alpha: 0.5) : Colors.transparent,
-                            width: 1,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: ListTile(
-                            onTap: () => widget.onActionSelected(action),
-                            leading: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.drag_handle, color: Colors.white30, size: 20),
-                                const SizedBox(width: 8),
-                                Container(
-                                  width: 24,
-                                  height: 24,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: accentColor.withValues(alpha: 0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text('${index + 1}', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 10)),
-                                ),
-                              ],
-                            ),
-                            title: Text(action.type, style: TextStyle(color: accentColor, fontWeight: FontWeight.w600, fontSize: 14)),
-                            subtitle: Text('Start: ${(action.startMs / 1000).toStringAsFixed(1)}s  |  Player: ${action.playerId}', style: const TextStyle(color: Colors.white70, fontSize: 11)),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent, size: 20),
-                              tooltip: 'Usuń z playlisty',
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              onPressed: () {
-                                final newPlaylist = List<ActionModel>.from(widget.playlist!);
-                                newPlaylist.removeAt(index);
-                                widget.onPlaylistChanged?.call(newPlaylist);
-                              },
-                            ),
-                          ),
-                        ),
-                      );
-                    },
->>>>>>> origin/main
                   ),
                 const SizedBox(height: 12),
                 const TabBar(
@@ -999,128 +450,118 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                                 ),
                                                 child: Row(
                                                   children: [
-                                                    MouseRegion(
-                                                      cursor: SystemMouseCursors
-                                                          .click,
-                                                      child: InkWell(
-                                                        onTap: () =>
-                                                            _editAction(
-                                                              context,
-                                                              action,
-                                                            ),
-                                                        child: const Row(
-                                                          children: [
-                                                            Text(
-                                                              'EDIT',
-                                                              style: TextStyle(
-                                                                color: Colors
-                                                                    .white30,
-                                                                fontSize: 10,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                              ),
-                                                            ),
-                                                            SizedBox(width: 4),
-                                                            Icon(
-                                                              Icons.edit,
+                                                    InkWell(
+                                                      onTap: () => _editAction(
+                                                        context,
+                                                        action,
+                                                      ),
+                                                      child: const Row(
+                                                        children: [
+                                                          Text(
+                                                            'EDIT',
+                                                            style: TextStyle(
                                                               color: Colors
                                                                   .white30,
-                                                              size: 14,
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
                                                             ),
-                                                          ],
-                                                        ),
+                                                          ),
+                                                          SizedBox(width: 4),
+                                                          Icon(
+                                                            Icons.edit,
+                                                            color:
+                                                                Colors.white30,
+                                                            size: 14,
+                                                          ),
+                                                        ],
                                                       ),
                                                     ),
                                                     const SizedBox(width: 12),
-                                                    MouseRegion(
-                                                      cursor: SystemMouseCursors
-                                                          .click,
-                                                      child: InkWell(
-                                                        onTap: () async {
-                                                          final bool?
-                                                          confirm = await showDialog<bool>(
-                                                            context: context,
-                                                            builder: (context) => AlertDialog(
-                                                              backgroundColor:
-                                                                  const Color(
-                                                                    0xFF1E1E24,
-                                                                  ),
-                                                              title: const Text(
-                                                                'Usuń akcję',
-                                                                style: TextStyle(
-                                                                  color: Colors
-                                                                      .white,
+                                                    InkWell(
+                                                      onTap: () async {
+                                                        final bool?
+                                                        confirm = await showDialog<bool>(
+                                                          context: context,
+                                                          builder: (context) => AlertDialog(
+                                                            backgroundColor:
+                                                                const Color(
+                                                                  0xFF1E1E24,
                                                                 ),
-                                                              ),
-                                                              content: const Text(
-                                                                'Czy na pewno chcesz usunąć tę akcję?',
-                                                                style: TextStyle(
-                                                                  color: Colors
-                                                                      .white70,
-                                                                ),
-                                                              ),
-                                                              actions: [
-                                                                TextButton(
-                                                                  onPressed: () =>
-                                                                      Navigator.pop(
-                                                                        context,
-                                                                        false,
-                                                                      ),
-                                                                  child: const Text(
-                                                                    'Anuluj',
-                                                                    style: TextStyle(
-                                                                      color: Colors
-                                                                          .white54,
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                TextButton(
-                                                                  onPressed: () =>
-                                                                      Navigator.pop(
-                                                                        context,
-                                                                        true,
-                                                                      ),
-                                                                  child: const Text(
-                                                                    'Usuń',
-                                                                    style: TextStyle(
-                                                                      color: Colors
-                                                                          .redAccent,
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          );
-                                                          if (!mounted) return;
-                                                          if (confirm == true) {
-                                                            widget
-                                                                .onActionDeleted
-                                                                ?.call(action);
-                                                          }
-                                                        },
-                                                        child: const Row(
-                                                          children: [
-                                                            Text(
-                                                              'DEL',
+                                                            title: const Text(
+                                                              'Usuń akcję',
                                                               style: TextStyle(
                                                                 color: Colors
-                                                                    .redAccent,
-                                                                fontSize: 10,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
+                                                                    .white,
                                                               ),
                                                             ),
-                                                            SizedBox(width: 4),
-                                                            Icon(
-                                                              Icons.delete,
+                                                            content: const Text(
+                                                              'Czy na pewno chcesz usunąć tę akcję?',
+                                                              style: TextStyle(
+                                                                color: Colors
+                                                                    .white70,
+                                                              ),
+                                                            ),
+                                                            actions: [
+                                                              TextButton(
+                                                                onPressed: () =>
+                                                                    Navigator.pop(
+                                                                      context,
+                                                                      false,
+                                                                    ),
+                                                                child: const Text(
+                                                                  'Anuluj',
+                                                                  style: TextStyle(
+                                                                    color: Colors
+                                                                        .white54,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                              TextButton(
+                                                                onPressed: () =>
+                                                                    Navigator.pop(
+                                                                      context,
+                                                                      true,
+                                                                    ),
+                                                                child: const Text(
+                                                                  'Usuń',
+                                                                  style: TextStyle(
+                                                                    color: Colors
+                                                                        .redAccent,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        );
+                                                        if (!mounted) return;
+                                                        if (confirm == true) {
+                                                          widget.onActionDeleted
+                                                              ?.call(action);
+                                                        }
+                                                      },
+                                                      child: const Row(
+                                                        children: [
+                                                          Text(
+                                                            'DEL',
+                                                            style: TextStyle(
                                                               color: Colors
                                                                   .redAccent,
-                                                              size: 14,
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
                                                             ),
-                                                          ],
-                                                        ),
+                                                          ),
+                                                          SizedBox(width: 4),
+                                                          Icon(
+                                                            Icons.delete,
+                                                            color: Colors
+                                                                .redAccent,
+                                                            size: 14,
+                                                          ),
+                                                        ],
                                                       ),
                                                     ),
                                                   ],
@@ -1455,21 +896,31 @@ class _ActionSidebarState extends State<ActionSidebar> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A2A),
-          title: const Text('Nowa playlista', style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Nowa playlista',
+            style: TextStyle(color: Colors.white),
+          ),
           content: TextField(
             controller: nameController,
             style: const TextStyle(color: Colors.white),
             decoration: const InputDecoration(
               labelText: 'Nazwa playlisty',
               labelStyle: TextStyle(color: Colors.white70),
-              enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
-              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.purpleAccent)),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white30),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.purpleAccent),
+              ),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white54),
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -1478,7 +929,61 @@ class _ActionSidebarState extends State<ActionSidebar> {
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Utwórz', style: TextStyle(color: Colors.purpleAccent)),
+              child: const Text(
+                'Utwórz',
+                style: TextStyle(color: Colors.purpleAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showCreatePlaylistDialog(BuildContext context) {
+    final nameController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2A2A),
+          title: const Text(
+            'Nowa playlista',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: TextField(
+            controller: nameController,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: 'Nazwa playlisty',
+              labelStyle: TextStyle(color: Colors.white70),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.white30),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.purpleAccent),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                if (nameController.text.trim().isNotEmpty) {
+                  widget.onCreateNewPlaylist?.call(nameController.text.trim());
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text(
+                'Utwórz',
+                style: TextStyle(color: Colors.purpleAccent),
+              ),
             ),
           ],
         );
