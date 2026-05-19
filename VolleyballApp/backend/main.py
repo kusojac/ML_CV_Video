@@ -89,7 +89,10 @@ def process_video_task(job_id: str, video_path: str):
 
         with _file_lock:
             with open(json_path, 'w') as f:
-                json.dump(result, f, indent=4)
+                # ⚡ Bolt Optimization: Removed indent=4
+                # Indentation formatting adds significant CPU and I/O overhead
+                # which unnecessarily blocks the event loop and reduces performance.
+                json.dump(result, f)
 
             # Populate cache
             _parsed_json_cache[json_path] = result
@@ -203,7 +206,10 @@ def update_action(req: UpdateActionRequest):
 
         # Write updated data back to disk
         with open(json_path, 'w') as f:
-            json.dump(data, f, indent=4)
+            # ⚡ Bolt Optimization: Removed indent=4
+            # Indentation formatting adds significant CPU and I/O overhead
+            # which unnecessarily blocks the event loop and reduces performance.
+            json.dump(data, f)
 
     return {"status": "success"}
 
