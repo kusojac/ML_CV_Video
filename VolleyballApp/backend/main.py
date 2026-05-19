@@ -2,15 +2,18 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="google.protobuf")
 import json
 import time
+import logging
 import asyncio
+import logging
 import os
 import uuid
 import threading
-import aiofiles
+import anyio
+from anyio import Path
 from typing import Dict, Any
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Path as APIPath, Response
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from engine import VolleyballAnalyticsEngine
 from config import ALLOWED_ORIGINS
 
@@ -24,6 +27,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    return response
+
 # In-memory job state (In production, replace with DB/Redis)
 analysis_jobs: Dict[str, Dict[str, Any]] = {}
 
@@ -36,18 +48,20 @@ MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
 engine = VolleyballAnalyticsEngine(models_dir=MODELS_DIR)
 
 class AnalyzeRequest(BaseModel):
-    video_path: str
+    video_path: str = Field(..., max_length=2048)
 
 class UpdateActionRequest(BaseModel):
-    video_path: str
-    action_id: str
-    new_type: str
+    video_path: str = Field(..., max_length=2048)
+    action_id: str = Field(..., max_length=100)
+    new_type: str = Field(..., max_length=100)
     new_start_ms: float
     new_end_ms: float
 
-def validate_safe_path(file_path: str) -> str:
+def secure_path(file_path: str) -> str:
     """Validates that the given path does not contain directory traversal characters."""
     if ".." in file_path:
+        raise HTTPException(status_code=400, detail="Invalid path provided.")
+    if "\x00" in file_path:
         raise HTTPException(status_code=400, detail="Invalid path provided.")
     return file_path
 
@@ -93,20 +107,21 @@ def process_video_task(job_id: str, video_path: str):
         analysis_jobs[job_id]["result"] = result
         analysis_jobs[job_id]["json_path"] = json_path
     except Exception as e:
+        logging.error(f"Error processing video task {job_id}: {e}")
         analysis_jobs[job_id]["status"] = "error"
-        analysis_jobs[job_id]["error"] = str(e)
+        analysis_jobs[job_id]["error"] = "An internal error occurred during processing."
 
 
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
-    safe_video_path = validate_safe_path(request.video_path)
-    if not os.path.exists(safe_video_path):
+    safe_video_path = secure_path(request.video_path)
+    if not await asyncio.to_thread(os.path.exists, safe_video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
     json_path = get_json_path(safe_video_path)
     
     # If already processed, return it immediately
-    if os.path.exists(json_path):
+    if await asyncio.to_thread(os.path.exists, json_path):
         return {"status": "completed", "json_path": json_path}
 
     job_id = str(uuid.uuid4())
@@ -120,7 +135,7 @@ async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTas
 
 
 @app.get("/job/{job_id}")
-async def get_job_status(job_id: str):
+async def get_job_status(job_id: str = APIPath(..., max_length=100)):
     if job_id not in analysis_jobs:
         raise HTTPException(status_code=404, detail="Job not found")
     return analysis_jobs[job_id]
@@ -132,30 +147,35 @@ async def ping():
 
 
 @app.get("/results")
-def get_results(video_path: str):
-    validate_safe_path(video_path)
+def get_results(video_path: str = Query(..., max_length=2048)):
+    video_path = secure_path(video_path)
     json_path = get_json_path(video_path)
 
     with _file_lock:
         if json_path in _parsed_json_cache:
-            return _parsed_json_cache[json_path]
+            data = _parsed_json_cache[json_path]
+        else:
+            try:
+                with open(json_path, 'r') as f:
+                    data = json.load(f)
 
-        try:
-            with open(json_path, 'r') as f:
-                data = json.load(f)
+                _parsed_json_cache[json_path] = data
+                _action_dict_cache[json_path] = {
+                    action["id"]: action for action in data.get("actions", [])
+                }
+            except FileNotFoundError:
+                raise HTTPException(status_code=404, detail="Analysis results not found.")
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=500, detail="Invalid JSON format in analysis results.")
 
-            _parsed_json_cache[json_path] = data
-            _action_dict_cache[json_path] = {
-                action["id"]: action for action in data.get("actions", [])
-            }
-            return data
-        except FileNotFoundError:
-            raise HTTPException(status_code=404, detail="Analysis results not found.")
+    # ⚡ Bolt Optimization: Bypass FastAPI's slow default JSON serialization for large results
+    # and perform serialization outside of the thread lock to prevent blocking event loops.
+    return Response(content=json.dumps(data), media_type="application/json")
 
 @app.post("/update_action")
 def update_action(req: UpdateActionRequest):
-    validate_safe_path(req.video_path)
-    json_path = get_json_path(req.video_path)
+    safe_video_path = secure_path(req.video_path)
+    json_path = get_json_path(safe_video_path)
 
     with _file_lock:
         if json_path not in _parsed_json_cache:
@@ -169,6 +189,8 @@ def update_action(req: UpdateActionRequest):
                 }
             except FileNotFoundError:
                 raise HTTPException(status_code=404, detail="Analysis results not found.")
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=500, detail="Invalid JSON format in analysis results.")
 
         data = _parsed_json_cache[json_path]
         actions_dict = _action_dict_cache[json_path]
