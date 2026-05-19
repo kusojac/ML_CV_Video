@@ -20,15 +20,13 @@ class ActionModel {
 
   factory ActionModel.fromJson(Map<String, dynamic> json) {
     return ActionModel(
-      id: json['id'] ?? '',
-      type: json['type'] ?? 'NONE',
-      startMs: (json['start_ms'] as num?)?.toDouble() ?? 0.0,
-      endMs: (json['end_ms'] as num?)?.toDouble() ?? 0.0,
-      playerBox:
-          (json['player_box'] as List?)
-              ?.map((e) => (e as num?)?.toDouble() ?? 0.0)
-              .toList() ??
-          [],
+      id: json['id'],
+      type: json['type'],
+      startMs: (json['start_ms'] as num).toDouble(),
+      endMs: (json['end_ms'] as num).toDouble(),
+      playerBox: (json['player_box'] as List)
+          .map((e) => (e as num).toDouble())
+          .toList(),
       playerId: json['player_id'] ?? 'Unknown',
       confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
     );

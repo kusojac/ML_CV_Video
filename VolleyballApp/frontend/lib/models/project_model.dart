@@ -17,10 +17,10 @@ class ProjectModel {
     this.imagePath,
     DateTime? createdAt,
     List<String>? artifactIds,
-  })  : id = id ?? const Uuid().v4(),
-        createdAt = createdAt ?? DateTime.now(),
-        tags = tags ?? [],
-        artifactIds = artifactIds ?? [];
+  }) : id = id ?? const Uuid().v4(),
+       createdAt = createdAt ?? DateTime.now(),
+       tags = tags ?? [],
+       artifactIds = artifactIds ?? [];
 
   factory ProjectModel.fromJson(Map<String, dynamic> json) {
     return ProjectModel(

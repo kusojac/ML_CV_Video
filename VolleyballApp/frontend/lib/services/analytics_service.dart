@@ -10,11 +10,13 @@ class AnalyticsService {
   AnalyticsService({http.Client? client}) : _client = client ?? http.Client();
 
   Future<String> startAnalysis(String videoPath) async {
-    final response = await _client.post(
-      Uri.parse('$baseUrl/analyze'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'video_path': videoPath}),
-    ).timeout(const Duration(seconds: 30));
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl/analyze'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'video_path': videoPath}),
+        )
+        .timeout(const Duration(seconds: 30));
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
       if (jsonResponse['status'] == 'completed') {
@@ -27,7 +29,8 @@ class AnalyticsService {
   }
 
   Future<Map<String, dynamic>> checkJobStatus(String jobId) async {
-    final response = await _client.get(Uri.parse('$baseUrl/job/$jobId'))
+    final response = await _client
+        .get(Uri.parse('$baseUrl/job/$jobId'))
         .timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
@@ -44,7 +47,11 @@ class AnalyticsService {
     // We can just try reading the local json file directly instead of HTTP if it's the same machine
     // But let's use the API for correctness
     final response = await _client
-        .get(Uri.parse('$baseUrl/results?video_path=${Uri.encodeComponent(videoPath)}'))
+        .get(
+          Uri.parse(
+            '$baseUrl/results?video_path=${Uri.encodeComponent(videoPath)}',
+          ),
+        )
         .timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
@@ -52,7 +59,8 @@ class AnalyticsService {
       return actions.map((v) => ActionModel.fromJson(v)).toList();
     }
     // Fallback: try reading the JSON file locally if API is down
-    final path = '${videoPath.substring(0, videoPath.lastIndexOf('.'))}_analysis.json';
+    final path =
+        '${videoPath.substring(0, videoPath.lastIndexOf('.'))}_analysis.json';
     if (File(path).existsSync()) {
       final contents = await File(path).readAsString();
       final jsonResponse = jsonDecode(contents);

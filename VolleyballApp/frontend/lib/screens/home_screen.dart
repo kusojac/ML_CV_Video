@@ -61,9 +61,13 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       if (_sortOption == 'name_asc') {
-        filtered.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        filtered.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
       } else if (_sortOption == 'name_desc') {
-        filtered.sort((a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        filtered.sort(
+          (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()),
+        );
       } else if (_sortOption == 'date_asc') {
         filtered.sort((a, b) => a.createdAt.compareTo(b.createdAt));
       } else if (_sortOption == 'date_desc') {
@@ -161,7 +165,9 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Nazwa projektu'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nazwa projektu',
+                  ),
                 ),
                 TextField(
                   controller: descController,
@@ -272,260 +278,65 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Zbiór Projektów'),
-        actions: [
-          // Toggle widok: kafelki / graf
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _viewToggleBtn(
-                  icon: Icons.grid_view,
-                  tooltip: 'Widok kafelek',
-                  active: !_isGraphView,
-                  onTap: () => setState(() => _isGraphView = false),
-                ),
-                _viewToggleBtn(
-                  icon: Icons.account_tree,
-                  tooltip: 'Widok grafowy',
-                  active: _isGraphView,
-                  onTap: () => setState(() => _isGraphView = true),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Nowy Projekt',
-            onPressed: _showAddProjectDialog,
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Zbiór Projektów')),
       body: Column(
         children: [
-          Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              title: const Text('Wyszukaj i sortuj'),
-              leading: Icon(
-                Icons.tune,
-                color: (_selectedFilterTags.isNotEmpty || _searchController.text.isNotEmpty)
-                    ? Colors.purpleAccent
-                    : null,
-              ),
-              subtitle: Builder(builder: (context) {
-                final parts = <String>[];
-                if (_searchController.text.isNotEmpty) parts.add('"${_searchController.text}"');
-                for (final t in _selectedFilterTags) { parts.add('#$t'); }
-                if (parts.isEmpty) return const SizedBox.shrink();
-                return Text(
-                  parts.join(' · '),
-                  style: const TextStyle(color: Colors.purpleAccent, fontSize: 12),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                );
-              }),
-              trailing: _selectedFilterTags.isNotEmpty
-                  ? Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.purpleAccent.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.purpleAccent),
-                          ),
-                          child: Text(
-                            '${_selectedFilterTags.length}',
-                            style: const TextStyle(color: Colors.purpleAccent, fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const Icon(Icons.expand_more),
-                      ],
-                    )
-                  : null,
-              childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Filtruj po nazwie, opisie lub tagach...',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: const Color(0xFF2A2A2A),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2A2A2A),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Filtruj po nazwie, opisie lub tagach...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white24),
                       ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _sortOption,
-                          icon: const Icon(Icons.sort, color: Colors.white70),
-                          dropdownColor: const Color(0xFF2E2E2E),
-                          style: const TextStyle(color: Colors.white),
-                          items: const [
-                            DropdownMenuItem(value: 'date_desc', child: Text('Najnowsze')),
-                            DropdownMenuItem(value: 'date_asc', child: Text('Najstarsze')),
-                            DropdownMenuItem(value: 'name_asc', child: Text('Nazwa (A-Z)')),
-                            DropdownMenuItem(value: 'name_desc', child: Text('Nazwa (Z-A)')),
-                          ],
-                          onChanged: (val) {
-                            if (val != null) {
-                              setState(() {
-                                _sortOption = val;
-                                _filterProjects();
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2A2A2A),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white24),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          hint: const Text('Dodaj filtr tagu...', style: TextStyle(color: Colors.white70)),
-                          dropdownColor: const Color(0xFF2E2E2E),
-                          style: const TextStyle(color: Colors.white),
-                          value: null,
-                          icon: const Icon(Icons.sell, color: Colors.white70, size: 20),
-                          items: _dataService.projects
-                              .expand((p) => p.tags)
-                              .toSet()
-                              .where((tag) => !_selectedFilterTags.contains(tag))
-                              .map((tag) => DropdownMenuItem(value: tag, child: Text(tag)))
-                              .toList(),
-                          onChanged: (val) {
-                            if (val != null) {
-                              setState(() {
-                                _selectedFilterTags.add(val);
-                                _filterProjects();
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (_selectedFilterTags.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12.0),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Wrap(
-                        spacing: 8.0,
-                        runSpacing: 4.0,
-                        children: _selectedFilterTags.map((tag) {
-                          return InputChip(
-                            label: Text(tag, style: const TextStyle(fontSize: 12)),
-                            backgroundColor: Colors.purple.withValues(alpha: 0.3),
-                            deleteIcon: const Icon(Icons.close, size: 16),
-                            onDeleted: () {
-                              setState(() {
-                                _selectedFilterTags.remove(tag);
-                                _filterProjects();
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
+                      filled: true,
+                      fillColor: const Color(0xFF2A2A2A),
                     ),
                   ),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton.icon(
+                  onPressed: _showAddProjectDialog,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Nowy Projekt'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
           Expanded(
-            child: _isGraphView
-                ? GraphView(
-                    projects: _filteredProjects,
-                    onRefresh: _filterProjects,
-                    onProjectTap: (project) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProjectDetailsScreen(project: project),
-                        ),
-                      ).then((_) => _filterProjects());
-                    },
-                    onProjectEdit: (project) => _editProjectDialog(project),
-                    onProjectDelete: (project) => _deleteProject(project),
+            child: _filteredProjects.isEmpty
+                ? const Center(
+                    child: Text('Brak projektów. Dodaj nowy projekt.'),
                   )
-                : _filteredProjects.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.folder_open,
-                              size: 64,
-                              color: Colors.white30,
-                            ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Brak projektów',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white70,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Dodaj nowy projekt, aby rozpocząć pracę.',
-                              style: TextStyle(color: Colors.white54),
-                            ),
-                          ],
+                : GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 400,
+                          childAspectRatio: 0.8,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
                         ),
-                      )
-                    : GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate:
-                            const SliverGridDelegateWithMaxCrossAxisExtent(
-                              maxCrossAxisExtent: 400,
-                              childAspectRatio: 0.8,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                            ),
-                        itemCount: _filteredProjects.length,
-                        itemBuilder: (context, index) {
-                          final project = _filteredProjects[index];
-                          return _buildProjectTile(project);
-                        },
-                      ),
+                    itemCount: _filteredProjects.length,
+                    itemBuilder: (context, index) {
+                      final project = _filteredProjects[index];
+                      return _buildProjectTile(project);
+                    },
+                  ),
           ),
         ],
       ),
@@ -566,26 +377,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             fit: BoxFit.cover,
                           ) // W przyszłości np. File(imagePath)
                         : const Icon(
-                            Icons.folder_special,
-                            size: 72,
-                            color: Colors.white24,
+                            Icons.folder_copy,
+                            size: 64,
+                            color: Colors.white54,
                           ),
-                  ),
-                  // Mroczny gradient od dołu, aby tekst/ikony były czytelne
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withValues(alpha: 0.6),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          stops: const [0.6, 1.0],
-                        ),
-                      ),
-                    ),
                   ),
                   Positioned(
                     top: 8,
@@ -601,14 +396,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Row(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blueAccent, size: 20),
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: Colors.blueAccent,
+                                  size: 20,
+                                ),
                                 constraints: const BoxConstraints(),
                                 padding: const EdgeInsets.all(8),
                                 tooltip: 'Edytuj projekt',
                                 onPressed: () => _editProjectDialog(project),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.redAccent, size: 20),
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.redAccent,
+                                  size: 20,
+                                ),
                                 constraints: const BoxConstraints(),
                                 padding: const EdgeInsets.all(8),
                                 tooltip: 'Usuń projekt',
@@ -636,7 +439,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 0.3,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -648,9 +450,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             ? project.description
                             : 'Brak opisu.',
                         style: const TextStyle(
-                          fontSize: 13,
+                          fontSize: 12,
                           color: Colors.white70,
-                          height: 1.4,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -663,13 +464,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Wrap(
                           spacing: 6,
                           children: project.tags.map((tag) {
-                            return Chip(
-                              label: Text(
-                                tag,
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 4.0),
+                              child: Chip(
+                                label: Text(
+                                  tag,
+                                  style: const TextStyle(fontSize: 10),
+                                ),
+                                visualDensity: VisualDensity.compact,
+                                backgroundColor: Colors.purple.withValues(
+                                  alpha: 0.3,
+                                ),
                               ),
-                              visualDensity: VisualDensity.compact,
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             );
                           }).toList(),
                         ),

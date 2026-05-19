@@ -79,7 +79,8 @@ class AnalysisFileService {
     required String videoPath,
     required List<ActionModel> playlist,
   }) async {
-    final defaultName = '${p.basenameWithoutExtension(videoPath)}_playlist.json';
+    final defaultName =
+        '${p.basenameWithoutExtension(videoPath)}_playlist.json';
     final savePath = await FilePicker.platform.saveFile(
       dialogTitle: 'Zapisz playlistę',
       fileName: defaultName,
@@ -137,7 +138,7 @@ class AnalysisFileService {
       allowMultiple: false,
     );
     if (result == null || result.files.single.path == null) return null;
-    
+
     final parsed = await _parseFile(File(result.files.single.path!));
     return parsed.actions;
   }
