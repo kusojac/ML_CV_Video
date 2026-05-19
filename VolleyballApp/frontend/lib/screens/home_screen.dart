@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/project_model.dart';
 import '../services/project_data_service.dart';
 import 'project_details_screen.dart';
-import 'package:uuid/uuid.dart';
+import '../widgets/graph_view.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +15,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final ProjectDataService _dataService = ProjectDataService();
   final TextEditingController _searchController = TextEditingController();
   List<ProjectModel> _filteredProjects = [];
+  String _sortOption = 'date_desc';
+  final List<String> _selectedFilterTags = [];
+  bool _isGraphView = false;
 
   @override
   void initState() {
@@ -37,10 +40,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void _filterProjects() {
     final query = _searchController.text.toLowerCase();
     setState(() {
+      List<ProjectModel> filtered;
       if (query.isEmpty) {
-        _filteredProjects = _dataService.projects.toList();
+        filtered = _dataService.projects.toList();
       } else {
-        _filteredProjects = _dataService.projects.where((project) {
+        filtered = _dataService.projects.where((project) {
           final nameMatch = project.name.toLowerCase().contains(query);
           final descMatch = project.description.toLowerCase().contains(query);
           final tagMatch = project.tags.any(
@@ -49,6 +53,28 @@ class _HomeScreenState extends State<HomeScreen> {
           return nameMatch || descMatch || tagMatch;
         }).toList();
       }
+
+      if (_selectedFilterTags.isNotEmpty) {
+        filtered = filtered.where((project) {
+          return project.tags.any((t) => _selectedFilterTags.contains(t));
+        }).toList();
+      }
+
+      if (_sortOption == 'name_asc') {
+        filtered.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
+      } else if (_sortOption == 'name_desc') {
+        filtered.sort(
+          (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()),
+        );
+      } else if (_sortOption == 'date_asc') {
+        filtered.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      } else if (_sortOption == 'date_desc') {
+        filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      }
+
+      _filteredProjects = filtered;
     });
   }
 
@@ -123,6 +149,77 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _editProjectDialog(ProjectModel project) async {
+    final nameController = TextEditingController(text: project.name);
+    final descController = TextEditingController(text: project.description);
+    final tagsController = TextEditingController(text: project.tags.join(', '));
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edytuj Projekt'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nazwa projektu',
+                  ),
+                ),
+                TextField(
+                  controller: descController,
+                  decoration: const InputDecoration(labelText: 'Krótki opis'),
+                  maxLines: 3,
+                ),
+                TextField(
+                  controller: tagsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Tagi (oddzielone przecinkami)',
+                    hintText: 'np. JanKowalski, trening, przyjęcie',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Anuluj'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.trim().isNotEmpty) {
+                  Navigator.pop(context, true);
+                }
+              },
+              child: const Text('Zapisz'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == true) {
+      final tags = tagsController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+
+      setState(() {
+        project.name = nameController.text.trim();
+        project.description = descController.text.trim();
+        project.tags = tags;
+      });
+
+      await _dataService.updateProject(project);
+      _filterProjects();
+    }
+  }
+
   Future<void> _deleteProject(ProjectModel project) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -149,6 +246,33 @@ class _HomeScreenState extends State<HomeScreen> {
       await _dataService.deleteProject(project.id);
       _filterProjects();
     }
+  }
+
+  Widget _viewToggleBtn({
+    required IconData icon,
+    required String tooltip,
+    required bool active,
+    required VoidCallback onTap,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: active ? Colors.deepPurpleAccent : Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: active ? Colors.white : Colors.white54,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -221,10 +345,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildProjectTile(ProjectModel project) {
     return Card(
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 4,
-      color: const Color(0xFF1E1E24),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -244,7 +364,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 fit: StackFit.expand,
                 children: [
                   Container(
-                    color: Colors.grey[800],
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.grey[850]!, Colors.grey[900]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
                     child: project.imagePath != null
                         ? Image.network(
                             project.imagePath!,
@@ -259,9 +385,42 @@ class _HomeScreenState extends State<HomeScreen> {
                   Positioned(
                     top: 8,
                     right: 8,
-                    child: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.redAccent),
-                      onPressed: () => _deleteProject(project),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black45,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: Colors.blueAccent,
+                                  size: 20,
+                                ),
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(8),
+                                tooltip: 'Edytuj projekt',
+                                onPressed: () => _editProjectDialog(project),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.redAccent,
+                                  size: 20,
+                                ),
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.all(8),
+                                tooltip: 'Usuń projekt',
+                                onPressed: () => _deleteProject(project),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -271,7 +430,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -284,7 +443,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Expanded(
                       child: Text(
                         project.description.isNotEmpty
@@ -302,7 +461,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (project.tags.isNotEmpty)
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: Row(
+                        child: Wrap(
+                          spacing: 6,
                           children: project.tags.map((tag) {
                             return Padding(
                               padding: const EdgeInsets.only(right: 4.0),

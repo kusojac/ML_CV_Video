@@ -92,6 +92,21 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   // Kontroler przewijania osi czasu
   final ScrollController _timelineScrollController = ScrollController();
 
+  // Tryb przewijania kursorem po obszarze wideo
+  bool _scrubMode = false;
+  double? _scrubDragStartX;
+  double? _scrubDragStartMs;
+
+  // Prędkość odtwarzania
+  double _playbackRate = 1.0;
+
+  static const List<double> _kRates = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0];
+
+  void _setRate(double rate) {
+    _player.setRate(rate);
+    setState(() => _playbackRate = rate);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -132,6 +147,43 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     _player.dispose();
     _timelineScrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(VideoPlayerWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedAction?.id != oldWidget.selectedAction?.id &&
+        widget.selectedAction != null) {
+      if (_zoomLevel > 1.0) {
+        _scrollToSelectedAction();
+      }
+    }
+  }
+
+  void _scrollToSelectedAction() {
+    if (!mounted || !_timelineScrollController.hasClients) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_timelineScrollController.hasClients) return;
+
+      final totalMs = _totalDuration.inMilliseconds.toDouble();
+      if (totalMs <= 0) return;
+
+      final maxScroll = _timelineScrollController.position.maxScrollExtent;
+      if (maxScroll <= 0) return;
+
+      final viewport = _timelineScrollController.position.viewportDimension;
+      final timelineWidth = maxScroll + viewport;
+
+      final startFrac = widget.selectedAction!.startMs / totalMs;
+      final targetScroll = (startFrac * timelineWidth) - (viewport / 2);
+
+      _timelineScrollController.animateTo(
+        targetScroll.clamp(0.0, maxScroll),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   void _seekToMs(double ms) => _player.seek(Duration(milliseconds: ms.round()));
@@ -1176,6 +1228,112 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     );
   }
 
+  // ─── Kontrola prędkości ─────────────────────────────────────────────────────
+
+  Widget _buildSpeedControl() {
+    final isSlowMo = _playbackRate < 1.0;
+    final isNormal = _playbackRate == 1.0;
+
+    return PopupMenuButton<double>(
+      tooltip: 'Prędkość odtwarzania',
+      color: const Color(0xFF1E1E2E),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      offset: const Offset(0, -200),
+      onSelected: _setRate,
+      itemBuilder: (_) => _kRates.map((rate) {
+        final isSelected = rate == _playbackRate;
+        String label;
+        if (rate == 1.0) {
+          label = '${rate}x (normalna)';
+        } else if (rate < 1.0) {
+          label = '$rate× (zwolnione)';
+        } else {
+          label = '$rate× (przyspieszone)';
+        }
+        return PopupMenuItem<double>(
+          value: rate,
+          child: Row(
+            children: [
+              Icon(
+                isSelected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                size: 16,
+                color: isSelected
+                    ? (rate < 1.0
+                          ? Colors.cyanAccent
+                          : rate > 1.0
+                          ? Colors.orangeAccent
+                          : Colors.greenAccent)
+                    : Colors.white38,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isNormal
+              ? Colors.white.withValues(alpha: 0.07)
+              : isSlowMo
+              ? Colors.cyanAccent.withValues(alpha: 0.15)
+              : Colors.orangeAccent.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isNormal
+                ? Colors.white24
+                : isSlowMo
+                ? Colors.cyanAccent
+                : Colors.orangeAccent,
+            width: isNormal ? 1.0 : 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSlowMo
+                  ? Icons.slow_motion_video
+                  : isNormal
+                  ? Icons.speed
+                  : Icons.fast_forward,
+              size: 15,
+              color: isNormal
+                  ? Colors.white54
+                  : isSlowMo
+                  ? Colors.cyanAccent
+                  : Colors.orangeAccent,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              '$_playbackRate×',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isNormal ? FontWeight.normal : FontWeight.bold,
+                color: isNormal
+                    ? Colors.white54
+                    : isSlowMo
+                    ? Colors.cyanAccent
+                    : Colors.orangeAccent,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
@@ -1215,6 +1373,80 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         children: [
                           Video(controller: _controller),
                           _buildVideoBoundingBoxOverlay(size, videoW, videoH),
+                          // Nakładka scrub mode
+                          if (_scrubMode)
+                            MouseRegion(
+                              cursor: SystemMouseCursors.resizeLeftRight,
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onPanStart: (d) {
+                                  _scrubDragStartX = d.localPosition.dx;
+                                  _scrubDragStartMs = _currentPos.inMilliseconds
+                                      .toDouble();
+                                },
+                                onPanUpdate: (d) {
+                                  if (_scrubDragStartX == null ||
+                                      _scrubDragStartMs == null)
+                                    return;
+                                  // Czułość: 1px = 200ms (nastrojalna)
+                                  final deltaPx =
+                                      d.localPosition.dx - _scrubDragStartX!;
+                                  const sensitivity = 200.0; // ms na piksel
+                                  final newMs =
+                                      (_scrubDragStartMs! +
+                                              deltaPx * sensitivity)
+                                          .clamp(
+                                            0.0,
+                                            _totalDuration.inMilliseconds
+                                                .toDouble(),
+                                          );
+                                  _seekToMs(newMs);
+                                },
+                                onPanEnd: (_) {
+                                  _scrubDragStartX = null;
+                                  _scrubDragStartMs = null;
+                                },
+                                child: Container(
+                                  color: Colors.transparent,
+                                  child: Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black54,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.swap_horiz,
+                                              color: Colors.cyanAccent,
+                                              size: 14,
+                                            ),
+                                            SizedBox(width: 6),
+                                            Text(
+                                              'Tryb scrubbing aktywny',
+                                              style: TextStyle(
+                                                color: Colors.cyanAccent,
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       );
                     },
@@ -1288,7 +1520,64 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                       _seekToMs(newMs.toDouble());
                     },
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 8),
+                  // Przełącznik trybu scrubbing
+                  Tooltip(
+                    message: _scrubMode
+                        ? 'Wyłącz scrubbing (przewijanie myszą po wideo)'
+                        : 'Włącz scrubbing (przewijanie myszą po wideo)',
+                    child: GestureDetector(
+                      onTap: () => setState(() => _scrubMode = !_scrubMode),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _scrubMode
+                              ? Colors.cyanAccent.withValues(alpha: 0.2)
+                              : Colors.white.withValues(alpha: 0.07),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _scrubMode
+                                ? Colors.cyanAccent
+                                : Colors.white24,
+                            width: _scrubMode ? 1.5 : 1.0,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.swap_horiz,
+                              color: _scrubMode
+                                  ? Colors.cyanAccent
+                                  : Colors.white54,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Scrubbing',
+                              style: TextStyle(
+                                color: _scrubMode
+                                    ? Colors.cyanAccent
+                                    : Colors.white54,
+                                fontSize: 11,
+                                fontWeight: _scrubMode
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Kontrola prędkości odtwarzania
+                  _buildSpeedControl(),
+                  const SizedBox(width: 8),
                   // Hint trybu edycji
                   if (widget.isEditMode)
                     Container(

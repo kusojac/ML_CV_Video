@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import 'team_metadata.dart';
 
 enum ArtifactType { video, playlist, action }
 
@@ -46,6 +47,13 @@ class ArtifactModel {
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
       sourceVideoPath: json['sourceVideoPath'],
+      videoCategory: json['videoCategory'],
+      teamA: json['teamA'] != null
+          ? TeamMetadata.fromJson(json['teamA'] as Map<String, dynamic>)
+          : null,
+      teamB: json['teamB'] != null
+          ? TeamMetadata.fromJson(json['teamB'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -60,6 +68,9 @@ class ArtifactModel {
       'thumbnailPath': thumbnailPath,
       'createdAt': createdAt.toIso8601String(),
       'sourceVideoPath': sourceVideoPath,
+      'videoCategory': videoCategory,
+      'teamA': teamA?.toJson(),
+      'teamB': teamB?.toJson(),
     };
   }
 }

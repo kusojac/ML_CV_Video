@@ -28,7 +28,7 @@ class ActionModel {
           .map((e) => (e as num).toDouble())
           .toList(),
       playerId: json['player_id'] ?? 'Unknown',
-      confidence: (json['confidence'] as num).toDouble(),
+      confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
     );
   }
 

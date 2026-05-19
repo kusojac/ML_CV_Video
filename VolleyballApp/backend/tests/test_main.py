@@ -1,5 +1,4 @@
 import pytest
-import os
 import json
 from unittest.mock import patch
 
@@ -27,7 +26,7 @@ def test_process_video_task_error_handling():
         process_video_task(job_id, video_path)
 
     assert analysis_jobs[job_id]["status"] == "error"
-    assert analysis_jobs[job_id]["error"] == "Test error processing video"
+    assert analysis_jobs[job_id]["error"] == "An internal error occurred during processing."
 
 def test_process_video_task_success(tmp_path):
     job_id = "test_job_success"
@@ -60,6 +59,7 @@ def test_process_video_task_success(tmp_path):
     assert data == mock_result
 from fastapi.testclient import TestClient
 from main import app, secure_path
+from main import app, secure_path
 from fastapi import HTTPException
 
 client = TestClient(app)
@@ -67,9 +67,13 @@ client = TestClient(app)
 def test_validate_safe_path_valid():
     assert secure_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
     assert secure_path("video.mp4") == "video.mp4"
+def test_secure_path_valid():
+    assert secure_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
+    assert secure_path("video.mp4") == "video.mp4"
 
-def test_validate_safe_path_invalid():
+def test_secure_path_invalid():
     with pytest.raises(HTTPException) as excinfo:
+        secure_path("../../etc/passwd")
         secure_path("../../etc/passwd")
     assert excinfo.value.status_code == 400
 
@@ -129,3 +133,43 @@ def test_invalid_json_handling_update_action(tmp_path):
         })
         assert response.status_code == 500
         assert response.json() == {"detail": "Invalid JSON format in analysis results."}
+
+def test_max_length_validation_analyze_request():
+    response = client.post("/analyze", json={"video_path": "a" * 2049})
+    assert response.status_code == 422
+
+def test_max_length_validation_update_action_request():
+    response = client.post("/update_action", json={
+        "video_path": "a" * 2049,
+        "action_id": "123",
+        "new_type": "Serve",
+        "new_start_ms": 1.0,
+        "new_end_ms": 2.0
+    })
+    assert response.status_code == 422
+
+    response = client.post("/update_action", json={
+        "video_path": "a.mp4",
+        "action_id": "a" * 101,
+        "new_type": "Serve",
+        "new_start_ms": 1.0,
+        "new_end_ms": 2.0
+    })
+    assert response.status_code == 422
+
+    response = client.post("/update_action", json={
+        "video_path": "a.mp4",
+        "action_id": "123",
+        "new_type": "a" * 101,
+        "new_start_ms": 1.0,
+        "new_end_ms": 2.0
+    })
+    assert response.status_code == 422
+
+def test_max_length_validation_job_id():
+    response = client.get(f"/job/{'a' * 101}")
+    assert response.status_code == 422
+
+def test_max_length_validation_get_results():
+    response = client.get(f"/results?video_path={'a' * 2049}")
+    assert response.status_code == 422
