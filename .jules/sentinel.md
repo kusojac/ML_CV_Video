@@ -23,18 +23,6 @@
 **Vulnerability:** The FastAPI backend had its CORS middleware configured with `allow_origins=["*"]`, meaning it would accept cross-origin requests from any domain.
 **Learning:** In a local desktop architecture (like this Flutter app talking to a local Python backend), having an open CORS policy allows any malicious website a user visits to send requests to the local backend service (e.g., `http://localhost:8000`) and trigger local actions or access local files.
 **Prevention:** Use an explicit list of allowed local origins (e.g., `http://localhost:8001`, `http://127.0.0.1:8001`) via environment variables rather than a wildcard `*`.
-## 2025-05-08 - Unauthorized Network Exposure via 0.0.0.0
-**Vulnerability:** The FastAPI backend using Uvicorn was configured to bind to all network interfaces (`0.0.0.0`), exposing the local desktop application's backend to the entire local network (or public network if not firewalled).
-**Learning:** Local desktop applications typically only need to communicate between their local frontend and backend components. Binding to `0.0.0.0` unnecessarily expands the attack surface, potentially allowing anyone on the network to interact with the backend API.
-**Prevention:** Always bind local application backends strictly to the loopback interface (`127.0.0.1` or `localhost`) unless external network access is an explicit and authenticated requirement.
-## 2025-05-18 - [Fix insecure network binding exposing local backend]
-**Vulnerability:** The FastAPI backend bound to `0.0.0.0` in `main.py` (`uvicorn.run(app, host="0.0.0.0", port=8000)`). Since this is a local desktop application with an unauthenticated API, binding to all interfaces exposed it to the entire local network, meaning any unauthorized device on the same network could access local data or trigger actions.
-**Learning:** For desktop applications using local REST/RPC backends, blindly copying web server defaults (like binding to `0.0.0.0` or `*`) is extremely dangerous as it bypasses local boundaries.
-**Prevention:** Always ensure local backend APIs explicitly bind to the loopback interface (`127.0.0.1` or `localhost`) unless intentionally serving a remote frontend.
-## 2025-02-28 - Local Backend Bound to All Network Interfaces
-**Vulnerability:** The FastAPI backend service was configured to bind to `0.0.0.0`, exposing the local desktop application's backend to the entire local network rather than just the host machine.
-**Learning:** For local desktop applications, binding backend services to all interfaces (`0.0.0.0`) creates an unintended network attack surface, allowing anyone on the same network to potentially access the API endpoints and local files.
-**Prevention:** Always bind local-only desktop backend services strictly to the loopback interface (`127.0.0.1`) to ensure they are only accessible from the host machine itself.
 
 ## 2025-05-14 - Fix Server Bind to All Interfaces
 **Vulnerability:** The FastAPI backend was configured to bind to "0.0.0.0", exposing the local API to the entire network.
