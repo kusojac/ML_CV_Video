@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch, MagicMock
 import numpy as np
 import cv2
