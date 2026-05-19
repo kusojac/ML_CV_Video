@@ -8,17 +8,29 @@ import '../models/action_model.dart';
 import '../widgets/video_player_widget.dart';
 import '../widgets/action_sidebar.dart';
 import '../widgets/focus_player_widget.dart';
+import '../models/artifact_model.dart';
+import '../services/project_data_service.dart';
 
 class VideoAnalysisScreen extends StatefulWidget {
   final String videoPath;
-  const VideoAnalysisScreen({super.key, required this.videoPath});
+  final AnalyticsService? analyticsService;
+  final String? projectId;
+  final String? initialPlaylistPath;
+
+  const VideoAnalysisScreen({
+    super.key, 
+    required this.videoPath, 
+    this.analyticsService,
+    this.projectId,
+    this.initialPlaylistPath,
+  });
 
   @override
   State<VideoAnalysisScreen> createState() => _VideoAnalysisScreenState();
 }
 
 class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
-  final AnalyticsService _analyticsService = AnalyticsService();
+  late final AnalyticsService _analyticsService;
   bool _isAnalyzing = false;
   double _analysisProgress = 0.0;
   int? _etaSeconds;
@@ -39,10 +51,12 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   bool _isPlayingPlaylist = false;
   bool _loopPlaylist = false;
   int _currentPlaylistIndex = 0;
+  List<ArtifactModel> _availablePlaylists = [];
+  ArtifactModel? _currentPlaylistArtifact;
 
   // Filtrowanie
-  String _filterType = 'All';
-  String _filterPlayer = 'All';
+  List<String> _selectedActionTypes = [];
+  List<String> _selectedPlayers = [];
   bool _isolateSelected = false;
 
   List<ActionModel> get _filteredActions {
@@ -50,8 +64,8 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       if (_isEditMode && _isolateSelected && _selectedAction != null) {
         if (a.id != _selectedAction!.id) return false;
       }
-      if (_filterType != 'All' && a.type != _filterType) return false;
-      if (_filterPlayer != 'All' && a.playerId != _filterPlayer) return false;
+      if (_selectedActionTypes.isNotEmpty && !_selectedActionTypes.contains(a.type)) return false;
+      if (_selectedPlayers.isNotEmpty && !_selectedPlayers.contains(a.playerId)) return false;
       return true;
     }).toList();
   }
@@ -66,8 +80,53 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   @override
   void initState() {
     super.initState();
+    _analyticsService = widget.analyticsService ?? AnalyticsService();
     // Check existing analysis in background
-    Future.microtask(() => _checkExistingAnalysis());
+    Future.microtask(() async {
+      await _loadAvailablePlaylists();
+      _checkExistingAnalysis();
+      if (widget.initialPlaylistPath != null) {
+        _loadInitialPlaylist(widget.initialPlaylistPath!);
+      }
+    });
+  }
+
+  Future<void> _loadAvailablePlaylists() async {
+    final allPlaylists = ProjectDataService().artifacts.where((a) => 
+        a.type == ArtifactType.playlist && a.sourceVideoPath == widget.videoPath).toList();
+    if (mounted) {
+      setState(() {
+        _availablePlaylists = allPlaylists;
+        if (widget.initialPlaylistPath != null) {
+          try {
+            _currentPlaylistArtifact = _availablePlaylists.firstWhere((a) => a.filePath == widget.initialPlaylistPath);
+          } catch (_) {}
+        }
+      });
+    }
+  }
+
+  Future<void> _loadInitialPlaylist(String path) async {
+    try {
+      final result = await AnalysisFileService.loadPlaylistFromPath(path);
+      if (result == null) return;
+      if (!mounted) return;
+      setState(() {
+        _playlist = result;
+        _isPlayingPlaylist = false;
+        _currentPlaylistIndex = 0;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Wczytano playlistę (${result.length} akcji)'),
+          backgroundColor: const Color(0xFF0D47A1),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd odczytu playlisty: $e')));
+      }
+    }
   }
 
   void _onPositionChanged(Duration pos) {
@@ -234,9 +293,23 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         _hasUnsavedChanges = false;
         _loadedFromPath = null;
       });
+
+      final fileName = widget.videoPath.split(Platform.pathSeparator).last;
+      final artifact = ArtifactModel(
+        type: ArtifactType.video,
+        title: '$fileName - Analiza',
+        description: 'Zapisana analiza wideo',
+        filePath: widget.videoPath,
+      );
+      await ProjectDataService().createArtifact(artifact);
+      if (widget.projectId != null) {
+        await ProjectDataService().linkArtifactToProject(widget.projectId!, artifact.id);
+      }
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Analiza zapisana obok wideo.'),
+          content: const Text('Analiza zapisana obok wideo i dodana do artefaktów.'),
           action: SnackBarAction(
             label: 'OK',
             onPressed: () {},
@@ -317,21 +390,60 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   // ─── Playlista IO ──────────────────────────────────────────────────────────
 
   Future<void> _savePlaylist() async {
-    try {
-      await AnalysisFileService.savePlaylistToDefault(
-        videoPath: widget.videoPath,
-        playlist: _playlist,
-      );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Playlista zapisana domyślnie.'),
-          backgroundColor: Color(0xFF1B5E20),
-        ),
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd zapisu playlisty: $e')));
+    if (_currentPlaylistArtifact != null) {
+      try {
+        await AnalysisFileService.savePlaylistToPath(
+          _currentPlaylistArtifact!.filePath,
+          _playlist,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Playlista "${_currentPlaylistArtifact!.title}" została zapisana.'),
+            backgroundColor: const Color(0xFF1B5E20),
+          ),
+        );
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd zapisu playlisty: $e')));
+        }
+      }
+    } else {
+      try {
+        await AnalysisFileService.savePlaylistToDefault(
+          videoPath: widget.videoPath,
+          playlist: _playlist,
+        );
+        
+        final path = AnalysisFileService.defaultPlaylistJsonPath(widget.videoPath);
+        final fileName = path.split(Platform.pathSeparator).last;
+        final artifact = ArtifactModel(
+          type: ArtifactType.playlist,
+          title: fileName,
+          description: 'Domyślna playlista',
+          filePath: path,
+          sourceVideoPath: widget.videoPath,
+        );
+        await ProjectDataService().createArtifact(artifact);
+        if (widget.projectId != null) {
+          await ProjectDataService().linkArtifactToProject(widget.projectId!, artifact.id);
+        }
+
+        if (!mounted) return;
+        setState(() {
+          _availablePlaylists.add(artifact);
+          _currentPlaylistArtifact = artifact;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Playlista zapisana i dodana do artefaktów.'),
+            backgroundColor: Color(0xFF1B5E20),
+          ),
+        );
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd zapisu playlisty: $e')));
+        }
       }
     }
   }
@@ -343,10 +455,24 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         playlist: _playlist,
       );
       if (savedPath == null) return;
+      
+      final fileName = savedPath.split(Platform.pathSeparator).last;
+      final artifact = ArtifactModel(
+        type: ArtifactType.playlist,
+        title: fileName,
+        description: 'Zapisana playlista',
+        filePath: savedPath,
+        sourceVideoPath: widget.videoPath,
+      );
+      await ProjectDataService().createArtifact(artifact);
+      if (widget.projectId != null) {
+        await ProjectDataService().linkArtifactToProject(widget.projectId!, artifact.id);
+      }
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Zapisano playlistę: ${savedPath.split(Platform.pathSeparator).last}'),
+          content: Text('Zapisano playlistę: $fileName i dodano jako artefakt.'),
           backgroundColor: const Color(0xFF1B5E20),
         ),
       );
@@ -366,6 +492,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         _playlist = result;
         _isPlayingPlaylist = false;
         _currentPlaylistIndex = 0;
+        _currentPlaylistArtifact = null; // Wczytanie z zewnątrz odpina obecny artefakt
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -378,6 +505,51 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd odczytu playlisty: $e')));
       }
     }
+  }
+
+  Future<void> _createNewPlaylist(String name) async {
+    final base = widget.videoPath.substring(0, widget.videoPath.lastIndexOf('.'));
+    final uniqueId = DateTime.now().millisecondsSinceEpoch;
+    final String newPath = '${base}_playlist_$uniqueId.json';
+
+    try {
+      await AnalysisFileService.savePlaylistToPath(newPath, []);
+      final artifact = ArtifactModel(
+        type: ArtifactType.playlist,
+        title: name,
+        description: 'Playlista: $name',
+        filePath: newPath,
+        sourceVideoPath: widget.videoPath,
+      );
+      await ProjectDataService().createArtifact(artifact);
+      if (widget.projectId != null) {
+        await ProjectDataService().linkArtifactToProject(widget.projectId!, artifact.id);
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _availablePlaylists.add(artifact);
+        _currentPlaylistArtifact = artifact;
+        _playlist = [];
+        _isPlayingPlaylist = false;
+        _currentPlaylistIndex = 0;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Utworzono playlistę: $name')),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Błąd: $e')));
+      }
+    }
+  }
+
+  Future<void> _selectPlaylist(String id) async {
+    final artifact = _availablePlaylists.firstWhere((a) => a.id == id);
+    setState(() {
+      _currentPlaylistArtifact = artifact;
+    });
+    await _loadInitialPlaylist(artifact.filePath);
   }
 
   // ─── Usunięcie ─────────────────────────────────────────────────────────────
@@ -435,26 +607,27 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: const Color(0xFF1E1E24),
+          icon: const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 36),
           title: const Text('Niezapisane zmiany',
               style: TextStyle(color: Colors.white)),
           content: const Text(
-            'Masz niezapisane zmiany. Czy na pewno chcesz je odrzucić?',
+            'Masz niezapisane zmiany akcji. Czy na pewno chcesz je odrzucić?',
             style: TextStyle(color: Colors.white70),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child:
-                  const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Odrzuć',
+              child: const Text('Odrzuć zmiany',
                   style: TextStyle(color: Colors.orangeAccent)),
             ),
           ],
         ),
       );
+
 
   @override
   Widget build(BuildContext context) {
@@ -579,7 +752,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           else if (_actions.isEmpty)
             TextButton.icon(
               icon: const Icon(Icons.analytics, color: Colors.purpleAccent),
-              label: const Text('Analyze Video',
+              label: const Text('Analizuj wideo',
                   style: TextStyle(color: Colors.white)),
               onPressed: _startAnalysis,
             ),
@@ -763,10 +936,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               isPlayingPlaylist: _isPlayingPlaylist,
               loopPlaylist: _loopPlaylist,
               isEditMode: _isEditMode,
-              filterType: _filterType,
-              filterPlayer: _filterPlayer,
-              onFilterTypeChanged: (v) => setState(() => _filterType = v),
-              onFilterPlayerChanged: (v) => setState(() => _filterPlayer = v),
+              selectedActionTypes: _selectedActionTypes,
+              selectedPlayers: _selectedPlayers,
+              onSelectedActionTypesChanged: (v) => setState(() => _selectedActionTypes = v),
+              onSelectedPlayersChanged: (v) => setState(() => _selectedPlayers = v),
               isolateSelected: _isolateSelected,
               onIsolateSelectedChanged: (v) => setState(() => _isolateSelected = v),
               onPlaylistChanged: (newPlaylist) => setState(() => _playlist = newPlaylist),
@@ -775,6 +948,11 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               onSavePlaylistAs: _savePlaylistAs,
               onLoadPlaylist: _loadPlaylist,
               onActionAdded: _onActionAdded,
+              initialTabIndex: widget.initialPlaylistPath != null ? 1 : 0,
+              availablePlaylists: _availablePlaylists,
+              currentPlaylistId: _currentPlaylistArtifact?.id,
+              onPlaylistSelected: _selectPlaylist,
+              onCreateNewPlaylist: _createNewPlaylist,
               onActionDeleted: (action) {
                 setState(() {
                   _actions.removeWhere((a) => a.id == action.id);
