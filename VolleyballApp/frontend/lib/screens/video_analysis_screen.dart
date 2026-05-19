@@ -65,10 +65,13 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         if (a.id != _selectedAction!.id) return false;
       }
       if (_selectedActionTypes.isNotEmpty &&
-          !_selectedActionTypes.contains(a.type))
+          !_selectedActionTypes.contains(a.type)) {
         return false;
-      if (_selectedPlayers.isNotEmpty && !_selectedPlayers.contains(a.playerId))
+      }
+      if (_selectedPlayers.isNotEmpty &&
+          !_selectedPlayers.contains(a.playerId)) {
         return false;
+      }
       return true;
     }).toList();
   }

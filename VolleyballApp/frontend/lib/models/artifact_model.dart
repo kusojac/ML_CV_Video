@@ -17,6 +17,10 @@ class ArtifactModel {
   // W przypadku typu "action" lub "playlist", wskazanie na plik wideo bazowy
   String? sourceVideoPath;
 
+  String? videoCategory;
+  TeamMetadata? teamA;
+  TeamMetadata? teamB;
+
   ArtifactModel({
     String? id,
     required this.type,
@@ -27,6 +31,9 @@ class ArtifactModel {
     this.thumbnailPath,
     DateTime? createdAt,
     this.sourceVideoPath,
+    this.videoCategory,
+    this.teamA,
+    this.teamB,
   }) : id = id ?? const Uuid().v4(),
        createdAt = createdAt ?? DateTime.now(),
        tags = tags ?? [];

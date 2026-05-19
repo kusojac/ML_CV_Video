@@ -73,14 +73,18 @@ class ActionSidebar extends StatefulWidget {
 class _ActionSidebarState extends State<ActionSidebar> {
   final ScrollController _scrollController = ScrollController();
   final Map<String, GlobalKey> _itemKeys = {};
-  String _sortOption = 'time_asc';
+  final String _sortOption = 'time_asc';
+  String _filterType = 'All';
+  String _filterPlayer = 'All';
 
   List<ActionModel> get _filteredActions {
-    return widget.actions.where((a) {
-      if (widget.filterType != 'All' && a.type != widget.filterType)
+    final filtered = widget.actions.where((a) {
+      if (_filterType != 'All' && a.type != _filterType) {
         return false;
-      if (widget.filterPlayer != 'All' && a.playerId != widget.filterPlayer)
+      }
+      if (_filterPlayer != 'All' && a.playerId != _filterPlayer) {
         return false;
+      }
       return true;
     }).toList();
 
@@ -205,8 +209,8 @@ class _ActionSidebarState extends State<ActionSidebar> {
                   ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  initialValue: actionTypes.contains(widget.filterType)
-                      ? widget.filterType
+                  initialValue: actionTypes.contains(_filterType)
+                      ? _filterType
                       : 'All',
                   dropdownColor: const Color(0xFF2E2E2E),
                   decoration: const InputDecoration(
@@ -223,13 +227,15 @@ class _ActionSidebarState extends State<ActionSidebar> {
                       .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                       .toList(),
                   onChanged: (v) {
-                    widget.onFilterTypeChanged(v ?? 'All');
+                    setState(() {
+                      _filterType = v ?? 'All';
+                    });
                   },
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  initialValue: playerIds.contains(widget.filterPlayer)
-                      ? widget.filterPlayer
+                  initialValue: playerIds.contains(_filterPlayer)
+                      ? _filterPlayer
                       : 'All',
                   dropdownColor: const Color(0xFF2E2E2E),
                   decoration: const InputDecoration(
@@ -246,7 +252,9 @@ class _ActionSidebarState extends State<ActionSidebar> {
                       .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                       .toList(),
                   onChanged: (v) {
-                    widget.onFilterPlayerChanged(v ?? 'All');
+                    setState(() {
+                      _filterPlayer = v ?? 'All';
+                    });
                   },
                 ),
                 if (widget.isEditMode)
@@ -327,13 +335,16 @@ class _ActionSidebarState extends State<ActionSidebar> {
                             );
 
                             Color accentColor = Colors.purpleAccent;
-                            if (action.type.toUpperCase() == 'BUMP')
+                            if (action.type.toUpperCase() == 'BUMP') {
                               accentColor = const Color(0xFF00FFCC);
-                            if (action.type.toUpperCase() == 'SET')
+                            }
+                            if (action.type.toUpperCase() == 'SET') {
                               accentColor = Colors.greenAccent;
+                            }
                             if (action.type.toUpperCase().contains('SPIKE') ||
-                                action.type.toUpperCase() == 'ATTACK')
+                                action.type.toUpperCase() == 'ATTACK') {
                               accentColor = const Color(0xFFFF0055);
+                            }
 
                             final timestamp = Duration(
                               milliseconds: action.startMs.round(),
@@ -581,6 +592,61 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 // ── ZAKŁADKA 2: Playlista ──
                 Column(
                   children: [
+                    if (widget.availablePlaylists != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 4.0,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                initialValue: widget.availablePlaylists!.any((p) => p.id == widget.currentPlaylistId)
+                                    ? widget.currentPlaylistId
+                                    : null,
+                                dropdownColor: const Color(0xFF2E2E2E),
+                                decoration: const InputDecoration(
+                                  labelText: 'Aktywna playlista',
+                                  border: OutlineInputBorder(),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 0,
+                                  ),
+                                  labelStyle: TextStyle(color: Colors.white70),
+                                ),
+                                style: const TextStyle(color: Colors.white),
+                                items: widget.availablePlaylists!
+                                    .map(
+                                      (p) => DropdownMenuItem(
+                                        value: p.id,
+                                        child: Text(
+                                          p.title,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (v) {
+                                  if (v != null) {
+                                    widget.onPlaylistSelected?.call(v);
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.playlist_add,
+                                color: Colors.purpleAccent,
+                              ),
+                              tooltip: 'Nowa playlista...',
+                              onPressed: () =>
+                                  _showCreatePlaylistDialog(context),
+                            ),
+                          ],
+                        ),
+                      ),
                     if (!widget.isEditMode)
                       Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -645,9 +711,12 @@ class _ActionSidebarState extends State<ActionSidebar> {
                               ),
                               color: const Color(0xFF2A2A3E),
                               onSelected: (v) {
-                                if (v == 'save') widget.onSavePlaylist?.call();
-                                if (v == 'save_as')
+                                if (v == 'save') {
+                                  widget.onSavePlaylist?.call();
+                                }
+                                if (v == 'save_as') {
                                   widget.onSavePlaylistAs?.call();
+                                }
                               },
                               itemBuilder: (_) => [
                                 const PopupMenuItem(
@@ -748,13 +817,16 @@ class _ActionSidebarState extends State<ActionSidebar> {
                           itemBuilder: (context, index) {
                             final action = widget.playlist![index];
                             Color accentColor = Colors.purpleAccent;
-                            if (action.type.toUpperCase() == 'BUMP')
+                            if (action.type.toUpperCase() == 'BUMP') {
                               accentColor = const Color(0xFF00FFCC);
-                            if (action.type.toUpperCase() == 'SET')
+                            }
+                            if (action.type.toUpperCase() == 'SET') {
                               accentColor = Colors.greenAccent;
+                            }
                             if (action.type.toUpperCase().contains('SPIKE') ||
-                                action.type.toUpperCase() == 'ATTACK')
+                                action.type.toUpperCase() == 'ATTACK') {
                               accentColor = const Color(0xFFFF0055);
+                            }
                             final isSelected =
                                 widget.selectedAction?.id == action.id;
 
@@ -938,56 +1010,4 @@ class _ActionSidebarState extends State<ActionSidebar> {
         );
       },
     );
-  }
-
-  void _showCreatePlaylistDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF2A2A2A),
-          title: const Text(
-            'Nowa playlista',
-            style: TextStyle(color: Colors.white),
-          ),
-          content: TextField(
-            controller: nameController,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              labelText: 'Nazwa playlisty',
-              labelStyle: TextStyle(color: Colors.white70),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.white30),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.purpleAccent),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Anuluj',
-                style: TextStyle(color: Colors.white54),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                if (nameController.text.trim().isNotEmpty) {
-                  widget.onCreateNewPlaylist?.call(nameController.text.trim());
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text(
-                'Utwórz',
-                style: TextStyle(color: Colors.purpleAccent),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
+  }}

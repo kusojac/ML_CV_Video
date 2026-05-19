@@ -15,7 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ProjectDataService _dataService = ProjectDataService();
   final TextEditingController _searchController = TextEditingController();
   List<ProjectModel> _filteredProjects = [];
-  String _sortOption = 'date_desc';
+  final String _sortOption = 'date_desc';
   final List<String> _selectedFilterTags = [];
   bool _isGraphView = false;
 
@@ -278,7 +278,25 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Zbiór Projektów')),
+      appBar: AppBar(
+        title: const Text('Zbiór Projektów'),
+        actions: [
+          _viewToggleBtn(
+            icon: Icons.grid_view,
+            tooltip: 'Widok kafelków',
+            active: !_isGraphView,
+            onTap: () => setState(() => _isGraphView = false),
+          ),
+          const SizedBox(width: 8),
+          _viewToggleBtn(
+            icon: Icons.account_tree_outlined,
+            tooltip: 'Widok grafu',
+            active: _isGraphView,
+            onTap: () => setState(() => _isGraphView = true),
+          ),
+          const SizedBox(width: 16),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
@@ -318,25 +336,40 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Expanded(
-            child: _filteredProjects.isEmpty
-                ? const Center(
-                    child: Text('Brak projektów. Dodaj nowy projekt.'),
-                  )
-                : GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate:
-                        const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 400,
-                          childAspectRatio: 0.8,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
+            child: _isGraphView
+                ? GraphView(
+                    projects: _filteredProjects,
+                    onRefresh: _loadData,
+                    onProjectTap: (project) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProjectDetailsScreen(project: project),
                         ),
-                    itemCount: _filteredProjects.length,
-                    itemBuilder: (context, index) {
-                      final project = _filteredProjects[index];
-                      return _buildProjectTile(project);
+                      ).then((_) => _filterProjects());
                     },
-                  ),
+                    onProjectEdit: _editProjectDialog,
+                    onProjectDelete: _deleteProject,
+                  )
+                : _filteredProjects.isEmpty
+                    ? const Center(
+                        child: Text('Brak projektów. Dodaj nowy projekt.'),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate:
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 400,
+                              childAspectRatio: 0.8,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                        itemCount: _filteredProjects.length,
+                        itemBuilder: (context, index) {
+                          final project = _filteredProjects[index];
+                          return _buildProjectTile(project);
+                        },
+                      ),
           ),
         ],
       ),

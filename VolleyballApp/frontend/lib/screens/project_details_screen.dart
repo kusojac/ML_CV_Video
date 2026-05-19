@@ -365,6 +365,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     // Obecnie zakładamy, że VideoAnalysisScreen obsługuje główny wideo
     // Dla playlist / akcji powinniśmy przekazać context
     String videoToOpen = artifact.filePath;
+    String? playlistToOpen;
     if (artifact.type == ArtifactType.playlist ||
         artifact.type == ArtifactType.action) {
       if (artifact.sourceVideoPath != null &&
@@ -520,8 +521,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
               subtitle: Builder(
                 builder: (context) {
                   final parts = <String>[];
-                  if (_searchController.text.isNotEmpty)
+                  if (_searchController.text.isNotEmpty) {
                     parts.add('"${_searchController.text}"');
+                  }
                   for (final t in _selectedTypes) {
                     parts.add('Typ: ${t.name}');
                   }

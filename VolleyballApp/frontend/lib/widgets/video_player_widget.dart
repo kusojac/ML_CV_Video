@@ -1386,8 +1386,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                                 },
                                 onPanUpdate: (d) {
                                   if (_scrubDragStartX == null ||
-                                      _scrubDragStartMs == null)
+                                      _scrubDragStartMs == null) {
                                     return;
+                                  }
                                   // Czułość: 1px = 200ms (nastrojalna)
                                   final deltaPx =
                                       d.localPosition.dx - _scrubDragStartX!;
