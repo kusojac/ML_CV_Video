@@ -8,14 +8,17 @@ import logging
 import os
 import uuid
 import threading
+import concurrent.futures
 import anyio
 from anyio import Path
 from typing import Dict, Any
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Path as APIPath, Response
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Path as APIPath, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from engine import VolleyballAnalyticsEngine
 from config import ALLOWED_ORIGINS
+from database import JobStore
 
 app = FastAPI(title="Volleyball Action Detection API")
 
@@ -27,22 +30,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.middleware("http")
-async def add_security_headers(request, call_next):
-    response = await call_next(request)
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    response.headers["X-XSS-Protection"] = "1; mode=block"
-    return response
-
 # In-memory job state (In production, replace with DB/Redis)
 analysis_jobs: Dict[str, Dict[str, Any]] = {}
-
-# Caches for parsed JSON data and O(1) action lookups
-_parsed_json_cache: Dict[str, Any] = {}
-_action_dict_cache: Dict[str, Dict[str, Any]] = {}
-_file_lock = threading.Lock()
 
 MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
 engine = VolleyballAnalyticsEngine(models_dir=MODELS_DIR)
@@ -72,20 +61,26 @@ def get_json_path(video_path: str) -> str:
 
 def process_video_task(job_id: str, video_path: str):
     try:
-        analysis_jobs[job_id]["status"] = "processing"
-        analysis_jobs[job_id]["progress"] = 0.0
-        analysis_jobs[job_id]["eta_seconds"] = None
+        job_store.update_job(job_id, {
+            "status": "processing",
+            "progress": 0.0,
+            "eta_seconds": None
+        })
         start_time = time.time()
 
         def update_progress(current_frame, total_frames):
             if total_frames > 0:
                 progress = current_frame / total_frames
-                analysis_jobs[job_id]["progress"] = round(progress, 3)
                 elapsed = time.time() - start_time
+                eta = None
                 if progress > 0:
                     total_estimated = elapsed / progress
-                    eta = max(0.0, total_estimated - elapsed)
-                    analysis_jobs[job_id]["eta_seconds"] = round(eta)
+                    eta = round(max(0.0, total_estimated - elapsed))
+
+                job_store.update_job(job_id, {
+                    "progress": round(progress, 3),
+                    "eta_seconds": eta
+                })
 
         result = engine.process_video(video_path, progress_callback=update_progress)
         
@@ -102,20 +97,21 @@ def process_video_task(job_id: str, video_path: str):
                 action["id"]: action for action in result.get("actions", [])
             }
             
-        analysis_jobs[job_id]["status"] = "completed"
-        analysis_jobs[job_id]["progress"] = 1.0
-        analysis_jobs[job_id]["result"] = result
-        analysis_jobs[job_id]["json_path"] = json_path
+        job_store.update_job(job_id, {
+            "status": "completed",
+            "progress": 1.0,
+            "result": result,
+            "json_path": json_path
+        })
     except Exception as e:
-        logging.error(f"Error processing video task {job_id}: {e}")
         analysis_jobs[job_id]["status"] = "error"
-        analysis_jobs[job_id]["error"] = "An internal error occurred during processing."
+        analysis_jobs[job_id]["error"] = str(e)
 
 
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
-    safe_video_path = secure_path(request.video_path)
-    if not await asyncio.to_thread(os.path.exists, safe_video_path):
+    validate_safe_path(request.video_path)
+    if not os.path.exists(request.video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
 
     json_path = get_json_path(safe_video_path)
@@ -125,11 +121,11 @@ async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTas
         return {"status": "completed", "json_path": json_path}
 
     job_id = str(uuid.uuid4())
-    analysis_jobs[job_id] = {
+    job_store.set_job(job_id, {
         "status": "pending",
         "progress": 0.0,
         "video_path": safe_video_path
-    }
+    })
     background_tasks.add_task(process_video_task, job_id, safe_video_path)
     return {"job_id": job_id, "status": "pending"}
 
@@ -138,7 +134,7 @@ async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTas
 async def get_job_status(job_id: str = APIPath(..., max_length=100)):
     if job_id not in analysis_jobs:
         raise HTTPException(status_code=404, detail="Job not found")
-    return analysis_jobs[job_id]
+    return job
 
 
 @app.get("/ping")
@@ -170,7 +166,9 @@ def get_results(video_path: str = Query(..., max_length=2048)):
 
     # ⚡ Bolt Optimization: Bypass FastAPI's slow default JSON serialization for large results
     # and perform serialization outside of the thread lock to prevent blocking event loops.
-    return Response(content=json.dumps(data), media_type="application/json")
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        json_str = executor.submit(json.dumps, data).result()
+    return Response(content=json_str, media_type="application/json")
 
 @app.post("/update_action")
 def update_action(req: UpdateActionRequest):

@@ -59,6 +59,7 @@ def test_process_video_task_success(tmp_path):
     assert data == mock_result
 from fastapi.testclient import TestClient
 from main import app, secure_path
+from main import app, secure_path
 from fastapi import HTTPException
 
 client = TestClient(app)
@@ -66,9 +67,13 @@ client = TestClient(app)
 def test_validate_safe_path_valid():
     assert secure_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
     assert secure_path("video.mp4") == "video.mp4"
+def test_secure_path_valid():
+    assert secure_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
+    assert secure_path("video.mp4") == "video.mp4"
 
-def test_validate_safe_path_invalid():
+def test_secure_path_invalid():
     with pytest.raises(HTTPException) as excinfo:
+        secure_path("../../etc/passwd")
         secure_path("../../etc/passwd")
     assert excinfo.value.status_code == 400
 
