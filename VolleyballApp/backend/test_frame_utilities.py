@@ -102,7 +102,7 @@ def test_preprocess_yolo_input_value_scaling():
     output_half = preprocess_yolo_input(image_half)
     assert np.allclose(output_half, 127 / 255.0)
 
-from frame_utilities import postprocess_yolo_output
+from frame_utilities import postprocess_yolo_output, postprocess_yolo_ball, postprocess_yolo_coco
 
 def test_postprocess_yolo_output_ball_below_threshold():
     # Arrange: output shape (1, 5, 100), all confidences below 0.25
@@ -110,7 +110,7 @@ def test_postprocess_yolo_output_ball_below_threshold():
     output[0, 4, :] = 0.1
 
     # Act
-    boxes, scores, class_ids = postprocess_yolo_output(
+    boxes, scores, class_ids = postprocess_yolo_ball(
         output,
         original_img_shape=(1080, 1920),
         input_size=(640, 640),
@@ -128,7 +128,7 @@ def test_postprocess_yolo_output_coco_below_threshold():
     output[0, 4:, :] = 0.1
 
     # Act
-    boxes, scores, class_ids = postprocess_yolo_output(
+    boxes, scores, class_ids = postprocess_yolo_coco(
         output,
         original_img_shape=(1080, 1920),
         input_size=(640, 640),
@@ -147,7 +147,7 @@ def test_postprocess_yolo_output_ball_valid():
     output[0, :, 0] = [320, 320, 50, 50, 0.9]
 
     # Act
-    boxes, scores, class_ids = postprocess_yolo_output(
+    boxes, scores, class_ids = postprocess_yolo_ball(
         output,
         original_img_shape=(1080, 1920),
         input_size=(640, 640),
@@ -175,7 +175,7 @@ def test_postprocess_yolo_output_coco_valid():
     output[0, 4, 0] = 0.9 # class 0 score 0.9
 
     # Act
-    boxes, scores, class_ids = postprocess_yolo_output(
+    boxes, scores, class_ids = postprocess_yolo_coco(
         output,
         original_img_shape=(1080, 1920),
         input_size=(640, 640),
@@ -188,6 +188,34 @@ def test_postprocess_yolo_output_coco_valid():
     assert class_ids.shape == (1,)
     assert scores[0] == pytest.approx(0.9)
     assert class_ids[0] == 0
+
+def test_postprocess_yolo_output_coco_target_class_id():
+    # Arrange: output shape (1, 84, 100), testing target_class_id optimization
+    output = np.zeros((1, 84, 100), dtype=np.float32)
+    # Box 1: Class 0 is high confidence
+    output[0, :4, 0] = [320, 320, 50, 50]
+    output[0, 4, 0] = 0.9 # class 0 score 0.9
+
+    # Box 2: Class 1 is high confidence (should be ignored if target_class_id=0)
+    output[0, :4, 1] = [100, 100, 20, 20]
+    output[0, 5, 1] = 0.8 # class 1 score 0.8
+
+    # Act
+    boxes, scores, class_ids = postprocess_yolo_coco(
+        output,
+        original_img_shape=(1080, 1920),
+        input_size=(640, 640),
+        conf_threshold=0.25,
+        target_class_id=0
+    )
+
+    # Assert
+    assert boxes.shape == (1, 4)
+    assert scores.shape == (1,)
+    assert class_ids.shape == (1,)
+    assert scores[0] == pytest.approx(0.9)
+    assert class_ids[0] == 0
+
 
 def test_postprocess_yolo_output_invalid_features():
     # Arrange: model output with 10 features (neither 5 nor 84)
