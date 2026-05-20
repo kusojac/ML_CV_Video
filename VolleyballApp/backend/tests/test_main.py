@@ -2,6 +2,13 @@ import pytest
 import json
 from unittest.mock import patch
 
+import sys
+from unittest.mock import MagicMock
+if 'engine' in sys.modules and isinstance(sys.modules['engine'], MagicMock):
+    del sys.modules['engine']
+if 'main' in sys.modules:
+    del sys.modules['main']
+
 from main import process_video_task, analysis_jobs
 from main import app, secure_path
 from fastapi import HTTPException

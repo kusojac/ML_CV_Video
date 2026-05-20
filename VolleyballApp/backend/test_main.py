@@ -61,7 +61,7 @@ def test_get_results_invalid_json():
     try:
         response = client.get(f"/results?video_path={video_path}")
         assert response.status_code == 500
-        assert response.json()["detail"] == "Error decoding analysis results."
+        assert response.json()["detail"] == "Invalid JSON format in analysis results."
     finally:
         if os.path.exists(json_path):
             os.remove(json_path)
