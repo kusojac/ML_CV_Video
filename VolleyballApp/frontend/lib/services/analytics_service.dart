@@ -80,6 +80,7 @@ class AnalyticsService {
         'new_type': action.type,
         'new_start_ms': action.startMs,
         'new_end_ms': action.endMs,
+        'new_sub_actions': action.subActions.map((e) => e.toJson()).toList(),
       }),
     );
     if (response.statusCode != 200) {

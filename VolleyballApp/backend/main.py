@@ -11,7 +11,7 @@ import threading
 import concurrent.futures
 import anyio
 from anyio import Path
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Path as APIPath, Response
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, Path as APIPath, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,6 +45,7 @@ class UpdateActionRequest(BaseModel):
     new_type: str = Field(..., max_length=100)
     new_start_ms: float
     new_end_ms: float
+    new_sub_actions: Optional[List[Dict[str, Any]]] = None
 
 def secure_path(file_path: str) -> str:
     """Validates that the given path does not contain directory traversal characters."""
@@ -203,6 +204,8 @@ def update_action(req: UpdateActionRequest):
         action["type"] = req.new_type
         action["start_ms"] = req.new_start_ms
         action["end_ms"] = req.new_end_ms
+        if req.new_sub_actions is not None:
+            action["sub_actions"] = req.new_sub_actions
 
         # Write updated data back to disk
         with open(json_path, 'w') as f:

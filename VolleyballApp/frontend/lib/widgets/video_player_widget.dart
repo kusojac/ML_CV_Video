@@ -506,6 +506,45 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         ),
                       ),
                     ),
+                  // Sub-actions indicators
+                  if (action.subActions.isNotEmpty)
+                    ...action.subActions.map((sub) {
+                      final parentDuration = action.endMs - action.startMs;
+                      final relFrac = (parentDuration > 0)
+                          ? ((sub.startMs - action.startMs) / parentDuration).clamp(0.0, 1.0)
+                          : 0.0;
+                      final leftPos = relFrac * w;
+                      final subColor = _actionColor(sub.type);
+                      final isSubSelected = widget.selectedAction?.id == sub.id;
+
+                      return Positioned(
+                        left: (leftPos - 5.0).clamp(-5.0, w - 5.0),
+                        top: 0,
+                        bottom: 0,
+                        width: 10,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            _seekToMs(sub.startMs);
+                            widget.onActionSelected?.call(sub);
+                          },
+                          child: Center(
+                            child: Container(
+                              width: 3.5,
+                              height: double.infinity,
+                              decoration: BoxDecoration(
+                                color: subColor,
+                                borderRadius: BorderRadius.circular(1),
+                                border: Border.all(
+                                  color: isSubSelected ? Colors.white : Colors.black45,
+                                  width: isSubSelected ? 1.0 : 0.5,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
                   // Uchwyt lewej krawędzi
                   if (widget
                       .isEditMode) // Pokazuj uchwyty tylko w trybie edycji

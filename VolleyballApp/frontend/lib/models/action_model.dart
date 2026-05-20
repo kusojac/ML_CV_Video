@@ -7,6 +7,7 @@ class ActionModel {
   playerBox; // [x, y, w, h] or similar. Our backend gives [x_min, y_min, x_max, y_max].
   String playerId;
   double confidence;
+  List<ActionModel> subActions;
 
   ActionModel({
     required this.id,
@@ -16,9 +17,16 @@ class ActionModel {
     required this.playerBox,
     required this.playerId,
     required this.confidence,
-  });
+    List<ActionModel>? subActions,
+  }) : subActions = subActions ?? [];
 
   factory ActionModel.fromJson(Map<String, dynamic> json) {
+    final subActionsJson = json['sub_actions'] as List?;
+    final List<ActionModel> subs = subActionsJson != null
+        ? subActionsJson
+            .map((e) => ActionModel.fromJson(e as Map<String, dynamic>))
+            .toList()
+        : [];
     return ActionModel(
       id: json['id'],
       type: json['type'],
@@ -29,6 +37,7 @@ class ActionModel {
           .toList(),
       playerId: json['player_id'] ?? 'Unknown',
       confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
+      subActions: subs,
     );
   }
 
@@ -41,11 +50,14 @@ class ActionModel {
       'player_box': playerBox,
       'player_id': playerId,
       'confidence': confidence,
+      'sub_actions': subActions.map((e) => e.toJson()).toList(),
     };
   }
 }
 
 const List<String> kVolleyballActions = [
+  'POINT',
+  'RALLY',
   'SERVE',
   'JUMP SERVE',
   'FLOAT SERVE',

@@ -3,6 +3,7 @@ import '../models/action_model.dart';
 import '../models/artifact_model.dart';
 
 class ActionSidebar extends StatefulWidget {
+  final Duration? currentPosition;
   final List<ActionModel> actions;
   final ActionModel? selectedAction;
   final bool isEditMode;
@@ -36,6 +37,7 @@ class ActionSidebar extends StatefulWidget {
 
   const ActionSidebar({
     super.key,
+    this.currentPosition,
     required this.actions,
     required this.selectedAction,
     required this.isEditMode,
@@ -376,210 +378,253 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                   borderRadius: BorderRadius.circular(8),
                                   child: Padding(
                                     padding: const EdgeInsets.all(12),
-                                    child: Row(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        if (!widget.isEditMode &&
-                                            widget.playlist != null)
-                                          Checkbox(
-                                            value: widget.playlist!.any(
-                                              (a) => a.id == action.id,
-                                            ),
-                                            activeColor: Colors.purpleAccent,
-                                            onChanged: (val) {
-                                              if (val == true) {
-                                                widget.onPlaylistChanged?.call([
-                                                  ...widget.playlist!,
-                                                  action,
-                                                ]);
-                                              } else {
-                                                widget.onPlaylistChanged?.call(
-                                                  widget.playlist!
-                                                      .where(
-                                                        (a) =>
-                                                            a.id != action.id,
-                                                      )
-                                                      .toList(),
-                                                );
-                                              }
-                                            },
-                                          ),
-                                        Container(
-                                          width: 4,
-                                          height: 36,
-                                          decoration: BoxDecoration(
-                                            color: accentColor,
-                                            borderRadius: BorderRadius.circular(
-                                              2,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                action.type.toUpperCase(),
-                                                style: TextStyle(
-                                                  color: isSelected
-                                                      ? accentColor
-                                                      : Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 15,
-                                                  letterSpacing: 1.1,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                'Player: ${action.playerId}',
-                                                style: const TextStyle(
-                                                  color: Colors.white54,
-                                                  fontSize: 13,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
+                                        Row(
                                           children: [
-                                            Text(
-                                              timestamp,
-                                              style: const TextStyle(
-                                                color: Colors.white70,
-                                                fontFamily: 'monospace',
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
+                                            if (!widget.isEditMode &&
+                                                widget.playlist != null)
+                                              Checkbox(
+                                                value: widget.playlist!.any(
+                                                  (a) => a.id == action.id,
+                                                ),
+                                                activeColor:
+                                                    Colors.purpleAccent,
+                                                onChanged: (val) {
+                                                  if (val == true) {
+                                                    widget.onPlaylistChanged
+                                                        ?.call([
+                                                      ...widget.playlist!,
+                                                      action,
+                                                    ]);
+                                                  } else {
+                                                    widget.onPlaylistChanged
+                                                        ?.call(
+                                                      widget.playlist!
+                                                          .where(
+                                                            (a) =>
+                                                                a.id !=
+                                                                action.id,
+                                                          )
+                                                          .toList(),
+                                                    );
+                                                  }
+                                                },
+                                              ),
+                                            Container(
+                                              width: 4,
+                                              height: 36,
+                                              decoration: BoxDecoration(
+                                                color: accentColor,
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                  2,
+                                                ),
                                               ),
                                             ),
-                                            if (widget.isEditMode)
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                  top: 8.0,
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    InkWell(
-                                                      onTap: () => _editAction(
-                                                        context,
-                                                        action,
-                                                      ),
-                                                      child: const Row(
-                                                        children: [
-                                                          Text(
-                                                            'EDIT',
-                                                            style: TextStyle(
-                                                              color: Colors
-                                                                  .white30,
-                                                              fontSize: 10,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                            ),
-                                                          ),
-                                                          SizedBox(width: 4),
-                                                          Icon(
-                                                            Icons.edit,
-                                                            color:
-                                                                Colors.white30,
-                                                            size: 14,
-                                                          ),
-                                                        ],
-                                                      ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    action.type.toUpperCase(),
+                                                    style: TextStyle(
+                                                      color: isSelected
+                                                          ? accentColor
+                                                          : Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 15,
+                                                      letterSpacing: 1.1,
                                                     ),
-                                                    const SizedBox(width: 12),
-                                                    InkWell(
-                                                      onTap: () async {
-                                                        final bool?
-                                                        confirm = await showDialog<bool>(
-                                                          context: context,
-                                                          builder: (context) => AlertDialog(
-                                                            backgroundColor:
-                                                                const Color(
-                                                                  0xFF1E1E24,
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    'Player: ${action.playerId}',
+                                                    style: const TextStyle(
+                                                      color: Colors.white54,
+                                                      fontSize: 13,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                Text(
+                                                  timestamp,
+                                                  style: const TextStyle(
+                                                    color: Colors.white70,
+                                                    fontFamily: 'monospace',
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                                if (widget.isEditMode)
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                      top: 8.0,
+                                                    ),
+                                                    child: Row(
+                                                      children: [
+                                                        InkWell(
+                                                          onTap: () =>
+                                                              _editAction(
+                                                            context,
+                                                            action,
+                                                          ),
+                                                          child: const Row(
+                                                            children: [
+                                                              Text(
+                                                                'EDIT',
+                                                                style:
+                                                                    TextStyle(
+                                                                  color: Colors
+                                                                      .white30,
+                                                                  fontSize: 10,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
                                                                 ),
-                                                            title: const Text(
-                                                              'Usuń akcję',
-                                                              style: TextStyle(
+                                                              ),
+                                                              SizedBox(
+                                                                width: 4,
+                                                              ),
+                                                              Icon(
+                                                                Icons.edit,
                                                                 color: Colors
-                                                                    .white,
-                                                              ),
-                                                            ),
-                                                            content: const Text(
-                                                              'Czy na pewno chcesz usunąć tę akcję?',
-                                                              style: TextStyle(
-                                                                color: Colors
-                                                                    .white70,
-                                                              ),
-                                                            ),
-                                                            actions: [
-                                                              TextButton(
-                                                                onPressed: () =>
-                                                                    Navigator.pop(
-                                                                      context,
-                                                                      false,
-                                                                    ),
-                                                                child: const Text(
-                                                                  'Anuluj',
-                                                                  style: TextStyle(
-                                                                    color: Colors
-                                                                        .white54,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                              TextButton(
-                                                                onPressed: () =>
-                                                                    Navigator.pop(
-                                                                      context,
-                                                                      true,
-                                                                    ),
-                                                                child: const Text(
-                                                                  'Usuń',
-                                                                  style: TextStyle(
-                                                                    color: Colors
-                                                                        .redAccent,
-                                                                  ),
-                                                                ),
+                                                                    .white30,
+                                                                size: 14,
                                                               ),
                                                             ],
                                                           ),
-                                                        );
-                                                        if (!mounted) return;
-                                                        if (confirm == true) {
-                                                          widget.onActionDeleted
-                                                              ?.call(action);
-                                                        }
-                                                      },
-                                                      child: const Row(
-                                                        children: [
-                                                          Text(
-                                                            'DEL',
-                                                            style: TextStyle(
-                                                              color: Colors
-                                                                  .redAccent,
-                                                              fontSize: 10,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                            ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 12,
+                                                        ),
+                                                        InkWell(
+                                                          onTap: () async {
+                                                            final bool?
+                                                            confirm =
+                                                                await showDialog<
+                                                                  bool
+                                                                >(
+                                                              context:
+                                                                  context,
+                                                              builder:
+                                                                  (context) =>
+                                                                      AlertDialog(
+                                                                backgroundColor:
+                                                                    const Color(
+                                                                      0xFF1E1E24,
+                                                                    ),
+                                                                title:
+                                                                    const Text(
+                                                                  'Usuń akcję',
+                                                                  style: TextStyle(
+                                                                    color: Colors
+                                                                        .white,
+                                                                  ),
+                                                                ),
+                                                                content:
+                                                                    const Text(
+                                                                  'Czy na pewno chcesz usunąć tę akcję?',
+                                                                  style: TextStyle(
+                                                                    color: Colors
+                                                                        .white70,
+                                                                  ),
+                                                                ),
+                                                                actions: [
+                                                                  TextButton(
+                                                                    onPressed:
+                                                                        () =>
+                                                                            Navigator
+                                                                                .pop(
+                                                                              context,
+                                                                              false,
+                                                                            ),
+                                                                    child:
+                                                                        const Text(
+                                                                      'Anuluj',
+                                                                      style: TextStyle(
+                                                                        color: Colors
+                                                                            .white54,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                  TextButton(
+                                                                    onPressed:
+                                                                        () =>
+                                                                            Navigator
+                                                                                .pop(
+                                                                              context,
+                                                                              true,
+                                                                            ),
+                                                                    child:
+                                                                        const Text(
+                                                                      'Usuń',
+                                                                      style: TextStyle(
+                                                                        color: Colors
+                                                                            .redAccent,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            );
+                                                            if (!mounted) {
+                                                              return;
+                                                            }
+                                                            if (confirm ==
+                                                                true) {
+                                                              widget
+                                                                  .onActionDeleted
+                                                                  ?.call(
+                                                                    action,
+                                                                  );
+                                                            }
+                                                          },
+                                                          child: const Row(
+                                                            children: [
+                                                              Text(
+                                                                'DEL',
+                                                                style:
+                                                                    TextStyle(
+                                                                  color: Colors
+                                                                      .redAccent,
+                                                                  fontSize: 10,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                              ),
+                                                              SizedBox(
+                                                                width: 4,
+                                                              ),
+                                                              Icon(
+                                                                Icons.delete,
+                                                                color: Colors
+                                                                    .redAccent,
+                                                                size: 14,
+                                                              ),
+                                                            ],
                                                           ),
-                                                          SizedBox(width: 4),
-                                                          Icon(
-                                                            Icons.delete,
-                                                            color: Colors
-                                                                .redAccent,
-                                                            size: 14,
-                                                          ),
-                                                        ],
-                                                      ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ],
-                                                ),
-                                              ),
+                                                  ),
+                                              ],
+                                            ),
                                           ],
                                         ),
+                                        _buildSubActionsList(context, action),
                                       ],
                                     ),
                                   ),
@@ -954,6 +999,449 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 'Save',
                 style: TextStyle(color: Colors.purpleAccent),
               ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSubActionsList(BuildContext context, ActionModel parentAction) {
+    if (parentAction.subActions.isEmpty) {
+      if (widget.isEditMode) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 8.0, left: 16.0),
+          child: InkWell(
+            onTap: () => _showAddSubActionDialog(context, parentAction),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add_circle_outline, size: 14, color: Colors.blueAccent),
+                SizedBox(width: 4),
+                Text(
+                  'Dodaj pod-akcję',
+                  style: TextStyle(
+                    color: Colors.blueAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(color: Colors.white12, height: 16),
+        ...parentAction.subActions.map((sub) {
+          Color subColor = Colors.grey;
+          if (sub.type.toUpperCase() == 'SERVE' ||
+              sub.type.toUpperCase().contains('SERVE')) {
+            subColor = Colors.orangeAccent;
+          }
+          if (sub.type.toUpperCase() == 'RECEIVE' ||
+              sub.type.toUpperCase() == 'BUMP') {
+            subColor = const Color(0xFF00FFCC);
+          }
+          if (sub.type.toUpperCase() == 'SET') {
+            subColor = Colors.greenAccent;
+          }
+          if (sub.type.toUpperCase().contains('SPIKE') ||
+              sub.type.toUpperCase() == 'ATTACK') {
+            subColor = const Color(0xFFFF0055);
+          }
+          if (sub.type.toUpperCase() == 'BLOCK') {
+            subColor = Colors.purpleAccent;
+          }
+          if (sub.type.toUpperCase() == 'DIG') {
+            subColor = Colors.blueAccent;
+          }
+
+          final subTimestamp = Duration(
+            milliseconds: sub.startMs.round(),
+          ).toString().split('.').first;
+
+          return Padding(
+            padding: const EdgeInsets.only(left: 16.0, bottom: 6.0),
+            child: Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: subColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: InkWell(
+                    onTap: () => widget.onActionSelected(sub),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          sub.type.toUpperCase(),
+                          style: TextStyle(
+                            color: subColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          'Player: ${sub.playerId} • $subTimestamp',
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.play_arrow, size: 16, color: Colors.white70),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => widget.onActionSelected(sub),
+                ),
+                if (widget.isEditMode) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 14, color: Colors.white30),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => _showEditSubActionDialog(context, parentAction, sub),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.delete, size: 14, color: Colors.redAccent),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => _deleteSubAction(context, parentAction, sub),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }),
+        if (widget.isEditMode)
+          Padding(
+            padding: const EdgeInsets.only(top: 4.0, left: 16.0),
+            child: InkWell(
+              onTap: () => _showAddSubActionDialog(context, parentAction),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add, size: 14, color: Colors.blueAccent),
+                  SizedBox(width: 2),
+                  Text(
+                    'Dodaj pod-akcję',
+                    style: TextStyle(
+                      color: Colors.blueAccent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _showAddSubActionDialog(BuildContext context, ActionModel parent) {
+    final parentStartSec = parent.startMs / 1000.0;
+    final parentEndSec = parent.endMs / 1000.0;
+
+    double initialStartSec = parentStartSec;
+    if (widget.currentPosition != null) {
+      final curPosSec = widget.currentPosition!.inMilliseconds / 1000.0;
+      if (curPosSec >= parentStartSec && curPosSec <= parentEndSec) {
+        initialStartSec = curPosSec;
+      }
+    }
+    double initialEndSec = (initialStartSec + 2.0).clamp(parentStartSec, parentEndSec);
+
+    final typeController = TextEditingController(text: 'RECEIVE');
+    final playerController = TextEditingController();
+    final startController = TextEditingController(text: initialStartSec.toStringAsFixed(2));
+    final endController = TextEditingController(text: initialEndSec.toStringAsFixed(2));
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2A2A),
+          title: Text(
+            'Dodaj pod-akcję (${parent.type})',
+            style: const TextStyle(color: Colors.white, fontSize: 18),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Przedział rodzica: ${parentStartSec.toStringAsFixed(2)}s - ${parentEndSec.toStringAsFixed(2)}s',
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: 'RECEIVE',
+                  dropdownColor: const Color(0xFF3A3A3A),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Typ pod-akcji',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    border: OutlineInputBorder(),
+                  ),
+                  items: kVolleyballActions.map((type) {
+                    return DropdownMenuItem<String>(
+                      value: type,
+                      child: Text(type),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) typeController.text = val;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: playerController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Numer/ID gracza',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: startController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          labelText: 'Start (s)',
+                          labelStyle: TextStyle(color: Colors.white70),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: endController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          labelText: 'Koniec (s)',
+                          labelStyle: TextStyle(color: Colors.white70),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+            ),
+            TextButton(
+              onPressed: () {
+                final type = typeController.text;
+                final player = playerController.text.trim().isEmpty ? 'Unknown' : playerController.text.trim();
+                final startSec = double.tryParse(startController.text) ?? initialStartSec;
+                final endSec = double.tryParse(endController.text) ?? initialEndSec;
+
+                final sub = ActionModel(
+                  id: 'sub_${DateTime.now().millisecondsSinceEpoch}',
+                  type: type,
+                  startMs: startSec * 1000.0,
+                  endMs: endSec * 1000.0,
+                  playerBox: [0.0, 0.0, 0.0, 0.0],
+                  playerId: player,
+                  confidence: 1.0,
+                );
+
+                final updatedParent = parent;
+                updatedParent.subActions = List.from(parent.subActions)..add(sub);
+
+                widget.onActionUpdated(updatedParent);
+                Navigator.pop(context);
+              },
+              child: const Text('Zapisz', style: TextStyle(color: Colors.purpleAccent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditSubActionDialog(BuildContext context, ActionModel parent, ActionModel sub) {
+    final parentStartSec = parent.startMs / 1000.0;
+    final parentEndSec = parent.endMs / 1000.0;
+
+    final typeController = TextEditingController(text: sub.type);
+    final playerController = TextEditingController(text: sub.playerId);
+    final startController = TextEditingController(text: (sub.startMs / 1000.0).toStringAsFixed(2));
+    final endController = TextEditingController(text: (sub.endMs / 1000.0).toStringAsFixed(2));
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2A2A),
+          title: Text(
+            'Edytuj pod-akcję (${parent.type})',
+            style: const TextStyle(color: Colors.white, fontSize: 18),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Przedział rodzica: ${parentStartSec.toStringAsFixed(2)}s - ${parentEndSec.toStringAsFixed(2)}s',
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: kVolleyballActions.contains(sub.type.toUpperCase())
+                      ? sub.type.toUpperCase()
+                      : kVolleyballActions.first,
+                  dropdownColor: const Color(0xFF3A3A3A),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Typ pod-akcji',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    border: OutlineInputBorder(),
+                  ),
+                  items: kVolleyballActions.map((type) {
+                    return DropdownMenuItem<String>(
+                      value: type,
+                      child: Text(type),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) typeController.text = val;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: playerController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Numer/ID gracza',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: startController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          labelText: 'Start (s)',
+                          labelStyle: TextStyle(color: Colors.white70),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: endController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(
+                          labelText: 'Koniec (s)',
+                          labelStyle: TextStyle(color: Colors.white70),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+            ),
+            TextButton(
+              onPressed: () {
+                final type = typeController.text;
+                final player = playerController.text.trim().isEmpty ? 'Unknown' : playerController.text.trim();
+                final startSec = double.tryParse(startController.text) ?? (sub.startMs / 1000.0);
+                final endSec = double.tryParse(endController.text) ?? (sub.endMs / 1000.0);
+
+                final updatedSub = ActionModel(
+                  id: sub.id,
+                  type: type,
+                  startMs: startSec * 1000.0,
+                  endMs: endSec * 1000.0,
+                  playerBox: sub.playerBox,
+                  playerId: player,
+                  confidence: sub.confidence,
+                  subActions: sub.subActions,
+                );
+
+                final updatedParent = parent;
+                final idx = parent.subActions.indexWhere((s) => s.id == sub.id);
+                if (idx != -1) {
+                  updatedParent.subActions = List.from(parent.subActions)..[idx] = updatedSub;
+                }
+
+                widget.onActionUpdated(updatedParent);
+                Navigator.pop(context);
+              },
+              child: const Text('Zapisz', style: TextStyle(color: Colors.purpleAccent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteSubAction(BuildContext context, ActionModel parent, ActionModel sub) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E1E24),
+          title: const Text('Usuń pod-akcję', style: TextStyle(color: Colors.white)),
+          content: Text('Czy na pewno chcesz usunąć pod-akcję: ${sub.type}?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+            ),
+            TextButton(
+              onPressed: () {
+                final updatedParent = parent;
+                updatedParent.subActions = List.from(parent.subActions)..removeWhere((s) => s.id == sub.id);
+                widget.onActionUpdated(updatedParent);
+                Navigator.pop(context);
+              },
+              child: const Text('Usuń', style: TextStyle(color: Colors.redAccent)),
             ),
           ],
         );

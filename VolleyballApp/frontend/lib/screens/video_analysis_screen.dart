@@ -921,6 +921,21 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                             _selectedAction = action;
                                           }
                                         });
+                                      } else {
+                                        for (int i = 0; i < _actions.length; i++) {
+                                          final subIdx = _actions[i]
+                                              .subActions
+                                              .indexWhere((sub) => sub.id == action.id);
+                                          if (subIdx != -1) {
+                                            setState(() {
+                                              _actions[i].subActions[subIdx] = action;
+                                              if (_selectedAction?.id == action.id) {
+                                                _selectedAction = action;
+                                              }
+                                            });
+                                            break;
+                                          }
+                                        }
                                       }
                                       setState(() {
                                         _isUpdatingFocus = false;
@@ -1079,6 +1094,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               border: Border(left: BorderSide(color: Colors.white12)),
             ),
             child: ActionSidebar(
+              currentPosition: _currentPosition,
               actions: _actions,
               selectedAction: _selectedAction,
               playlist: _playlist,
