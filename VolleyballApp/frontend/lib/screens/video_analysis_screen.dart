@@ -286,11 +286,11 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     return '${m}m ${s.toString().padLeft(2, '0')}s';
   }
 
-  void _onActionSelected(ActionModel action) {
+  void _onActionSelected(ActionModel? action) {
     setState(() {
       _selectedAction = action;
     });
-    if (_videoController != null) {
+    if (action != null && _videoController != null) {
       _videoController!.player.seek(
         Duration(milliseconds: action.startMs.round()),
       );

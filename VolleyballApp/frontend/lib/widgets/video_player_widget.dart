@@ -43,7 +43,7 @@ class VideoPlayerWidget extends StatefulWidget {
   final Function(VideoController) onControllerReady;
   final ValueChanged<ActionModel>? onActionUpdated;
   final ValueChanged<ActionModel>? onActionAdded;
-  final ValueChanged<ActionModel>? onActionSelected;
+  final ValueChanged<ActionModel?>? onActionSelected;
   final List<ActionModel>? playlistActions;
   final ValueChanged<ActionModel>? onActionPlaylistToggled;
 
@@ -374,6 +374,201 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     }
   }
 
+  Future<void> _confirmNewSubAction(ActionModel parent, double startMs, double endMs) async {
+    if (!mounted) return;
+    if (startMs > endMs) {
+      final tmp = startMs;
+      startMs = endMs;
+      endMs = tmp;
+    }
+    if (endMs - startMs < 100) return; // zbyt krótkie zaznaczenie
+
+    startMs = startMs.clamp(parent.startMs, parent.endMs);
+    endMs = endMs.clamp(startMs, parent.endMs);
+
+    String selectedType = kVolleyballActions.first;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF1E1E2E),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              const Icon(
+                Icons.add_circle_outline,
+                color: Colors.purpleAccent,
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Nowa pod-akcja (${parent.type})',
+                style: const TextStyle(color: Colors.white, fontSize: 17),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(13),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Początek',
+                          style: TextStyle(color: Colors.white54, fontSize: 11),
+                        ),
+                        Text(
+                          _fmtMs(startMs),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Icon(
+                      Icons.arrow_forward,
+                      color: Colors.white38,
+                      size: 16,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text(
+                          'Koniec',
+                          style: TextStyle(color: Colors.white54, fontSize: 11),
+                        ),
+                        Text(
+                          _fmtMs(endMs),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Typ pod-akcji',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: kVolleyballActions.map((type) {
+                  final isChosen = type == selectedType;
+                  final col = _actionColor(type);
+                  return MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => setDialogState(() => selectedType = type),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isChosen
+                              ? col.withAlpha(51)
+                              : Colors.white.withAlpha(13),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isChosen ? col : Colors.white24,
+                            width: isChosen ? 2 : 1,
+                          ),
+                        ),
+                        child: Text(
+                          type,
+                          style: TextStyle(
+                            color: isChosen ? col : Colors.white70,
+                            fontWeight: isChosen
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white38),
+              ),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purpleAccent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              icon: const Icon(Icons.check, size: 16),
+              label: const Text('Dodaj'),
+              onPressed: () => Navigator.pop(ctx, true),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final newSub = ActionModel(
+        id: 'sub_${DateTime.now().millisecondsSinceEpoch}',
+        type: selectedType,
+        startMs: startMs,
+        endMs: endMs,
+        playerBox: [0.0, 0.0, 0.0, 0.0],
+        playerId: 'Unknown',
+        confidence: 1.0,
+      );
+      final updatedParent = ActionModel(
+        id: parent.id,
+        type: parent.type,
+        startMs: parent.startMs,
+        endMs: parent.endMs,
+        playerBox: parent.playerBox,
+        playerId: parent.playerId,
+        confidence: parent.confidence,
+        subActions: List<ActionModel>.from(parent.subActions)..add(newSub),
+      );
+      widget.onActionUpdated?.call(updatedParent);
+      widget.onActionSelected?.call(newSub);
+    }
+  }
+
   String _fmtMs(double ms) {
     final d = Duration(milliseconds: ms.round());
     final h = d.inHours;
@@ -386,247 +581,99 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     return h > 0 ? '$h:$m:$s.$mil' : '$m:$s.$mil';
   }
 
-  // ─── Markery na timeline ──────────────────────────────────────────────────
-
   Widget _buildTimelineMarkers(double timelineWidth) {
     final totalMs = _totalDuration.inMilliseconds.toDouble();
     if (totalMs == 0) return const SizedBox.shrink();
 
+    // Find active parent
+    ActionModel? activeParent;
+    if (widget.selectedAction != null) {
+      final idx = widget.actions.indexWhere((a) => a.id == widget.selectedAction!.id);
+      if (idx != -1) {
+        activeParent = widget.actions[idx];
+      } else {
+        for (final a in widget.actions) {
+          if (a.subActions.any((s) => s.id == widget.selectedAction!.id)) {
+            activeParent = a;
+            break;
+          }
+        }
+      }
+    }
+
+    final double timelineMinMs = activeParent != null ? activeParent.startMs : 0.0;
+    final double timelineMaxMs = activeParent != null ? activeParent.endMs : totalMs;
+    final double timelineDurationMs = timelineMaxMs - timelineMinMs;
+
     final markers = <Widget>[];
 
-    // Istniejące akcje
-    for (final action in widget.actions) {
-      final hasSubs = action.subActions.isNotEmpty;
-      final startFrac = (action.startMs / totalMs).clamp(0.0, 1.0);
-      final endFrac = (action.endMs / totalMs).clamp(0.0, 1.0);
-      final w = ((endFrac - startFrac) * timelineWidth).clamp(2.0, timelineWidth);
-      final color = _actionColor(action.type);
-      final isSelected = widget.selectedAction?.id == action.id;
-      final isInPlaylist = widget.playlistActions?.any((a) => a.id == action.id) ?? false;
+    if (activeParent != null) {
+      final parent = activeParent;
+      // ──── Zoomed mode: Draw only activeParent and its subActions ────
+      final hasSubs = parent.subActions.isNotEmpty;
+      final color = _actionColor(parent.type);
+      final isSelected = widget.selectedAction?.id == parent.id;
+      final isInPlaylist = widget.playlistActions?.any((a) => a.id == parent.id) ?? false;
 
-      // 1. Dodaj nadrzędną akcję
+      // Draw the parent action occupying the top half
       markers.add(
         Positioned(
-          left: startFrac * timelineWidth,
+          left: 0,
           top: 0,
-          bottom: hasSubs ? 18 : 0, // Podział pionowy jeśli są pod-akcje
-          width: w,
+          bottom: hasSubs ? 18 : 0,
+          width: timelineWidth,
           child: MouseRegion(
-            onEnter: (_) => setState(() => _hoveredActionId = action.id),
+            onEnter: (_) => setState(() => _hoveredActionId = parent.id),
             onExit: (_) {
-              if (_hoveredActionId == action.id) {
+              if (_hoveredActionId == parent.id) {
                 setState(() => _hoveredActionId = null);
               }
             },
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              // Dragging rodzica jest dozwolony tylko gdy NIE MA pod-akcji!
-              onHorizontalDragUpdate: (widget.isEditMode && !hasSubs)
-                  ? (details) {
-                      final msDelta = (details.primaryDelta ?? 0) / timelineWidth * totalMs;
-                      final newStart = (action.startMs + msDelta).clamp(0.0, totalMs);
-                      final newEnd = (action.endMs + msDelta).clamp(newStart, totalMs);
-
-                      _seekToMs(newStart); // Podgląd
-
-                      widget.onActionUpdated?.call(
-                        ActionModel(
-                          id: action.id,
-                          type: action.type,
-                          startMs: newStart,
-                          endMs: newEnd,
-                          playerBox: action.playerBox,
-                          playerId: action.playerId,
-                          confidence: action.confidence,
-                          subActions: action.subActions,
-                        ),
-                      );
-                    }
-                  : null,
               onTap: () {
-                _seekToMs(action.startMs);
-                widget.onActionSelected?.call(action);
+                _seekToMs(parent.startMs);
+                widget.onActionSelected?.call(parent);
               },
               onDoubleTap: () {
-                widget.onActionPlaylistToggled?.call(action);
+                widget.onActionPlaylistToggled?.call(parent);
               },
+              onHorizontalDragUpdate: null,
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // Blok akcji
                   Container(
                     decoration: BoxDecoration(
                       color: color.withAlpha(
-                        widget.isEditMode || _hoveredActionId == action.id
+                        widget.isEditMode || _hoveredActionId == parent.id
                             ? 204
                             : 153,
                       ),
-                      borderRadius: BorderRadius.circular(
-                        widget.isEditMode ? 6 : 3,
-                      ),
+                      borderRadius: BorderRadius.circular(widget.isEditMode ? 6 : 3),
                       border: isSelected
                           ? Border.all(color: Colors.white, width: 2)
                           : isInPlaylist
                           ? Border.all(color: Colors.white, width: 1.5)
-                          : (_hoveredActionId == action.id
+                          : (_hoveredActionId == parent.id
                                 ? Border.all(color: Colors.white70, width: 2)
                                 : (widget.isEditMode
-                                      ? Border.all(
-                                          color: Colors.white54,
-                                          width: 1,
-                                        )
+                                      ? Border.all(color: Colors.white54, width: 1)
                                       : null)),
                     ),
                   ),
-                  // Nazwa akcji
-                  if (w > 30)
-                    Center(
-                      child: Text(
-                        action.type.substring(
-                          0,
-                          action.type.length.clamp(0, 3),
-                        ),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withAlpha(180),
-                              blurRadius: 2,
-                            ),
-                          ],
-                        ),
+                  Center(
+                    child: Text(
+                      '${parent.type} (Nadrzędna)',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(color: Colors.black, blurRadius: 2),
+                        ],
                       ),
                     ),
-                  // Uchwyt lewej krawędzi (tylko gdy brak pod-akcji)
-                  if (widget.isEditMode && !hasSubs)
-                    Positioned(
-                      left: -6,
-                      top: 0,
-                      bottom: 0,
-                      width: 16,
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.resizeLeftRight,
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onHorizontalDragUpdate: (details) {
-                            final msDelta = (details.primaryDelta ?? 0) /
-                                timelineWidth *
-                                totalMs;
-                            final newStart = (action.startMs + msDelta).clamp(
-                              0.0,
-                              action.endMs - 100,
-                            );
-
-                            _seekToMs(newStart);
-
-                            widget.onActionUpdated?.call(
-                              ActionModel(
-                                id: action.id,
-                                type: action.type,
-                                startMs: newStart,
-                                endMs: action.endMs,
-                                playerBox: action.playerBox,
-                                playerId: action.playerId,
-                                confidence: action.confidence,
-                                subActions: action.subActions,
-                              ),
-                            );
-                          },
-                          child: Center(
-                            child: Container(
-                              height: double.infinity,
-                              width: 8,
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.white70,
-                                borderRadius: BorderRadius.circular(4),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black45,
-                                    blurRadius: 2,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.chevron_left,
-                                  size: 10,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  // Uchwyt prawej krawędzi (tylko gdy brak pod-akcji)
-                  if (widget.isEditMode && !hasSubs)
-                    Positioned(
-                      right: -6,
-                      top: 0,
-                      bottom: 0,
-                      width: 16,
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.resizeLeftRight,
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onHorizontalDragUpdate: (details) {
-                            final msDelta = (details.primaryDelta ?? 0) /
-                                timelineWidth *
-                                totalMs;
-                            final newEnd = (action.endMs + msDelta).clamp(
-                              action.startMs + 100,
-                              totalMs,
-                            );
-
-                            _seekToMs(newEnd);
-
-                            widget.onActionUpdated?.call(
-                              ActionModel(
-                                id: action.id,
-                                type: action.type,
-                                startMs: action.startMs,
-                                endMs: newEnd,
-                                playerBox: action.playerBox,
-                                playerId: action.playerId,
-                                confidence: action.confidence,
-                                subActions: action.subActions,
-                              ),
-                            );
-                          },
-                          child: Center(
-                            child: Container(
-                              height: double.infinity,
-                              width: 8,
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.white70,
-                                borderRadius: BorderRadius.circular(4),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black45,
-                                    blurRadius: 2,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.chevron_right,
-                                  size: 10,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+                  ),
                 ],
               ),
             ),
@@ -634,284 +681,433 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         ),
       );
 
-      // 2. Dodaj pod-akcje jako samodzielne poziome zakresy poniżej rodzica
-      if (hasSubs) {
-        for (final sub in action.subActions) {
-          final subStartFrac = (sub.startMs / totalMs).clamp(0.0, 1.0);
-          final subEndFrac = (sub.endMs / totalMs).clamp(0.0, 1.0);
-          final subW = ((subEndFrac - subStartFrac) * timelineWidth).clamp(2.0, timelineWidth);
-          final subColor = _actionColor(sub.type);
-          final isSubSelected = widget.selectedAction?.id == sub.id;
+      // Draw sub-actions in the bottom half
+      for (final sub in parent.subActions) {
+        final subStartFrac = ((sub.startMs - timelineMinMs) / timelineDurationMs).clamp(0.0, 1.0);
+        final subEndFrac = ((sub.endMs - timelineMinMs) / timelineDurationMs).clamp(0.0, 1.0);
+        final subW = ((subEndFrac - subStartFrac) * timelineWidth).clamp(2.0, timelineWidth);
+        final subColor = _actionColor(sub.type);
+        final isSubSelected = widget.selectedAction?.id == sub.id;
 
-          markers.add(
-            Positioned(
-              left: subStartFrac * timelineWidth,
-              top: 18,
-              bottom: 0,
-              width: subW,
-              child: MouseRegion(
-                onEnter: (_) => setState(() => _hoveredActionId = sub.id),
-                onExit: (_) {
-                  if (_hoveredActionId == sub.id) {
-                    setState(() => _hoveredActionId = null);
-                  }
+        markers.add(
+          Positioned(
+            left: subStartFrac * timelineWidth,
+            top: 18,
+            bottom: 0,
+            width: subW,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _hoveredActionId = sub.id),
+              onExit: (_) {
+                if (_hoveredActionId == sub.id) {
+                  setState(() => _hoveredActionId = null);
+                }
+              },
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onHorizontalDragUpdate: widget.isEditMode
+                    ? (details) {
+                        final msDelta = (details.primaryDelta ?? 0) / timelineWidth * timelineDurationMs;
+                        final subDuration = sub.endMs - sub.startMs;
+                        final newStart = (sub.startMs + msDelta).clamp(parent.startMs, parent.endMs - subDuration);
+                        final newEnd = newStart + subDuration;
+
+                        final updatedSub = ActionModel(
+                          id: sub.id,
+                          type: sub.type,
+                          startMs: newStart,
+                          endMs: newEnd,
+                          playerBox: sub.playerBox,
+                          playerId: sub.playerId,
+                          confidence: sub.confidence,
+                          subActions: sub.subActions,
+                        );
+
+                        final List<ActionModel> newSubs = parent.subActions.map((s) {
+                          return s.id == sub.id ? updatedSub : s;
+                        }).toList();
+
+                        _seekToMs(newStart);
+
+                        widget.onActionUpdated?.call(
+                          ActionModel(
+                            id: parent.id,
+                            type: parent.type,
+                            startMs: parent.startMs,
+                            endMs: parent.endMs,
+                            playerBox: parent.playerBox,
+                            playerId: parent.playerId,
+                            confidence: parent.confidence,
+                            subActions: newSubs,
+                          ),
+                        );
+                      }
+                    : null,
+                onTap: () {
+                  _seekToMs(sub.startMs);
+                  widget.onActionSelected?.call(sub);
                 },
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  // Przesuwanie (shifting) pod-akcji
-                  onHorizontalDragUpdate: widget.isEditMode
-                      ? (details) {
-                          final msDelta = (details.primaryDelta ?? 0) / timelineWidth * totalMs;
-                          final subDuration = sub.endMs - sub.startMs;
-                          final newStart = (sub.startMs + msDelta).clamp(action.startMs, action.endMs - subDuration);
-                          final newEnd = newStart + subDuration;
-
-                          final updatedSub = ActionModel(
-                            id: sub.id,
-                            type: sub.type,
-                            startMs: newStart,
-                            endMs: newEnd,
-                            playerBox: sub.playerBox,
-                            playerId: sub.playerId,
-                            confidence: sub.confidence,
-                            subActions: sub.subActions,
-                          );
-
-                          // Aktualizujemy pod-akcję na liście rodzica
-                          final List<ActionModel> newSubs = action.subActions.map((s) {
-                            return s.id == sub.id ? updatedSub : s;
-                          }).toList();
-
-                          _seekToMs(newStart);
-
-                          widget.onActionUpdated?.call(
-                            ActionModel(
-                              id: action.id,
-                              type: action.type,
-                              startMs: action.startMs,
-                              endMs: action.endMs,
-                              playerBox: action.playerBox,
-                              playerId: action.playerId,
-                              confidence: action.confidence,
-                              subActions: newSubs,
-                            ),
-                          );
-                        }
-                      : null,
-                  onTap: () {
-                    _seekToMs(sub.startMs);
-                    widget.onActionSelected?.call(sub);
-                  },
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Kontener pod-akcji
-                      Container(
-                        decoration: BoxDecoration(
-                          color: subColor.withAlpha(
-                            widget.isEditMode || _hoveredActionId == sub.id
-                                ? 204
-                                : 153,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: subColor.withAlpha(
+                          widget.isEditMode || _hoveredActionId == sub.id ? 204 : 153,
+                        ),
+                        borderRadius: BorderRadius.circular(widget.isEditMode ? 4 : 2),
+                        border: isSubSelected
+                            ? Border.all(color: Colors.white, width: 1.5)
+                            : (_hoveredActionId == sub.id
+                                  ? Border.all(color: Colors.white70, width: 1.5)
+                                  : (widget.isEditMode
+                                        ? Border.all(color: Colors.white54, width: 0.5)
+                                        : null)),
+                      ),
+                    ),
+                    if (subW > 24)
+                      Center(
+                        child: Text(
+                          sub.type.substring(0, sub.type.length.clamp(0, 3)),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(color: Colors.black.withAlpha(180), blurRadius: 1.5),
+                            ],
                           ),
-                          borderRadius: BorderRadius.circular(
-                            widget.isEditMode ? 4 : 2,
-                          ),
-                          border: isSubSelected
-                              ? Border.all(color: Colors.white, width: 1.5)
-                              : (_hoveredActionId == sub.id
-                                    ? Border.all(color: Colors.white70, width: 1.5)
-                                    : (widget.isEditMode
-                                          ? Border.all(
-                                              color: Colors.white54,
-                                              width: 0.5,
-                                            )
-                                          : null)),
                         ),
                       ),
-                      // Skrócona nazwa pod-akcji
-                      if (subW > 24)
-                        Center(
-                          child: Text(
-                            sub.type.substring(
-                              0,
-                              sub.type.length.clamp(0, 3),
-                            ),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 7,
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withAlpha(180),
-                                  blurRadius: 1.5,
+                    // Left resize handle
+                    if (widget.isEditMode)
+                      Positioned(
+                        left: -4,
+                        top: 0,
+                        bottom: 0,
+                        width: 12,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.resizeLeftRight,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onHorizontalDragUpdate: (details) {
+                              final msDelta = (details.primaryDelta ?? 0) / timelineWidth * timelineDurationMs;
+                              final newStart = (sub.startMs + msDelta).clamp(parent.startMs, sub.endMs - 100);
+
+                              final updatedSub = ActionModel(
+                                id: sub.id,
+                                type: sub.type,
+                                startMs: newStart,
+                                endMs: sub.endMs,
+                                playerBox: sub.playerBox,
+                                playerId: sub.playerId,
+                                confidence: sub.confidence,
+                                subActions: sub.subActions,
+                              );
+
+                              final List<ActionModel> newSubs = parent.subActions.map((s) {
+                                return s.id == sub.id ? updatedSub : s;
+                              }).toList();
+
+                              _seekToMs(newStart);
+
+                              widget.onActionUpdated?.call(
+                                ActionModel(
+                                  id: parent.id,
+                                  type: parent.type,
+                                  startMs: parent.startMs,
+                                  endMs: parent.endMs,
+                                  playerBox: parent.playerBox,
+                                  playerId: parent.playerId,
+                                  confidence: parent.confidence,
+                                  subActions: newSubs,
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      // Lewy uchwyt zmiany rozmiaru pod-akcji
-                      if (widget.isEditMode)
-                        Positioned(
-                          left: -4,
-                          top: 0,
-                          bottom: 0,
-                          width: 12,
-                          child: MouseRegion(
-                            cursor: SystemMouseCursors.resizeLeftRight,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onHorizontalDragUpdate: (details) {
-                                final msDelta = (details.primaryDelta ?? 0) /
-                                    timelineWidth *
-                                    totalMs;
-                                final newStart = (sub.startMs + msDelta).clamp(
-                                  action.startMs,
-                                  sub.endMs - 100,
-                                );
-
-                                final updatedSub = ActionModel(
-                                  id: sub.id,
-                                  type: sub.type,
-                                  startMs: newStart,
-                                  endMs: sub.endMs,
-                                  playerBox: sub.playerBox,
-                                  playerId: sub.playerId,
-                                  confidence: sub.confidence,
-                                  subActions: sub.subActions,
-                                );
-
-                                final List<ActionModel> newSubs = action.subActions.map((s) {
-                                  return s.id == sub.id ? updatedSub : s;
-                                }).toList();
-
-                                _seekToMs(newStart);
-
-                                widget.onActionUpdated?.call(
-                                  ActionModel(
-                                    id: action.id,
-                                    type: action.type,
-                                    startMs: action.startMs,
-                                    endMs: action.endMs,
-                                    playerBox: action.playerBox,
-                                    playerId: action.playerId,
-                                    confidence: action.confidence,
-                                    subActions: newSubs,
-                                  ),
-                                );
-                              },
-                              child: Center(
-                                child: Container(
-                                  height: double.infinity,
-                                  width: 4,
-                                  decoration: BoxDecoration(
-                                    color: isSubSelected
-                                        ? Colors.white
-                                        : Colors.white70,
-                                    borderRadius: BorderRadius.circular(2),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Colors.black45,
-                                        blurRadius: 1,
-                                        spreadRadius: 0.5,
-                                      ),
-                                    ],
-                                  ),
+                              );
+                            },
+                            child: Center(
+                              child: Container(
+                                height: double.infinity,
+                                width: 4,
+                                decoration: BoxDecoration(
+                                  color: isSubSelected ? Colors.white : Colors.white70,
+                                  borderRadius: BorderRadius.circular(2),
+                                  boxShadow: const [
+                                    BoxShadow(color: Colors.black45, blurRadius: 1, spreadRadius: 0.5),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      // Prawy uchwyt zmiany rozmiaru pod-akcji
-                      if (widget.isEditMode)
-                        Positioned(
-                          right: -4,
-                          top: 0,
-                          bottom: 0,
-                          width: 12,
-                          child: MouseRegion(
-                            cursor: SystemMouseCursors.resizeLeftRight,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onHorizontalDragUpdate: (details) {
-                                final msDelta = (details.primaryDelta ?? 0) /
-                                    timelineWidth *
-                                    totalMs;
-                                final newEnd = (sub.endMs + msDelta).clamp(
-                                  sub.startMs + 100,
-                                  action.endMs,
-                                );
+                      ),
+                    // Right resize handle
+                    if (widget.isEditMode)
+                      Positioned(
+                        right: -4,
+                        top: 0,
+                        bottom: 0,
+                        width: 12,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.resizeLeftRight,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onHorizontalDragUpdate: (details) {
+                              final msDelta = (details.primaryDelta ?? 0) / timelineWidth * timelineDurationMs;
+                              final newEnd = (sub.endMs + msDelta).clamp(sub.startMs + 100, parent.endMs);
 
-                                final updatedSub = ActionModel(
-                                  id: sub.id,
-                                  type: sub.type,
-                                  startMs: sub.startMs,
-                                  endMs: newEnd,
-                                  playerBox: sub.playerBox,
-                                  playerId: sub.playerId,
-                                  confidence: sub.confidence,
-                                  subActions: sub.subActions,
-                                );
+                              final updatedSub = ActionModel(
+                                id: sub.id,
+                                type: sub.type,
+                                startMs: sub.startMs,
+                                endMs: newEnd,
+                                playerBox: sub.playerBox,
+                                playerId: sub.playerId,
+                                confidence: sub.confidence,
+                                subActions: sub.subActions,
+                              );
 
-                                final List<ActionModel> newSubs = action.subActions.map((s) {
-                                  return s.id == sub.id ? updatedSub : s;
-                                }).toList();
+                              final List<ActionModel> newSubs = parent.subActions.map((s) {
+                                return s.id == sub.id ? updatedSub : s;
+                              }).toList();
 
-                                _seekToMs(newEnd);
+                              _seekToMs(newEnd);
 
-                                widget.onActionUpdated?.call(
-                                  ActionModel(
-                                    id: action.id,
-                                    type: action.type,
-                                    startMs: action.startMs,
-                                    endMs: action.endMs,
-                                    playerBox: action.playerBox,
-                                    playerId: action.playerId,
-                                    confidence: action.confidence,
-                                    subActions: newSubs,
-                                  ),
-                                );
-                              },
-                              child: Center(
-                                child: Container(
-                                  height: double.infinity,
-                                  width: 4,
-                                  decoration: BoxDecoration(
-                                    color: isSubSelected
-                                        ? Colors.white
-                                        : Colors.white70,
-                                    borderRadius: BorderRadius.circular(2),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Colors.black45,
-                                        blurRadius: 1,
-                                        spreadRadius: 0.5,
-                                      ),
-                                    ],
-                                  ),
+                              widget.onActionUpdated?.call(
+                                ActionModel(
+                                  id: parent.id,
+                                  type: parent.type,
+                                  startMs: parent.startMs,
+                                  endMs: parent.endMs,
+                                  playerBox: parent.playerBox,
+                                  playerId: parent.playerId,
+                                  confidence: parent.confidence,
+                                  subActions: newSubs,
+                                ),
+                              );
+                            },
+                            child: Center(
+                              child: Container(
+                                height: double.infinity,
+                                width: 4,
+                                decoration: BoxDecoration(
+                                  color: isSubSelected ? Colors.white : Colors.white70,
+                                  borderRadius: BorderRadius.circular(2),
+                                  boxShadow: const [
+                                    BoxShadow(color: Colors.black45, blurRadius: 1, spreadRadius: 0.5),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
               ),
             ),
-          );
-        }
+          ),
+        );
+      }
+    } else {
+      // ──── Zoomed out mode: Draw all actions normally ────
+      for (final action in widget.actions) {
+        final hasSubs = action.subActions.isNotEmpty;
+        final startFrac = (action.startMs / totalMs).clamp(0.0, 1.0);
+        final endFrac = (action.endMs / totalMs).clamp(0.0, 1.0);
+        final w = ((endFrac - startFrac) * timelineWidth).clamp(2.0, timelineWidth);
+        final color = _actionColor(action.type);
+        final isSelected = widget.selectedAction?.id == action.id;
+        final isInPlaylist = widget.playlistActions?.any((a) => a.id == action.id) ?? false;
+
+        markers.add(
+          Positioned(
+            left: startFrac * timelineWidth,
+            top: 0,
+            bottom: hasSubs ? 18 : 0,
+            width: w,
+            child: MouseRegion(
+              onEnter: (_) => setState(() => _hoveredActionId = action.id),
+              onExit: (_) {
+                if (_hoveredActionId == action.id) {
+                  setState(() => _hoveredActionId = null);
+                }
+              },
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onHorizontalDragUpdate: (widget.isEditMode && !hasSubs)
+                    ? (details) {
+                        final msDelta = (details.primaryDelta ?? 0) / timelineWidth * totalMs;
+                        final newStart = (action.startMs + msDelta).clamp(0.0, totalMs);
+                        final newEnd = (action.endMs + msDelta).clamp(newStart, totalMs);
+
+                        _seekToMs(newStart);
+
+                        widget.onActionUpdated?.call(
+                          ActionModel(
+                            id: action.id,
+                            type: action.type,
+                            startMs: newStart,
+                            endMs: newEnd,
+                            playerBox: action.playerBox,
+                            playerId: action.playerId,
+                            confidence: action.confidence,
+                            subActions: action.subActions,
+                          ),
+                        );
+                      }
+                    : null,
+                onTap: () {
+                  _seekToMs(action.startMs);
+                  widget.onActionSelected?.call(action);
+                },
+                onDoubleTap: () {
+                  widget.onActionPlaylistToggled?.call(action);
+                },
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: color.withAlpha(
+                          widget.isEditMode || _hoveredActionId == action.id
+                              ? 204
+                              : 153,
+                        ),
+                        borderRadius: BorderRadius.circular(widget.isEditMode ? 6 : 3),
+                        border: isSelected
+                            ? Border.all(color: Colors.white, width: 2)
+                            : isInPlaylist
+                            ? Border.all(color: Colors.white, width: 1.5)
+                            : (_hoveredActionId == action.id
+                                  ? Border.all(color: Colors.white70, width: 2)
+                                  : (widget.isEditMode
+                                        ? Border.all(color: Colors.white54, width: 1)
+                                        : null)),
+                      ),
+                    ),
+                    if (w > 30)
+                      Center(
+                        child: Text(
+                          action.type.substring(0, action.type.length.clamp(0, 3)),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(color: Colors.black.withAlpha(180), blurRadius: 2),
+                            ],
+                          ),
+                        ),
+                      ),
+                    // Left handle
+                    if (widget.isEditMode && !hasSubs)
+                      Positioned(
+                        left: -6,
+                        top: 0,
+                        bottom: 0,
+                        width: 16,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.resizeLeftRight,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onHorizontalDragUpdate: (details) {
+                              final msDelta = (details.primaryDelta ?? 0) / timelineWidth * totalMs;
+                              final newStart = (action.startMs + msDelta).clamp(0.0, action.endMs - 100);
+
+                              _seekToMs(newStart);
+
+                              widget.onActionUpdated?.call(
+                                ActionModel(
+                                  id: action.id,
+                                  type: action.type,
+                                  startMs: newStart,
+                                  endMs: action.endMs,
+                                  playerBox: action.playerBox,
+                                  playerId: action.playerId,
+                                  confidence: action.confidence,
+                                  subActions: action.subActions,
+                                ),
+                              );
+                            },
+                            child: Center(
+                              child: Container(
+                                height: double.infinity,
+                                width: 4,
+                                decoration: BoxDecoration(
+                                  color: isSelected ? Colors.white : Colors.white70,
+                                  borderRadius: BorderRadius.circular(2),
+                                  boxShadow: const [
+                                    BoxShadow(color: Colors.black45, blurRadius: 1, spreadRadius: 0.5),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Right handle
+                    if (widget.isEditMode && !hasSubs)
+                      Positioned(
+                        right: -6,
+                        top: 0,
+                        bottom: 0,
+                        width: 16,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.resizeLeftRight,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onHorizontalDragUpdate: (details) {
+                              final msDelta = (details.primaryDelta ?? 0) / timelineWidth * totalMs;
+                              final newEnd = (action.endMs + msDelta).clamp(action.startMs + 100, totalMs);
+
+                              _seekToMs(newEnd);
+
+                              widget.onActionUpdated?.call(
+                                ActionModel(
+                                  id: action.id,
+                                  type: action.type,
+                                  startMs: action.startMs,
+                                  endMs: newEnd,
+                                  playerBox: action.playerBox,
+                                  playerId: action.playerId,
+                                  confidence: action.confidence,
+                                  subActions: action.subActions,
+                                ),
+                              );
+                            },
+                            child: Center(
+                              child: Container(
+                                height: double.infinity,
+                                width: 4,
+                                decoration: BoxDecoration(
+                                  color: isSelected ? Colors.white : Colors.white70,
+                                  borderRadius: BorderRadius.circular(2),
+                                  boxShadow: const [
+                                    BoxShadow(color: Colors.black45, blurRadius: 1, spreadRadius: 0.5),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
       }
     }
 
-    // Podgląd zaznaczanego zakresu (podczas drag)
+    // Preview of selected range (during drag)
     if (_isDraggingRange &&
         _rangeStartMs != null &&
         _rangeEndMs != null &&
         _totalDuration.inMilliseconds > 0) {
-      final lo = _rangeStartMs!.clamp(0.0, totalMs);
-      final hi = _rangeEndMs!.clamp(0.0, totalMs);
-      final left = (lo / totalMs * timelineWidth).clamp(0.0, timelineWidth);
-      final right = (hi / totalMs * timelineWidth).clamp(0.0, timelineWidth);
+      final lo = _rangeStartMs!.clamp(timelineMinMs, timelineMaxMs);
+      final hi = _rangeEndMs!.clamp(timelineMinMs, timelineMaxMs);
+      final left = ((lo - timelineMinMs) / timelineDurationMs * timelineWidth).clamp(0.0, timelineWidth);
+      final right = ((hi - timelineMinMs) / timelineDurationMs * timelineWidth).clamp(0.0, timelineWidth);
       final selLeft = left < right ? left : right;
       final selWidth = (left - right).abs().clamp(1.0, timelineWidth);
 
@@ -931,7 +1127,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         ),
       );
 
-      // Linia pionowa — lewy uchwyt
       markers.add(
         Positioned(
           left: selLeft,
@@ -942,7 +1137,6 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         ),
       );
 
-      // Linia pionowa — prawy uchwyt
       markers.add(
         Positioned(
           left: selLeft + selWidth - 2,
@@ -966,7 +1160,30 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         final pos = snapshot.data ?? Duration.zero;
         final total = _totalDuration;
         final totalMs = total.inMilliseconds.toDouble();
-        final progress = totalMs > 0 ? pos.inMilliseconds / totalMs : 0.0;
+
+        // Find active parent
+        ActionModel? activeParent;
+        if (widget.selectedAction != null) {
+          final idx = widget.actions.indexWhere((a) => a.id == widget.selectedAction!.id);
+          if (idx != -1) {
+            activeParent = widget.actions[idx];
+          } else {
+            for (final a in widget.actions) {
+              if (a.subActions.any((s) => s.id == widget.selectedAction!.id)) {
+                activeParent = a;
+                break;
+              }
+            }
+          }
+        }
+
+        final double timelineMinMs = activeParent != null ? activeParent.startMs : 0.0;
+        final double timelineMaxMs = activeParent != null ? activeParent.endMs : totalMs;
+        final double timelineDurationMs = timelineMaxMs - timelineMinMs;
+
+        final progress = timelineDurationMs > 0
+            ? (pos.inMilliseconds - timelineMinMs) / timelineDurationMs
+            : 0.0;
 
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -997,9 +1214,11 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                           const SizedBox(width: 4),
                           Text(
                             _rangeStartMs != null && _rangeEndMs != null
-                                ? '${_fmtMs(_rangeStartMs!.clamp(0.0, totalMs))} → '
-                                      '${_fmtMs(_rangeEndMs!.clamp(0.0, totalMs))}'
-                                : 'Przeciągnij aby dodać akcję',
+                                ? '${_fmtMs(_rangeStartMs!.clamp(timelineMinMs, timelineMaxMs))} → '
+                                      '${_fmtMs(_rangeEndMs!.clamp(timelineMinMs, timelineMaxMs))}'
+                                : (activeParent != null
+                                    ? 'Przeciągnij w zakresie akcji nadrzędnej aby dodać pod-akcję'
+                                    : 'Przeciągnij aby dodać akcję'),
                             style: const TextStyle(
                               color: Colors.purpleAccent,
                               fontSize: 11,
@@ -1010,6 +1229,32 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                       ),
                     Row(
                       children: [
+                        if (activeParent != null) ...[
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            icon: const Icon(
+                              Icons.zoom_out_map,
+                              color: Colors.purpleAccent,
+                              size: 12,
+                            ),
+                            label: const Text(
+                              'Pełna oś czasu',
+                              style: TextStyle(
+                                color: Colors.purpleAccent,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onPressed: () {
+                              widget.onActionSelected?.call(null);
+                            },
+                          ),
+                          const SizedBox(width: 12),
+                        ],
                         if (_zoomLevel > 1.0)
                           Text(
                             'Zoom: ${_zoomLevel.toStringAsFixed(1)}x',
@@ -1086,7 +1331,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                               final rel =
                                   (details.localPosition.dx / timelineWidth)
                                       .clamp(0.0, 1.0);
-                              _seekToMs(rel * totalMs);
+                              _seekToMs(timelineMinMs + rel * timelineDurationMs);
                             },
                       // ── Tap bez edit: seek ─────────────────────────────────
                       onTapUp: widget.isEditMode
@@ -1095,15 +1340,15 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                               final rel =
                                   (details.localPosition.dx / timelineWidth)
                                       .clamp(0.0, 1.0);
-                              _seekToMs(rel * totalMs);
+                              _seekToMs(timelineMinMs + rel * timelineDurationMs);
                             },
                       // ── Drag w edit: zaznaczenie zakresu ──────────────────
                       onPanStart: widget.isEditMode
                           ? (details) {
-                              final ms =
+                              final rel =
                                   (details.localPosition.dx / timelineWidth)
-                                      .clamp(0.0, 1.0) *
-                                  totalMs;
+                                      .clamp(0.0, 1.0);
+                              final ms = timelineMinMs + rel * timelineDurationMs;
                               setState(() {
                                 _rangeStartMs = ms;
                                 _rangeEndMs = ms;
@@ -1114,10 +1359,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                           : null,
                       onPanUpdate: widget.isEditMode
                           ? (details) {
-                              final ms =
+                              final rel =
                                   (details.localPosition.dx / timelineWidth)
-                                      .clamp(0.0, 1.0) *
-                                  totalMs;
+                                      .clamp(0.0, 1.0);
+                              final ms = timelineMinMs + rel * timelineDurationMs;
                               setState(() => _rangeEndMs = ms);
                               _seekToMs(ms);
                             }
@@ -1132,7 +1377,13 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                                 _rangeEndMs = null;
                               });
                               if (start != null && end != null) {
-                                await _confirmNewAction(start, end);
+                                final clampedStart = start.clamp(timelineMinMs, timelineMaxMs);
+                                final clampedEnd = end.clamp(timelineMinMs, timelineMaxMs);
+                                if (activeParent != null) {
+                                  await _confirmNewSubAction(activeParent, clampedStart, clampedEnd);
+                                } else {
+                                  await _confirmNewAction(clampedStart, clampedEnd);
+                                }
                               }
                             }
                           : null,
