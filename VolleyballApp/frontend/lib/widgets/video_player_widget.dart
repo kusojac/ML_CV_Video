@@ -662,8 +662,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                   onHorizontalDragUpdate: widget.isEditMode
                       ? (details) {
                           final msDelta = (details.primaryDelta ?? 0) / timelineWidth * totalMs;
-                          final newStart = (sub.startMs + msDelta).clamp(0.0, totalMs);
-                          final newEnd = (sub.endMs + msDelta).clamp(newStart, totalMs);
+                          final subDuration = sub.endMs - sub.startMs;
+                          final newStart = (sub.startMs + msDelta).clamp(action.startMs, action.endMs - subDuration);
+                          final newEnd = newStart + subDuration;
 
                           final updatedSub = ActionModel(
                             id: sub.id,
@@ -681,22 +682,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                             return s.id == sub.id ? updatedSub : s;
                           }).toList();
 
-                          // Przeliczamy zakres nadrzędny
-                          double minStart = newSubs.first.startMs;
-                          double maxEnd = newSubs.first.endMs;
-                          for (final s in newSubs) {
-                            if (s.startMs < minStart) minStart = s.startMs;
-                            if (s.endMs > maxEnd) maxEnd = s.endMs;
-                          }
-
                           _seekToMs(newStart);
 
                           widget.onActionUpdated?.call(
                             ActionModel(
                               id: action.id,
                               type: action.type,
-                              startMs: minStart,
-                              endMs: maxEnd,
+                              startMs: action.startMs,
+                              endMs: action.endMs,
                               playerBox: action.playerBox,
                               playerId: action.playerId,
                               confidence: action.confidence,
@@ -772,7 +765,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                                     timelineWidth *
                                     totalMs;
                                 final newStart = (sub.startMs + msDelta).clamp(
-                                  0.0,
+                                  action.startMs,
                                   sub.endMs - 100,
                                 );
 
@@ -791,21 +784,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                                   return s.id == sub.id ? updatedSub : s;
                                 }).toList();
 
-                                double minStart = newSubs.first.startMs;
-                                double maxEnd = newSubs.first.endMs;
-                                for (final s in newSubs) {
-                                  if (s.startMs < minStart) minStart = s.startMs;
-                                  if (s.endMs > maxEnd) maxEnd = s.endMs;
-                                }
-
                                 _seekToMs(newStart);
 
                                 widget.onActionUpdated?.call(
                                   ActionModel(
                                     id: action.id,
                                     type: action.type,
-                                    startMs: minStart,
-                                    endMs: maxEnd,
+                                    startMs: action.startMs,
+                                    endMs: action.endMs,
                                     playerBox: action.playerBox,
                                     playerId: action.playerId,
                                     confidence: action.confidence,
@@ -852,7 +838,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                                     totalMs;
                                 final newEnd = (sub.endMs + msDelta).clamp(
                                   sub.startMs + 100,
-                                  totalMs,
+                                  action.endMs,
                                 );
 
                                 final updatedSub = ActionModel(
@@ -870,21 +856,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                                   return s.id == sub.id ? updatedSub : s;
                                 }).toList();
 
-                                double minStart = newSubs.first.startMs;
-                                double maxEnd = newSubs.first.endMs;
-                                for (final s in newSubs) {
-                                  if (s.startMs < minStart) minStart = s.startMs;
-                                  if (s.endMs > maxEnd) maxEnd = s.endMs;
-                                }
-
                                 _seekToMs(newEnd);
 
                                 widget.onActionUpdated?.call(
                                   ActionModel(
                                     id: action.id,
                                     type: action.type,
-                                    startMs: minStart,
-                                    endMs: maxEnd,
+                                    startMs: action.startMs,
+                                    endMs: action.endMs,
                                     playerBox: action.playerBox,
                                     playerId: action.playerId,
                                     confidence: action.confidence,

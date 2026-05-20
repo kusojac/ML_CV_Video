@@ -930,24 +930,6 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                           if (subIdx != -1) {
                                             setState(() {
                                               _actions[i].subActions[subIdx] = action;
-                                              
-                                              final newSubs = _actions[i].subActions;
-                                              double minStart = newSubs.first.startMs;
-                                              double maxEnd = newSubs.first.endMs;
-                                              for (final s in newSubs) {
-                                                if (s.startMs < minStart) minStart = s.startMs;
-                                                if (s.endMs > maxEnd) maxEnd = s.endMs;
-                                              }
-                                              _actions[i] = ActionModel(
-                                                id: _actions[i].id,
-                                                type: _actions[i].type,
-                                                startMs: minStart,
-                                                endMs: maxEnd,
-                                                playerBox: _actions[i].playerBox,
-                                                playerId: _actions[i].playerId,
-                                                confidence: _actions[i].confidence,
-                                                subActions: newSubs,
-                                              );
 
                                               if (_selectedAction?.id == action.id) {
                                                 _selectedAction = action;

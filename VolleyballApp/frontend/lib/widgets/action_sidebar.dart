@@ -122,6 +122,25 @@ class _ActionSidebarState extends State<ActionSidebar> {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedAction?.id != oldWidget.selectedAction?.id &&
         widget.selectedAction != null) {
+      ActionModel? matchingParent;
+      for (final a in widget.actions) {
+        if (a.id == widget.selectedAction!.id) {
+          matchingParent = a;
+          break;
+        }
+        if (a.subActions.any((s) => s.id == widget.selectedAction!.id)) {
+          matchingParent = a;
+          break;
+        }
+      }
+
+      if (matchingParent != null) {
+        _filterType = matchingParent.type;
+        if (_filterPlayer != 'All' && matchingParent.playerId != _filterPlayer) {
+          _filterPlayer = 'All';
+        }
+      }
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final key = _itemKeys[widget.selectedAction!.id];
@@ -1266,29 +1285,26 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 final startSec = double.tryParse(startController.text) ?? initialStartSec;
                 final endSec = double.tryParse(endController.text) ?? initialEndSec;
 
+                final subStartMs = (startSec * 1000.0).clamp(parent.startMs, parent.endMs);
+                final subEndMs = (endSec * 1000.0).clamp(subStartMs, parent.endMs);
+
                 final sub = ActionModel(
                   id: 'sub_${DateTime.now().millisecondsSinceEpoch}',
                   type: type,
-                  startMs: startSec * 1000.0,
-                  endMs: endSec * 1000.0,
+                  startMs: subStartMs,
+                  endMs: subEndMs,
                   playerBox: [0.0, 0.0, 0.0, 0.0],
                   playerId: player,
                   confidence: 1.0,
                 );
 
                 final newSubs = List<ActionModel>.from(parent.subActions)..add(sub);
-                double minStart = newSubs.first.startMs;
-                double maxEnd = newSubs.first.endMs;
-                for (final s in newSubs) {
-                  if (s.startMs < minStart) minStart = s.startMs;
-                  if (s.endMs > maxEnd) maxEnd = s.endMs;
-                }
 
                 final updatedParent = ActionModel(
                   id: parent.id,
                   type: parent.type,
-                  startMs: minStart,
-                  endMs: maxEnd,
+                  startMs: parent.startMs,
+                  endMs: parent.endMs,
                   playerBox: parent.playerBox,
                   playerId: parent.playerId,
                   confidence: parent.confidence,
@@ -1409,11 +1425,14 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 final startSec = double.tryParse(startController.text) ?? (sub.startMs / 1000.0);
                 final endSec = double.tryParse(endController.text) ?? (sub.endMs / 1000.0);
 
+                final subStartMs = (startSec * 1000.0).clamp(parent.startMs, parent.endMs);
+                final subEndMs = (endSec * 1000.0).clamp(subStartMs, parent.endMs);
+
                 final updatedSub = ActionModel(
                   id: sub.id,
                   type: type,
-                  startMs: startSec * 1000.0,
-                  endMs: endSec * 1000.0,
+                  startMs: subStartMs,
+                  endMs: subEndMs,
                   playerBox: sub.playerBox,
                   playerId: player,
                   confidence: sub.confidence,
@@ -1426,18 +1445,11 @@ class _ActionSidebarState extends State<ActionSidebar> {
                   newSubs[idx] = updatedSub;
                 }
 
-                double minStart = newSubs.first.startMs;
-                double maxEnd = newSubs.first.endMs;
-                for (final s in newSubs) {
-                  if (s.startMs < minStart) minStart = s.startMs;
-                  if (s.endMs > maxEnd) maxEnd = s.endMs;
-                }
-
                 final updatedParent = ActionModel(
                   id: parent.id,
                   type: parent.type,
-                  startMs: minStart,
-                  endMs: maxEnd,
+                  startMs: parent.startMs,
+                  endMs: parent.endMs,
                   playerBox: parent.playerBox,
                   playerId: parent.playerId,
                   confidence: parent.confidence,
@@ -1473,22 +1485,11 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 final newSubs = List<ActionModel>.from(parent.subActions)
                   ..removeWhere((s) => s.id == sub.id);
 
-                double minStart = parent.startMs;
-                double maxEnd = parent.endMs;
-                if (newSubs.isNotEmpty) {
-                  minStart = newSubs.first.startMs;
-                  maxEnd = newSubs.first.endMs;
-                  for (final s in newSubs) {
-                    if (s.startMs < minStart) minStart = s.startMs;
-                    if (s.endMs > maxEnd) maxEnd = s.endMs;
-                  }
-                }
-
                 final updatedParent = ActionModel(
                   id: parent.id,
                   type: parent.type,
-                  startMs: minStart,
-                  endMs: maxEnd,
+                  startMs: parent.startMs,
+                  endMs: parent.endMs,
                   playerBox: parent.playerBox,
                   playerId: parent.playerId,
                   confidence: parent.confidence,
