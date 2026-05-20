@@ -1276,8 +1276,24 @@ class _ActionSidebarState extends State<ActionSidebar> {
                   confidence: 1.0,
                 );
 
-                final updatedParent = parent;
-                updatedParent.subActions = List.from(parent.subActions)..add(sub);
+                final newSubs = List<ActionModel>.from(parent.subActions)..add(sub);
+                double minStart = newSubs.first.startMs;
+                double maxEnd = newSubs.first.endMs;
+                for (final s in newSubs) {
+                  if (s.startMs < minStart) minStart = s.startMs;
+                  if (s.endMs > maxEnd) maxEnd = s.endMs;
+                }
+
+                final updatedParent = ActionModel(
+                  id: parent.id,
+                  type: parent.type,
+                  startMs: minStart,
+                  endMs: maxEnd,
+                  playerBox: parent.playerBox,
+                  playerId: parent.playerId,
+                  confidence: parent.confidence,
+                  subActions: newSubs,
+                );
 
                 widget.onActionUpdated(updatedParent);
                 Navigator.pop(context);
@@ -1404,11 +1420,29 @@ class _ActionSidebarState extends State<ActionSidebar> {
                   subActions: sub.subActions,
                 );
 
-                final updatedParent = parent;
-                final idx = parent.subActions.indexWhere((s) => s.id == sub.id);
+                final newSubs = List<ActionModel>.from(parent.subActions);
+                final idx = newSubs.indexWhere((s) => s.id == sub.id);
                 if (idx != -1) {
-                  updatedParent.subActions = List.from(parent.subActions)..[idx] = updatedSub;
+                  newSubs[idx] = updatedSub;
                 }
+
+                double minStart = newSubs.first.startMs;
+                double maxEnd = newSubs.first.endMs;
+                for (final s in newSubs) {
+                  if (s.startMs < minStart) minStart = s.startMs;
+                  if (s.endMs > maxEnd) maxEnd = s.endMs;
+                }
+
+                final updatedParent = ActionModel(
+                  id: parent.id,
+                  type: parent.type,
+                  startMs: minStart,
+                  endMs: maxEnd,
+                  playerBox: parent.playerBox,
+                  playerId: parent.playerId,
+                  confidence: parent.confidence,
+                  subActions: newSubs,
+                );
 
                 widget.onActionUpdated(updatedParent);
                 Navigator.pop(context);
@@ -1436,8 +1470,30 @@ class _ActionSidebarState extends State<ActionSidebar> {
             ),
             TextButton(
               onPressed: () {
-                final updatedParent = parent;
-                updatedParent.subActions = List.from(parent.subActions)..removeWhere((s) => s.id == sub.id);
+                final newSubs = List<ActionModel>.from(parent.subActions)
+                  ..removeWhere((s) => s.id == sub.id);
+
+                double minStart = parent.startMs;
+                double maxEnd = parent.endMs;
+                if (newSubs.isNotEmpty) {
+                  minStart = newSubs.first.startMs;
+                  maxEnd = newSubs.first.endMs;
+                  for (final s in newSubs) {
+                    if (s.startMs < minStart) minStart = s.startMs;
+                    if (s.endMs > maxEnd) maxEnd = s.endMs;
+                  }
+                }
+
+                final updatedParent = ActionModel(
+                  id: parent.id,
+                  type: parent.type,
+                  startMs: minStart,
+                  endMs: maxEnd,
+                  playerBox: parent.playerBox,
+                  playerId: parent.playerId,
+                  confidence: parent.confidence,
+                  subActions: newSubs,
+                );
                 widget.onActionUpdated(updatedParent);
                 Navigator.pop(context);
               },
