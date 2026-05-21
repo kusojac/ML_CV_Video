@@ -71,6 +71,7 @@ class AnalyticsService {
   }
 
   Future<void> updateAction(String videoPath, ActionModel action) async {
+    final actionJson = action.toJson();
     final response = await _client.post(
       Uri.parse('$baseUrl/update_action'),
       headers: {'Content-Type': 'application/json'},
@@ -80,7 +81,11 @@ class AnalyticsService {
         'new_type': action.type,
         'new_start_ms': action.startMs,
         'new_end_ms': action.endMs,
-        'new_sub_actions': action.subActions.map((e) => e.toJson()).toList(),
+        'new_sub_actions': actionJson['sub_actions'],
+        'new_player_box': actionJson['player_box'],
+        'new_player_id': actionJson['player_id'],
+        'new_player_focuses': actionJson['player_focuses'],
+        'new_active_focus_id': actionJson['active_focus_id'],
       }),
     );
     if (response.statusCode != 200) {

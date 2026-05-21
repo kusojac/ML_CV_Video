@@ -554,19 +554,25 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         playerId: 'Unknown',
         confidence: 1.0,
       );
-      final updatedParent = ActionModel(
-        id: parent.id,
-        type: parent.type,
-        startMs: parent.startMs,
-        endMs: parent.endMs,
-        playerBox: parent.playerBox,
-        playerId: parent.playerId,
-        confidence: parent.confidence,
+      final updatedParent = parent.copyWith(
         subActions: List<ActionModel>.from(parent.subActions)..add(newSub),
       );
       widget.onActionUpdated?.call(updatedParent);
       widget.onActionSelected?.call(newSub);
     }
+  }
+
+  ActionModel _updateActiveFocusBox(ActionModel action, List<double> newBox) {
+    final updatedFocuses = action.playerFocuses.map((f) {
+      if (f.id == action.activeFocusId) {
+        return f.copyWith(playerBox: newBox);
+      }
+      return f;
+    }).toList();
+    return action.copyWith(
+      playerFocuses: updatedFocuses,
+      playerBox: newBox,
+    );
   }
 
   String _fmtMs(double ms) {
@@ -711,15 +717,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         final newStart = (sub.startMs + msDelta).clamp(parent.startMs, parent.endMs - subDuration);
                         final newEnd = newStart + subDuration;
 
-                        final updatedSub = ActionModel(
-                          id: sub.id,
-                          type: sub.type,
+                        final updatedSub = sub.copyWith(
                           startMs: newStart,
                           endMs: newEnd,
-                          playerBox: sub.playerBox,
-                          playerId: sub.playerId,
-                          confidence: sub.confidence,
-                          subActions: sub.subActions,
                         );
 
                         final List<ActionModel> newSubs = parent.subActions.map((s) {
@@ -729,14 +729,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         _seekToMs(newStart);
 
                         widget.onActionUpdated?.call(
-                          ActionModel(
-                            id: parent.id,
-                            type: parent.type,
-                            startMs: parent.startMs,
-                            endMs: parent.endMs,
-                            playerBox: parent.playerBox,
-                            playerId: parent.playerId,
-                            confidence: parent.confidence,
+                          parent.copyWith(
                             subActions: newSubs,
                           ),
                         );
@@ -793,15 +786,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                               final msDelta = (details.primaryDelta ?? 0) / timelineWidth * timelineDurationMs;
                               final newStart = (sub.startMs + msDelta).clamp(parent.startMs, sub.endMs - 100);
 
-                              final updatedSub = ActionModel(
-                                id: sub.id,
-                                type: sub.type,
+                              final updatedSub = sub.copyWith(
                                 startMs: newStart,
-                                endMs: sub.endMs,
-                                playerBox: sub.playerBox,
-                                playerId: sub.playerId,
-                                confidence: sub.confidence,
-                                subActions: sub.subActions,
                               );
 
                               final List<ActionModel> newSubs = parent.subActions.map((s) {
@@ -811,14 +797,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                               _seekToMs(newStart);
 
                               widget.onActionUpdated?.call(
-                                ActionModel(
-                                  id: parent.id,
-                                  type: parent.type,
-                                  startMs: parent.startMs,
-                                  endMs: parent.endMs,
-                                  playerBox: parent.playerBox,
-                                  playerId: parent.playerId,
-                                  confidence: parent.confidence,
+                                parent.copyWith(
                                   subActions: newSubs,
                                 ),
                               );
@@ -854,15 +833,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                               final msDelta = (details.primaryDelta ?? 0) / timelineWidth * timelineDurationMs;
                               final newEnd = (sub.endMs + msDelta).clamp(sub.startMs + 100, parent.endMs);
 
-                              final updatedSub = ActionModel(
-                                id: sub.id,
-                                type: sub.type,
-                                startMs: sub.startMs,
+                              final updatedSub = sub.copyWith(
                                 endMs: newEnd,
-                                playerBox: sub.playerBox,
-                                playerId: sub.playerId,
-                                confidence: sub.confidence,
-                                subActions: sub.subActions,
                               );
 
                               final List<ActionModel> newSubs = parent.subActions.map((s) {
@@ -872,14 +844,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                               _seekToMs(newEnd);
 
                               widget.onActionUpdated?.call(
-                                ActionModel(
-                                  id: parent.id,
-                                  type: parent.type,
-                                  startMs: parent.startMs,
-                                  endMs: parent.endMs,
-                                  playerBox: parent.playerBox,
-                                  playerId: parent.playerId,
-                                  confidence: parent.confidence,
+                                parent.copyWith(
                                   subActions: newSubs,
                                 ),
                               );
@@ -942,15 +907,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         _seekToMs(newStart);
 
                         widget.onActionUpdated?.call(
-                          ActionModel(
-                            id: action.id,
-                            type: action.type,
+                          action.copyWith(
                             startMs: newStart,
                             endMs: newEnd,
-                            playerBox: action.playerBox,
-                            playerId: action.playerId,
-                            confidence: action.confidence,
-                            subActions: action.subActions,
                           ),
                         );
                       }
@@ -1016,15 +975,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                               _seekToMs(newStart);
 
                               widget.onActionUpdated?.call(
-                                ActionModel(
-                                  id: action.id,
-                                  type: action.type,
+                                action.copyWith(
                                   startMs: newStart,
-                                  endMs: action.endMs,
-                                  playerBox: action.playerBox,
-                                  playerId: action.playerId,
-                                  confidence: action.confidence,
-                                  subActions: action.subActions,
                                 ),
                               );
                             },
@@ -1062,15 +1014,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                               _seekToMs(newEnd);
 
                               widget.onActionUpdated?.call(
-                                ActionModel(
-                                  id: action.id,
-                                  type: action.type,
-                                  startMs: action.startMs,
+                                action.copyWith(
                                   endMs: newEnd,
-                                  playerBox: action.playerBox,
-                                  playerId: action.playerId,
-                                  confidence: action.confidence,
-                                  subActions: action.subActions,
                                 ),
                               );
                             },
@@ -1462,16 +1407,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
           onTap: () {
             // Czyszczenie fokusu po kliknięciu
             widget.onActionUpdated?.call(
-              ActionModel(
-                id: widget.selectedAction!.id,
-                type: widget.selectedAction!.type,
-                startMs: widget.selectedAction!.startMs,
-                endMs: widget.selectedAction!.endMs,
-                playerBox: [0.0, 0.0, 0.0, 0.0],
-                playerId: widget.selectedAction!.playerId,
-                confidence: widget.selectedAction!.confidence,
-                subActions: widget.selectedAction!.subActions,
-              ),
+              _updateActiveFocusBox(widget.selectedAction!, [0.0, 0.0, 0.0, 0.0]),
             );
           },
           onPanStart: (d) => setState(() {
@@ -1487,20 +1423,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
               final y2 = _dragCurrent!.dy / size.height * videoH;
               if ((x2 - x1).abs() > 10 && (y2 - y1).abs() > 10) {
                 widget.onActionUpdated?.call(
-                  ActionModel(
-                    id: widget.selectedAction!.id,
-                    type: widget.selectedAction!.type,
-                    startMs: widget.selectedAction!.startMs,
-                    endMs: widget.selectedAction!.endMs,
-                    playerBox: [
+                  _updateActiveFocusBox(
+                    widget.selectedAction!,
+                    [
                       x1 < x2 ? x1 : x2,
                       y1 < y2 ? y1 : y2,
                       x1 > x2 ? x1 : x2,
                       y1 > y2 ? y1 : y2,
                     ],
-                    playerId: widget.selectedAction!.playerId,
-                    confidence: widget.selectedAction!.confidence,
-                    subActions: widget.selectedAction!.subActions,
                   ),
                 );
               }
@@ -1530,215 +1460,191 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
               ),
             ),
           )
-        else if (widget.selectedAction != null &&
-            widget.selectedAction!.playerBox.length == 4 &&
-            widget.selectedAction!.playerBox.any((v) => v != 0.0))
-          Positioned(
-            left: widget.selectedAction!.playerBox[0] / videoW * size.width,
-            top: widget.selectedAction!.playerBox[1] / videoH * size.height,
-            width:
-                ((widget.selectedAction!.playerBox[2] -
-                            widget.selectedAction!.playerBox[0]) /
-                        videoW *
-                        size.width)
-                    .abs(),
-            height:
-                ((widget.selectedAction!.playerBox[3] -
-                            widget.selectedAction!.playerBox[1]) /
-                        videoH *
-                        size.height)
-                    .abs(),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.greenAccent, width: 2),
-                    color: Colors.greenAccent.withAlpha(51),
-                  ),
-                  child: const Align(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: EdgeInsets.all(2.0),
-                      child: Text(
-                        'Fokus',
-                        style: TextStyle(
-                          color: Colors.greenAccent,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          backgroundColor: Colors.black54,
+        else if (widget.selectedAction != null)
+          ...widget.selectedAction!.playerFocuses.map((focus) {
+            final isActive = focus.id == widget.selectedAction!.activeFocusId;
+            final box = focus.playerBox;
+            if (box.length != 4 || box.every((v) => v == 0.0)) {
+              return const SizedBox.shrink();
+            }
+
+            final left = box[0] / videoW * size.width;
+            final top = box[1] / videoH * size.height;
+            final width = ((box[2] - box[0]) / videoW * size.width).abs();
+            final height = ((box[3] - box[1]) / videoH * size.height).abs();
+
+            return Positioned(
+              left: left,
+              top: top,
+              width: width,
+              height: height,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: isActive ? Colors.greenAccent : Colors.white24,
+                        width: isActive ? 2 : 1.5,
+                      ),
+                      color: isActive
+                          ? Colors.greenAccent.withAlpha(51)
+                          : Colors.white.withAlpha(15),
+                    ),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        color: Colors.black54,
+                        child: Text(
+                          focus.name,
+                          style: TextStyle(
+                            color: isActive ? Colors.greenAccent : Colors.white60,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                // Lewy górny róg
-                Positioned(
-                  left: -8,
-                  top: -8,
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.resizeUpLeftDownRight,
-                    child: GestureDetector(
-                      onPanUpdate: (d) {
-                        final dx = d.delta.dx / size.width * videoW;
-                        final dy = d.delta.dy / size.height * videoH;
-                        final b = widget.selectedAction!.playerBox;
-                        widget.onActionUpdated?.call(
-                          ActionModel(
-                            id: widget.selectedAction!.id,
-                            type: widget.selectedAction!.type,
-                            startMs: widget.selectedAction!.startMs,
-                            endMs: widget.selectedAction!.endMs,
-                            playerBox: [
+                  if (isActive) ...[
+                    // Lewy górny róg
+                    Positioned(
+                      left: -8,
+                      top: -8,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.resizeUpLeftDownRight,
+                        child: GestureDetector(
+                          onPanUpdate: (d) {
+                            final dx = d.delta.dx / size.width * videoW;
+                            final dy = d.delta.dy / size.height * videoH;
+                            final b = focus.playerBox;
+                            final newBox = [
                               (b[0] + dx).clamp(0.0, b[2] - 10.0),
                               (b[1] + dy).clamp(0.0, b[3] - 10.0),
                               b[2],
                               b[3],
-                            ],
-                            playerId: widget.selectedAction!.playerId,
-                            confidence: widget.selectedAction!.confidence,
-                            subActions: widget.selectedAction!.subActions,
+                            ];
+                            widget.onActionUpdated?.call(
+                              _updateActiveFocusBox(widget.selectedAction!, newBox),
+                            );
+                          },
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: Colors.greenAccent,
+                              border: Border.all(color: Colors.black),
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        );
-                      },
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.greenAccent,
-                          border: Border.all(color: Colors.black),
-                          shape: BoxShape.circle,
                         ),
                       ),
                     ),
-                  ),
-                ),
-                // Prawy górny róg
-                Positioned(
-                  right: -8,
-                  top: -8,
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.resizeUpRightDownLeft,
-                    child: GestureDetector(
-                      onPanUpdate: (d) {
-                        final dx = d.delta.dx / size.width * videoW;
-                        final dy = d.delta.dy / size.height * videoH;
-                        final b = widget.selectedAction!.playerBox;
-                        widget.onActionUpdated?.call(
-                          ActionModel(
-                            id: widget.selectedAction!.id,
-                            type: widget.selectedAction!.type,
-                            startMs: widget.selectedAction!.startMs,
-                            endMs: widget.selectedAction!.endMs,
-                            playerBox: [
+                    // Prawy górny róg
+                    Positioned(
+                      right: -8,
+                      top: -8,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.resizeUpRightDownLeft,
+                        child: GestureDetector(
+                          onPanUpdate: (d) {
+                            final dx = d.delta.dx / size.width * videoW;
+                            final dy = d.delta.dy / size.height * videoH;
+                            final b = focus.playerBox;
+                            final newBox = [
                               b[0],
                               (b[1] + dy).clamp(0.0, b[3] - 10.0),
                               (b[2] + dx).clamp(b[0] + 10.0, videoW),
                               b[3],
-                            ],
-                            playerId: widget.selectedAction!.playerId,
-                            confidence: widget.selectedAction!.confidence,
-                            subActions: widget.selectedAction!.subActions,
+                            ];
+                            widget.onActionUpdated?.call(
+                              _updateActiveFocusBox(widget.selectedAction!, newBox),
+                            );
+                          },
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: Colors.greenAccent,
+                              border: Border.all(color: Colors.black),
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        );
-                      },
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.greenAccent,
-                          border: Border.all(color: Colors.black),
-                          shape: BoxShape.circle,
                         ),
                       ),
                     ),
-                  ),
-                ),
-                // Lewy dolny róg
-                Positioned(
-                  left: -8,
-                  bottom: -8,
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.resizeUpRightDownLeft,
-                    child: GestureDetector(
-                      onPanUpdate: (d) {
-                        final dx = d.delta.dx / size.width * videoW;
-                        final dy = d.delta.dy / size.height * videoH;
-                        final b = widget.selectedAction!.playerBox;
-                        widget.onActionUpdated?.call(
-                          ActionModel(
-                            id: widget.selectedAction!.id,
-                            type: widget.selectedAction!.type,
-                            startMs: widget.selectedAction!.startMs,
-                            endMs: widget.selectedAction!.endMs,
-                            playerBox: [
+                    // Lewy dolny róg
+                    Positioned(
+                      left: -8,
+                      bottom: -8,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.resizeUpRightDownLeft,
+                        child: GestureDetector(
+                          onPanUpdate: (d) {
+                            final dx = d.delta.dx / size.width * videoW;
+                            final dy = d.delta.dy / size.height * videoH;
+                            final b = focus.playerBox;
+                            final newBox = [
                               (b[0] + dx).clamp(0.0, b[2] - 10.0),
                               b[1],
                               b[2],
                               (b[3] + dy).clamp(b[1] + 10.0, videoH),
-                            ],
-                            playerId: widget.selectedAction!.playerId,
-                            confidence: widget.selectedAction!.confidence,
-                            subActions: widget.selectedAction!.subActions,
+                            ];
+                            widget.onActionUpdated?.call(
+                              _updateActiveFocusBox(widget.selectedAction!, newBox),
+                            );
+                          },
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: Colors.greenAccent,
+                              border: Border.all(color: Colors.black),
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        );
-                      },
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.greenAccent,
-                          border: Border.all(color: Colors.black),
-                          shape: BoxShape.circle,
                         ),
                       ),
                     ),
-                  ),
-                ),
-                // Prawy dolny róg
-                Positioned(
-                  right: -8,
-                  bottom: -8,
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.resizeUpLeftDownRight,
-                    child: GestureDetector(
-                      onPanUpdate: (d) {
-                        final dx = d.delta.dx / size.width * videoW;
-                        final dy = d.delta.dy / size.height * videoH;
-                        final b = widget.selectedAction!.playerBox;
-                        widget.onActionUpdated?.call(
-                          ActionModel(
-                            id: widget.selectedAction!.id,
-                            type: widget.selectedAction!.type,
-                            startMs: widget.selectedAction!.startMs,
-                            endMs: widget.selectedAction!.endMs,
-                            playerBox: [
+                    // Prawy dolny róg
+                    Positioned(
+                      right: -8,
+                      bottom: -8,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.resizeUpLeftDownRight,
+                        child: GestureDetector(
+                          onPanUpdate: (d) {
+                            final dx = d.delta.dx / size.width * videoW;
+                            final dy = d.delta.dy / size.height * videoH;
+                            final b = focus.playerBox;
+                            final newBox = [
                               b[0],
                               b[1],
                               (b[2] + dx).clamp(b[0] + 10.0, videoW),
                               (b[3] + dy).clamp(b[1] + 10.0, videoH),
-                            ],
-                            playerId: widget.selectedAction!.playerId,
-                            confidence: widget.selectedAction!.confidence,
-                            subActions: widget.selectedAction!.subActions,
+                            ];
+                            widget.onActionUpdated?.call(
+                              _updateActiveFocusBox(widget.selectedAction!, newBox),
+                            );
+                          },
+                          child: Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: Colors.greenAccent,
+                              border: Border.all(color: Colors.black),
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        );
-                      },
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: BoxDecoration(
-                          color: Colors.greenAccent,
-                          border: Border.all(color: Colors.black),
-                          shape: BoxShape.circle,
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+                  ],
+                ],
+              ),
+            );
+          }),
       ],
     );
   }
