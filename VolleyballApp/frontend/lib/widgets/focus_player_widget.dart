@@ -4,18 +4,20 @@ import '../models/action_model.dart';
 
 class FocusPlayerWidget extends StatefulWidget {
   final VideoController controller;
-  final ActionModel action;
+  final PlayerFocusModel focus;
   final Duration mainPosition;
   final VoidCallback? onResetFocus;
   final bool isUpdatingFocus;
+  final bool isActive;
 
   const FocusPlayerWidget({
     super.key,
     required this.controller,
-    required this.action,
+    required this.focus,
     required this.mainPosition,
     this.onResetFocus,
     this.isUpdatingFocus = false,
+    this.isActive = false,
   });
 
   @override
@@ -86,15 +88,15 @@ class _FocusPlayerWidgetState extends State<FocusPlayerWidget> {
     }
 
     // playerBox is [x_min, y_min, x_max, y_max].
-    if (widget.action.playerBox.length != 4) return const SizedBox.shrink();
+    if (widget.focus.playerBox.length != 4) return const SizedBox.shrink();
 
     final vw = _videoSize.width;
     final vh = _videoSize.height;
 
-    final bxMin = widget.action.playerBox[0];
-    final byMin = widget.action.playerBox[1];
-    final bxMax = widget.action.playerBox[2];
-    final byMax = widget.action.playerBox[3];
+    final bxMin = widget.focus.playerBox[0];
+    final byMin = widget.focus.playerBox[1];
+    final bxMax = widget.focus.playerBox[2];
+    final byMax = widget.focus.playerBox[3];
 
     // Bounding box size
     final bw = (bxMax - bxMin).clamp(1.0, vw);
@@ -112,15 +114,15 @@ class _FocusPlayerWidgetState extends State<FocusPlayerWidget> {
               border: Border.all(
                 color: widget.isUpdatingFocus
                     ? Colors.amberAccent
-                    : Colors.purpleAccent,
-                width: widget.isUpdatingFocus ? 3 : 2,
+                    : (widget.isActive ? Colors.purpleAccent : Colors.blueGrey),
+                width: widget.isUpdatingFocus || widget.isActive ? 3 : 1.5,
               ),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Colors.black54,
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
+                  color: widget.isActive ? Colors.black54 : Colors.black26,
+                  blurRadius: widget.isActive ? 10 : 5,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -174,7 +176,9 @@ class _FocusPlayerWidgetState extends State<FocusPlayerWidget> {
                           decoration: BoxDecoration(
                             color: widget.isUpdatingFocus
                                 ? Colors.amber.withAlpha(200)
-                                : Colors.black.withAlpha(180),
+                                : (widget.isActive
+                                    ? Colors.purple.withAlpha(200)
+                                    : Colors.black.withAlpha(180)),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Row(
@@ -188,10 +192,8 @@ class _FocusPlayerWidgetState extends State<FocusPlayerWidget> {
                               const SizedBox(width: 4),
                               Text(
                                 widget.isUpdatingFocus
-                                    ? 'Edycja obszaru...'
-                                    : (widget.action.playerId == 'Unknown'
-                                          ? 'Player Focus'
-                                          : 'Player ${widget.action.playerId}'),
+                                    ? 'Edycja: ${widget.focus.name}...'
+                                    : '${widget.focus.name} (ID: ${widget.focus.playerId})',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
