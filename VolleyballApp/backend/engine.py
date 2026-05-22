@@ -139,20 +139,23 @@ class VolleyballAnalyticsEngine:
             coco_outs = self.session_coco.run([self.output_name_coco], {self.input_name_coco: yolo_input})
             coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_output(coco_outs[0], original_shape, conf_threshold=0.5)
             
-            person_boxes = [coco_boxes[i] for i, cid in enumerate(coco_class_ids) if cid == 0]
+            # ⚡ Bolt Optimization: Use vectorized boolean indexing instead of list comprehension
+            person_boxes = coco_boxes[coco_class_ids == 0]
             
             if len(person_boxes) > 0:
                 ball_box_index = np.argmax(ball_scores)
                 ball_box = ball_boxes[ball_box_index]
                 detected_ball_box = ball_box
 
-                # Find closest person to the best ball prediction
-                min_dist = float('inf')
-                for pbox in person_boxes:
-                    dist = get_distance_person_ball_np(pbox, ball_box)
-                    if dist < min_dist:
-                        min_dist = dist
-                        closest_person_box = pbox
+                # ⚡ Bolt Optimization: Vectorized distance calculation
+                person_centers_x = (person_boxes[:, 0] + person_boxes[:, 2]) / 2.0
+                person_centers_y = (person_boxes[:, 1] + person_boxes[:, 3]) / 2.0
+                ball_center_x = (ball_box[0] + ball_box[2]) / 2.0
+                ball_center_y = (ball_box[1] + ball_box[3]) / 2.0
+
+                dists_sq = (person_centers_x - ball_center_x) ** 2 + (person_centers_y - ball_center_y) ** 2
+                closest_idx = np.argmin(dists_sq)
+                closest_person_box = person_boxes[closest_idx]
         return closest_person_box, detected_ball_box
 
     def _classify_action(self, closest_person_box, ball_box, frame_rgb, original_shape):
