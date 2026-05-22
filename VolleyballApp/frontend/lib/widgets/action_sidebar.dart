@@ -1133,6 +1133,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.play_arrow, size: 16, color: Colors.white70),
+                    tooltip: 'Odtwórz pod-akcję',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () => widget.onActionSelected(sub),
@@ -1141,6 +1142,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                     const SizedBox(width: 8),
                     IconButton(
                       icon: const Icon(Icons.edit, size: 14, color: Colors.white30),
+                      tooltip: 'Edytuj pod-akcję',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       onPressed: () => _showEditSubActionDialog(context, parentAction, sub),
@@ -1148,6 +1150,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                     const SizedBox(width: 8),
                     IconButton(
                       icon: const Icon(Icons.delete, size: 14, color: Colors.redAccent),
+                      tooltip: 'Usuń pod-akcję',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       onPressed: () => _deleteSubAction(context, parentAction, sub),
@@ -1757,6 +1760,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                       if (widget.isEditMode) ...[
                         IconButton(
                           icon: const Icon(Icons.edit, size: 14, color: Colors.white30),
+                          tooltip: 'Edytuj obszar śledzenia',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () => _editPlayerFocus(context, selectedAction, focus, parentAction: parentAction),
@@ -1770,6 +1774,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                 ? Colors.redAccent.withValues(alpha: 0.7)
                                 : Colors.white12,
                           ),
+                          tooltip: 'Usuń obszar śledzenia',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: selectedAction.playerFocuses.length > 1
