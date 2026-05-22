@@ -29,6 +29,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    return response
+
 # In-memory job state (In production, replace with DB/Redis)
 analysis_jobs: Dict[str, Dict[str, Any]] = {}
 
@@ -55,6 +64,10 @@ class UpdateActionRequest(BaseModel):
     new_start_ms: float
     new_end_ms: float
     new_sub_actions: Optional[List[Dict[str, Any]]] = None
+    new_player_box: Optional[List[float]] = None
+    new_player_id: Optional[str] = None
+    new_player_focuses: Optional[List[Dict[str, Any]]] = None
+    new_active_focus_id: Optional[str] = None
 
 def secure_path(file_path: str) -> str:
     """Validates that the given path does not contain directory traversal characters."""
@@ -248,6 +261,14 @@ def update_action(req: UpdateActionRequest):
         action["end_ms"] = req.new_end_ms
         if req.new_sub_actions is not None:
             action["sub_actions"] = req.new_sub_actions
+        if req.new_player_box is not None:
+            action["player_box"] = req.new_player_box
+        if req.new_player_id is not None:
+            action["player_id"] = req.new_player_id
+        if req.new_player_focuses is not None:
+            action["player_focuses"] = req.new_player_focuses
+        if req.new_active_focus_id is not None:
+            action["active_focus_id"] = req.new_active_focus_id
 
         # Write updated data back to disk
         with open(json_path, 'w') as f:

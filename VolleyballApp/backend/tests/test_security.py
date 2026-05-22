@@ -38,3 +38,11 @@ def test_results_dos():
     long_path = "a" * 5000
     response = client.get(f"/results?video_path={long_path}")
     assert response.status_code == 422 # Unprocessable Entity
+
+def test_security_headers():
+    response = client.get("/ping")
+    assert response.status_code == 200
+    assert response.headers.get("X-Content-Type-Options") == "nosniff"
+    assert response.headers.get("X-Frame-Options") == "DENY"
+    assert response.headers.get("Strict-Transport-Security") == "max-age=31536000; includeSubDomains"
+    assert response.headers.get("X-XSS-Protection") == "1; mode=block"

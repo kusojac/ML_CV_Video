@@ -344,7 +344,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ProjectDetailsScreen(project: project),
+                          builder: (context) =>
+                              ProjectDetailsScreen(project: project),
                         ),
                       ).then((_) => _filterProjects());
                     },
@@ -352,24 +353,53 @@ class _HomeScreenState extends State<HomeScreen> {
                     onProjectDelete: _deleteProject,
                   )
                 : _filteredProjects.isEmpty
-                    ? const Center(
-                        child: Text('Brak projektów. Dodaj nowy projekt.'),
-                      )
-                    : GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate:
-                            const SliverGridDelegateWithMaxCrossAxisExtent(
-                              maxCrossAxisExtent: 400,
-                              childAspectRatio: 0.8,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.folder_open,
+                          size: 64,
+                          color: Colors.white30,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Brak projektów. Dodaj nowy projekt.',
+                          style: TextStyle(color: Colors.white54, fontSize: 16),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton.icon(
+                          onPressed: _showAddProjectDialog,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Nowy Projekt'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
                             ),
-                        itemCount: _filteredProjects.length,
-                        itemBuilder: (context, index) {
-                          final project = _filteredProjects[index];
-                          return _buildProjectTile(project);
-                        },
-                      ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 400,
+                          childAspectRatio: 0.8,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                    itemCount: _filteredProjects.length,
+                    itemBuilder: (context, index) {
+                      final project = _filteredProjects[index];
+                      return _buildProjectTile(project);
+                    },
+                  ),
           ),
         ],
       ),
