@@ -139,7 +139,7 @@ class VolleyballAnalyticsEngine:
             coco_outs = self.session_coco.run([self.output_name_coco], {self.input_name_coco: yolo_input})
             coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_output(coco_outs[0], original_shape, conf_threshold=0.5)
             
-            # ⚡ Bolt Optimization: Use vectorized boolean indexing instead of list comprehension
+            # ⚡ Bolt Optimization: Use numpy boolean indexing instead of list comprehension
             person_boxes = coco_boxes[coco_class_ids == 0]
             
             if len(person_boxes) > 0:
@@ -147,7 +147,7 @@ class VolleyballAnalyticsEngine:
                 ball_box = ball_boxes[ball_box_index]
                 detected_ball_box = ball_box
 
-                # ⚡ Bolt Optimization: Vectorized distance calculation
+                # ⚡ Bolt Optimization: Vectorize distance calculation to avoid python loop
                 person_centers_x = (person_boxes[:, 0] + person_boxes[:, 2]) / 2.0
                 person_centers_y = (person_boxes[:, 1] + person_boxes[:, 3]) / 2.0
                 ball_center_x = (ball_box[0] + ball_box[2]) / 2.0

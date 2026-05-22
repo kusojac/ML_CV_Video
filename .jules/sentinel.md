@@ -72,3 +72,7 @@
 **Learning:** When loading machine learning models from disk, especially in an environment where the model files might be externally supplied or altered, using format-specific binary loaders like `onnxruntime` or safer serialization like `joblib` (with `safe_load=True` if applicable) should always be preferred over Python's built-in `pickle`.
 
 **Prevention:** Avoid `pickle.load` for external or untrusted data. Standardize on secure model representation formats like ONNX, which separates the model architecture and weights from general-purpose execution context, eliminating the code execution risk inherent to unpickling.
+## 2026-05-21 - Add Defense-in-Depth HTTP Security Headers
+**Vulnerability:** The application was missing basic standard HTTP security headers across its responses.
+**Learning:** Default framework configurations (like bare FastAPI) do not typically add fundamental security headers automatically. Relying solely on CORS middleware leaves gaps in defense-in-depth protection for other common browser-based attack vectors.
+**Prevention:** Implement a global HTTP middleware that automatically injects fundamental security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security`, and `X-XSS-Protection`) to enforce defense-in-depth across all endpoints.
