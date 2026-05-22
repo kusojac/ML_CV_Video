@@ -82,3 +82,7 @@
 **Vulnerability:** The FastAPI backend lacked basic HTTP security headers (like X-Content-Type-Options, X-Frame-Options, Strict-Transport-Security, and X-XSS-Protection).
 **Learning:** Relying solely on CORS is insufficient for defense-in-depth against client-side attacks (e.g. MIME sniffing, clickjacking).
 **Prevention:** Implement an `@app.middleware("http")` to unconditionally inject standard security headers into all API responses.
+## 2026-05-21 - Add Defense-in-Depth HTTP Security Headers
+**Vulnerability:** The application was missing basic standard HTTP security headers across its responses.
+**Learning:** Default framework configurations (like bare FastAPI) do not typically add fundamental security headers automatically. Relying solely on CORS middleware leaves gaps in defense-in-depth protection for other common browser-based attack vectors.
+**Prevention:** Implement a global HTTP middleware that automatically injects fundamental security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security`, and `X-XSS-Protection`) to enforce defense-in-depth across all endpoints.
