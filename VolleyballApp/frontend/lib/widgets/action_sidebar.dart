@@ -1156,6 +1156,67 @@ class _ActionSidebarState extends State<ActionSidebar> {
                     ],
                   ),
                   _buildKeyPointsList(context, sub, parentAction: parentAction),
+              child: Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: subColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => widget.onActionSelected(sub),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            sub.type.toUpperCase(),
+                            style: TextStyle(
+                              color: subColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            'Player: ${sub.playerId} • $subTimestamp',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.play_arrow, size: 16, color: Colors.white70),
+                    tooltip: 'Odtwórz pod-akcję',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => widget.onActionSelected(sub),
+                  ),
+                  if (widget.isEditMode) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.edit, size: 14, color: Colors.white30),
+                      tooltip: 'Edytuj pod-akcję',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () => _showEditSubActionDialog(context, parentAction, sub),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.delete, size: 14, color: Colors.redAccent),
+                      tooltip: 'Usuń pod-akcję',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () => _deleteSubAction(context, parentAction, sub),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -2194,6 +2255,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                       if (widget.isEditMode) ...[
                         IconButton(
                           icon: const Icon(Icons.edit, size: 14, color: Colors.white30),
+                          tooltip: 'Edytuj obszar śledzenia',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () => _editPlayerFocus(context, selectedAction, focus, parentAction: parentAction),
@@ -2207,6 +2269,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                 ? Colors.redAccent.withValues(alpha: 0.7)
                                 : Colors.white12,
                           ),
+                          tooltip: 'Usuń obszar śledzenia',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: selectedAction.playerFocuses.length > 1
