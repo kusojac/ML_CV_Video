@@ -331,6 +331,12 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         _actions[parentIdx] = action;
         if (_selectedAction?.id == action.id) {
           _selectedAction = action;
+        } else if (_selectedAction != null) {
+          // If a sub-action of this parent is currently selected, update it to keep the UI in sync
+          final subIdx = action.subActions.indexWhere((sub) => sub.id == _selectedAction!.id);
+          if (subIdx != -1) {
+            _selectedAction = action.subActions[subIdx];
+          }
         }
         _hasUnsavedChanges = true;
       });
