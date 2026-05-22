@@ -72,3 +72,13 @@
 **Learning:** When loading machine learning models from disk, especially in an environment where the model files might be externally supplied or altered, using format-specific binary loaders like `onnxruntime` or safer serialization like `joblib` (with `safe_load=True` if applicable) should always be preferred over Python's built-in `pickle`.
 
 **Prevention:** Avoid `pickle.load` for external or untrusted data. Standardize on secure model representation formats like ONNX, which separates the model architecture and weights from general-purpose execution context, eliminating the code execution risk inherent to unpickling.
+
+## 2026-05-22 - Add Security Headers Middleware
+**Vulnerability:** The FastAPI backend lacked basic HTTP security headers (like X-Content-Type-Options, X-Frame-Options, Strict-Transport-Security, and X-XSS-Protection).
+**Learning:** Relying solely on CORS is insufficient for defense-in-depth against client-side attacks (e.g. MIME sniffing, clickjacking).
+**Prevention:** Implement an  to unconditionally inject standard security headers into all API responses.
+
+## 2026-05-22 - Add Security Headers Middleware
+**Vulnerability:** The FastAPI backend lacked basic HTTP security headers (like X-Content-Type-Options, X-Frame-Options, Strict-Transport-Security, and X-XSS-Protection).
+**Learning:** Relying solely on CORS is insufficient for defense-in-depth against client-side attacks (e.g. MIME sniffing, clickjacking).
+**Prevention:** Implement an `@app.middleware("http")` to unconditionally inject standard security headers into all API responses.
