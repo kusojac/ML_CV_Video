@@ -76,10 +76,31 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     }).toList();
   }
 
-  // Pozycja okienka PIP (Player Focus)
-  double _focusPlayerTop = 16.0;
-  double _focusPlayerRight = 16.0;
-  double _focusPlayerWidth = 200.0;
+  // Pozycja okienek PIP (Player Focus) dla poszczególnych focus ID
+  final Map<String, double> _focusPlayerTops = {};
+  final Map<String, double> _focusPlayerRights = {};
+  final Map<String, double> _focusPlayerWidths = {};
+
+  double _getFocusPlayerTop(String focusId, int index) {
+    if (!_focusPlayerTops.containsKey(focusId)) {
+      _focusPlayerTops[focusId] = 16.0 + (index * 190.0);
+    }
+    return _focusPlayerTops[focusId]!;
+  }
+
+  double _getFocusPlayerRight(String focusId) {
+    if (!_focusPlayerRights.containsKey(focusId)) {
+      _focusPlayerRights[focusId] = 16.0;
+    }
+    return _focusPlayerRights[focusId]!;
+  }
+
+  double _getFocusPlayerWidth(String focusId) {
+    if (!_focusPlayerWidths.containsKey(focusId)) {
+      _focusPlayerWidths[focusId] = 200.0;
+    }
+    return _focusPlayerWidths[focusId]!;
+  }
 
   bool _isUpdatingFocus = false;
 
@@ -294,6 +315,59 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       _videoController!.player.seek(
         Duration(milliseconds: action.startMs.round()),
       );
+    }
+  }
+
+  Future<void> _handleActionUpdated(ActionModel action, {bool updateBackend = false}) async {
+    // Determine if it is a parent action or a sub-action
+    int parentIdx = _actions.indexWhere((a) => a.id == action.id);
+    ActionModel? parentToUpdate;
+
+    if (parentIdx != -1) {
+      // It is a parent action
+      setState(() {
+        _actions[parentIdx] = action;
+        if (_selectedAction?.id == action.id) {
+          _selectedAction = action;
+        }
+        _hasUnsavedChanges = true;
+      });
+      parentToUpdate = action;
+    } else {
+      // It is a sub-action, find its parent
+      for (int i = 0; i < _actions.length; i++) {
+        final subIdx = _actions[i].subActions.indexWhere((sub) => sub.id == action.id);
+        if (subIdx != -1) {
+          setState(() {
+            _actions[i].subActions[subIdx] = action;
+            if (_selectedAction?.id == action.id) {
+              _selectedAction = action;
+            }
+            _hasUnsavedChanges = true;
+          });
+          parentToUpdate = _actions[i];
+          break;
+        }
+      }
+    }
+
+    setState(() {
+      _isUpdatingFocus = false;
+    });
+
+    if (updateBackend && parentToUpdate != null) {
+      try {
+        await _analyticsService.updateAction(
+          widget.videoPath,
+          parentToUpdate,
+        );
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to sync update with server: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -909,41 +983,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                       });
                                     },
                                     onActionSelected: _onActionSelected,
-                                    onActionUpdated: (action) {
-                                      final idx = _actions.indexWhere(
-                                        (a) => a.id == action.id,
-                                      );
-                                      if (idx != -1) {
-                                        setState(() {
-                                          _actions[idx] = action;
-                                          if (_selectedAction?.id ==
-                                              action.id) {
-                                            _selectedAction = action;
-                                          }
-                                          _hasUnsavedChanges = true;
-                                        });
-                                      } else {
-                                        for (int i = 0; i < _actions.length; i++) {
-                                          final subIdx = _actions[i]
-                                              .subActions
-                                              .indexWhere((sub) => sub.id == action.id);
-                                          if (subIdx != -1) {
-                                            setState(() {
-                                              _actions[i].subActions[subIdx] = action;
-
-                                              if (_selectedAction?.id == action.id) {
-                                                _selectedAction = action;
-                                              }
-                                              _hasUnsavedChanges = true;
-                                            });
-                                            break;
-                                          }
-                                        }
-                                      }
-                                      setState(() {
-                                        _isUpdatingFocus = false;
-                                      });
-                                    },
+                                    onActionUpdated: _handleActionUpdated,
                                     onActionAdded: (action) {
                                       setState(() {
                                         _actions.add(action);
@@ -1009,79 +1049,90 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                         ),
                         // Focus mode picture-in-picture
                         if (_selectedAction != null)
-                          Positioned(
-                            top: _focusPlayerTop,
-                            right: _focusPlayerRight,
-                            width: _focusPlayerWidth,
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                MouseRegion(
-                                  cursor: SystemMouseCursors.move,
-                                  child: GestureDetector(
-                                    onPanUpdate: (details) {
-                                      setState(() {
-                                        _focusPlayerTop += details.delta.dy;
-                                        _focusPlayerRight -= details.delta.dx;
-                                      });
-                                    },
-                                    child: FocusPlayerWidget(
-                                      controller: _videoController!,
-                                      action: _selectedAction!,
-                                      mainPosition: _currentPosition,
-                                      isUpdatingFocus: _isUpdatingFocus,
-                                      onResetFocus: _isEditMode
-                                          ? () {
-                                              // Start updating focus mode instead of resetting action to 0
-                                              setState(() {
-                                                _isUpdatingFocus = true;
-                                              });
-                                            }
-                                          : null,
-                                    ),
-                                  ),
-                                ),
-                                // Uchwyt do zmiany rozmiaru (lewy dolny róg)
-                                Positioned(
-                                  bottom: -10,
-                                  left: -10,
-                                  child: MouseRegion(
-                                    cursor: SystemMouseCursors
-                                        .resizeUpRightDownLeft,
+                          ..._selectedAction!.playerFocuses.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final focus = entry.value;
+                            final focusId = focus.id;
+                            final isFocusActive = focusId == _selectedAction!.activeFocusId;
+                            
+                            final top = _getFocusPlayerTop(focusId, index);
+                            final right = _getFocusPlayerRight(focusId);
+                            final width = _getFocusPlayerWidth(focusId);
+
+                            return Positioned(
+                              top: top,
+                              right: right,
+                              width: width,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  MouseRegion(
+                                    cursor: SystemMouseCursors.move,
                                     child: GestureDetector(
                                       onPanUpdate: (details) {
                                         setState(() {
-                                          // delta.dx ujemna => ruch w lewo => szerokość rośnie
-                                          _focusPlayerWidth =
-                                              (_focusPlayerWidth -
-                                                      details.delta.dx)
-                                                  .clamp(100.0, 800.0);
+                                          _focusPlayerTops[focusId] = top + details.delta.dy;
+                                          _focusPlayerRights[focusId] = right - details.delta.dx;
                                         });
                                       },
-                                      child: Container(
-                                        padding: const EdgeInsets.all(4),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.purpleAccent,
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black54,
-                                              blurRadius: 4,
-                                            ),
-                                          ],
-                                        ),
-                                        child: const Icon(
-                                          Icons.open_in_full,
-                                          size: 16,
-                                          color: Colors.white,
+                                      child: FocusPlayerWidget(
+                                        controller: _videoController!,
+                                        focus: focus,
+                                        isActive: isFocusActive,
+                                        mainPosition: _currentPosition,
+                                        isUpdatingFocus: _isUpdatingFocus && isFocusActive,
+                                        onResetFocus: _isEditMode && isFocusActive
+                                            ? () {
+                                                // Start updating focus mode instead of resetting action to 0
+                                                setState(() {
+                                                  _isUpdatingFocus = true;
+                                                });
+                                              }
+                                            : null,
+                                      ),
+                                    ),
+                                  ),
+                                  // Uchwyt do zmiany rozmiaru (lewy dolny róg)
+                                  Positioned(
+                                    bottom: -10,
+                                    left: -10,
+                                    child: MouseRegion(
+                                      cursor: SystemMouseCursors
+                                          .resizeUpRightDownLeft,
+                                      child: GestureDetector(
+                                        onPanUpdate: (details) {
+                                          setState(() {
+                                            // delta.dx ujemna => ruch w lewo => szerokość rośnie
+                                            _focusPlayerWidths[focusId] =
+                                                (width - details.delta.dx)
+                                                    .clamp(100.0, 800.0);
+                                          });
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: isFocusActive ? Colors.purpleAccent : Colors.grey,
+                                            shape: BoxShape.circle,
+                                            boxShadow: const [
+                                              BoxShadow(
+                                                color: Colors.black54,
+                                                blurRadius: 4,
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Icon(
+                                            Icons.open_in_full,
+                                            size: 16,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
+                                ],
+                              ),
+                            );
+                          }),
                       ],
                     ),
                   ),
@@ -1158,27 +1209,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                 setState(() => _isEditMode = val);
               },
               onActionSelected: _onActionSelected,
-              onActionUpdated: (updatedAction) async {
-                try {
-                  await _analyticsService.updateAction(
-                    widget.videoPath,
-                    updatedAction,
-                  );
-                  final idx = _actions.indexWhere(
-                    (a) => a.id == updatedAction.id,
-                  );
-                  if (idx != -1) {
-                    setState(() {
-                      _actions[idx] = updatedAction;
-                    });
-                  }
-                } catch (e) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(this.context).showSnackBar(
-                    SnackBar(content: Text('Failed to update: $e')),
-                  );
-                }
-              },
+              onActionUpdated: (updatedAction) => _handleActionUpdated(updatedAction, updateBackend: true),
             ),
           ),
         ],
