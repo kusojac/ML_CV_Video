@@ -46,6 +46,54 @@ class PlayerFocusModel {
   }
 }
 
+class ActionKeyPointModel {
+  final String id;
+  final String description;
+  final double timeMs;
+  final List<double> playerBox; // [x_min, y_min, x_max, y_max]
+
+  ActionKeyPointModel({
+    required this.id,
+    required this.description,
+    required this.timeMs,
+    required this.playerBox,
+  });
+
+  factory ActionKeyPointModel.fromJson(Map<String, dynamic> json) {
+    return ActionKeyPointModel(
+      id: json['id'] as String,
+      description: json['description'] as String,
+      timeMs: (json['time_ms'] as num).toDouble(),
+      playerBox: (json['player_box'] as List)
+          .map((e) => (e as num).toDouble())
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'description': description,
+      'time_ms': timeMs,
+      'player_box': playerBox,
+    };
+  }
+
+  ActionKeyPointModel copyWith({
+    String? id,
+    String? description,
+    double? timeMs,
+    List<double>? playerBox,
+  }) {
+    return ActionKeyPointModel(
+      id: id ?? this.id,
+      description: description ?? this.description,
+      timeMs: timeMs ?? this.timeMs,
+      playerBox: playerBox ?? List<double>.from(this.playerBox),
+    );
+  }
+}
+
 class ActionModel {
   String id;
   String type;
@@ -55,6 +103,7 @@ class ActionModel {
   String playerId;
   double confidence;
   List<ActionModel> subActions;
+  List<ActionKeyPointModel> keyPoints;
 
   List<PlayerFocusModel> playerFocuses;
   String? activeFocusId;
@@ -68,9 +117,11 @@ class ActionModel {
     required this.playerId,
     required this.confidence,
     List<ActionModel>? subActions,
+    List<ActionKeyPointModel>? keyPoints,
     List<PlayerFocusModel>? playerFocuses,
     this.activeFocusId,
   })  : subActions = subActions ?? [],
+        keyPoints = keyPoints ?? [],
         playerFocuses = playerFocuses ?? [] {
     // If playerFocuses is empty, generate a default one using playerBox and playerId
     if (this.playerFocuses.isEmpty) {
@@ -98,6 +149,13 @@ class ActionModel {
             .toList()
         : [];
 
+    final keyPointsJson = json['key_points'] as List?;
+    final List<ActionKeyPointModel> kPoints = keyPointsJson != null
+        ? keyPointsJson
+            .map((e) => ActionKeyPointModel.fromJson(e as Map<String, dynamic>))
+            .toList()
+        : [];
+
     final playerFocusesJson = json['player_focuses'] as List?;
     final List<PlayerFocusModel> focuses = playerFocusesJson != null
         ? playerFocusesJson
@@ -118,6 +176,7 @@ class ActionModel {
       playerId: json['player_id'] ?? 'Unknown',
       confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
       subActions: subs,
+      keyPoints: kPoints,
       playerFocuses: focuses,
       activeFocusId: activeFocusId,
     );
@@ -142,6 +201,7 @@ class ActionModel {
       'player_id': playerId,
       'confidence': confidence,
       'sub_actions': subActions.map((e) => e.toJson()).toList(),
+      'key_points': keyPoints.map((e) => e.toJson()).toList(),
       'player_focuses': playerFocuses.map((e) => e.toJson()).toList(),
       'active_focus_id': activeFocusId,
     };
@@ -156,6 +216,7 @@ class ActionModel {
     String? playerId,
     double? confidence,
     List<ActionModel>? subActions,
+    List<ActionKeyPointModel>? keyPoints,
     List<PlayerFocusModel>? playerFocuses,
     String? activeFocusId,
   }) {
@@ -168,6 +229,7 @@ class ActionModel {
       playerId: playerId ?? this.playerId,
       confidence: confidence ?? this.confidence,
       subActions: subActions ?? this.subActions.map((e) => e.copyWith()).toList(),
+      keyPoints: keyPoints ?? this.keyPoints.map((e) => e.copyWith()).toList(),
       playerFocuses: playerFocuses ?? this.playerFocuses.map((e) => e.copyWith()).toList(),
       activeFocusId: activeFocusId ?? this.activeFocusId,
     );

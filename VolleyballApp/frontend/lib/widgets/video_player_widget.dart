@@ -46,6 +46,9 @@ class VideoPlayerWidget extends StatefulWidget {
   final ValueChanged<ActionModel?>? onActionSelected;
   final List<ActionModel>? playlistActions;
   final ValueChanged<ActionModel>? onActionPlaylistToggled;
+  final ActionKeyPointModel? selectedKeyPoint;
+  final ValueChanged<ActionKeyPointModel?>? onKeyPointSelected;
+  final ValueChanged<ActionKeyPointModel>? onKeyPointUpdated;
 
   const VideoPlayerWidget({
     super.key,
@@ -60,6 +63,9 @@ class VideoPlayerWidget extends StatefulWidget {
     this.onActionSelected,
     this.playlistActions,
     this.onActionPlaylistToggled,
+    this.selectedKeyPoint,
+    this.onKeyPointSelected,
+    this.onKeyPointUpdated,
   });
 
   @override
@@ -872,6 +878,78 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
           ),
         );
       }
+
+      // Render parent key points
+      for (final kp in parent.keyPoints) {
+        final kpFrac = ((kp.timeMs - timelineMinMs) / timelineDurationMs).clamp(0.0, 1.0);
+        final isSelected = widget.selectedKeyPoint?.id == kp.id;
+        markers.add(
+          Positioned(
+            left: kpFrac * timelineWidth - 8,
+            top: 2,
+            width: 16,
+            height: 16,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                _seekToMs(kp.timeMs);
+                widget.onKeyPointSelected?.call(kp);
+              },
+              onHorizontalDragUpdate: widget.isEditMode
+                  ? (details) {
+                      final msDelta = (details.primaryDelta ?? 0) / timelineWidth * timelineDurationMs;
+                      final newTime = (kp.timeMs + msDelta).clamp(parent.startMs, parent.endMs);
+                      _seekToMs(newTime);
+                      widget.onKeyPointUpdated?.call(kp.copyWith(timeMs: newTime));
+                    }
+                  : null,
+              child: Icon(
+                Icons.diamond,
+                color: Colors.amber,
+                size: isSelected ? 16 : 12,
+                shadows: const [Shadow(color: Colors.black, blurRadius: 3)],
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Render sub-action key points
+      for (final sub in parent.subActions) {
+        for (final kp in sub.keyPoints) {
+          final kpFrac = ((kp.timeMs - timelineMinMs) / timelineDurationMs).clamp(0.0, 1.0);
+          final isSelected = widget.selectedKeyPoint?.id == kp.id;
+          markers.add(
+            Positioned(
+              left: kpFrac * timelineWidth - 8,
+              top: 20,
+              width: 16,
+              height: 16,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  _seekToMs(kp.timeMs);
+                  widget.onKeyPointSelected?.call(kp);
+                },
+                onHorizontalDragUpdate: widget.isEditMode
+                    ? (details) {
+                        final msDelta = (details.primaryDelta ?? 0) / timelineWidth * timelineDurationMs;
+                        final newTime = (kp.timeMs + msDelta).clamp(sub.startMs, sub.endMs);
+                        _seekToMs(newTime);
+                        widget.onKeyPointUpdated?.call(kp.copyWith(timeMs: newTime));
+                      }
+                    : null,
+                child: Icon(
+                  Icons.diamond_outlined,
+                  color: Colors.amberAccent,
+                  size: isSelected ? 16 : 12,
+                  shadows: const [Shadow(color: Colors.black, blurRadius: 3)],
+                ),
+              ),
+            ),
+          );
+        }
+      }
     } else {
       // ──── Zoomed out mode: Draw all actions normally ────
       for (final action in widget.actions) {
@@ -1041,6 +1119,78 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             ),
           ),
         );
+      }
+
+      // Render all key points in zoomed-out mode
+      for (final action in widget.actions) {
+        for (final kp in action.keyPoints) {
+          final kpFrac = (kp.timeMs / totalMs).clamp(0.0, 1.0);
+          final isSelected = widget.selectedKeyPoint?.id == kp.id;
+          markers.add(
+            Positioned(
+              left: kpFrac * timelineWidth - 8,
+              top: 10,
+              width: 16,
+              height: 16,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  _seekToMs(kp.timeMs);
+                  widget.onKeyPointSelected?.call(kp);
+                },
+                onHorizontalDragUpdate: widget.isEditMode
+                    ? (details) {
+                        final msDelta = (details.primaryDelta ?? 0) / timelineWidth * totalMs;
+                        final newTime = (kp.timeMs + msDelta).clamp(action.startMs, action.endMs);
+                        _seekToMs(newTime);
+                        widget.onKeyPointUpdated?.call(kp.copyWith(timeMs: newTime));
+                      }
+                    : null,
+                child: Icon(
+                  Icons.diamond,
+                  color: Colors.amber,
+                  size: isSelected ? 16 : 12,
+                  shadows: const [Shadow(color: Colors.black, blurRadius: 3)],
+                ),
+              ),
+            ),
+          );
+        }
+        for (final sub in action.subActions) {
+          for (final kp in sub.keyPoints) {
+            final kpFrac = (kp.timeMs / totalMs).clamp(0.0, 1.0);
+            final isSelected = widget.selectedKeyPoint?.id == kp.id;
+            markers.add(
+              Positioned(
+                left: kpFrac * timelineWidth - 8,
+                top: 10,
+                width: 16,
+                height: 16,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    _seekToMs(kp.timeMs);
+                    widget.onKeyPointSelected?.call(kp);
+                  },
+                  onHorizontalDragUpdate: widget.isEditMode
+                      ? (details) {
+                          final msDelta = (details.primaryDelta ?? 0) / timelineWidth * totalMs;
+                          final newTime = (kp.timeMs + msDelta).clamp(sub.startMs, sub.endMs);
+                          _seekToMs(newTime);
+                          widget.onKeyPointUpdated?.call(kp.copyWith(timeMs: newTime));
+                        }
+                      : null,
+                  child: Icon(
+                    Icons.diamond_outlined,
+                    color: Colors.amberAccent,
+                    size: isSelected ? 16 : 12,
+                    shadows: const [Shadow(color: Colors.black, blurRadius: 3)],
+                  ),
+                ),
+              ),
+            );
+          }
+        }
       }
     }
 
@@ -1396,7 +1546,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     double videoW,
     double videoH,
   ) {
-    if (!widget.isEditMode || widget.selectedAction == null) {
+    if (!widget.isEditMode) {
+      return const SizedBox.shrink();
+    }
+    if (widget.selectedKeyPoint == null && widget.selectedAction == null) {
       return const SizedBox.shrink();
     }
     return Stack(
@@ -1405,10 +1558,16 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
-            // Czyszczenie fokusu po kliknięciu
-            widget.onActionUpdated?.call(
-              _updateActiveFocusBox(widget.selectedAction!, [0.0, 0.0, 0.0, 0.0]),
-            );
+            if (widget.selectedKeyPoint != null) {
+              widget.onKeyPointUpdated?.call(
+                widget.selectedKeyPoint!.copyWith(playerBox: [0.0, 0.0, 0.0, 0.0]),
+              );
+            } else if (widget.selectedAction != null) {
+              // Czyszczenie fokusu po kliknięciu
+              widget.onActionUpdated?.call(
+                _updateActiveFocusBox(widget.selectedAction!, [0.0, 0.0, 0.0, 0.0]),
+              );
+            }
           },
           onPanStart: (d) => setState(() {
             _dragStart = d.localPosition;
@@ -1422,17 +1581,24 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
               final x2 = _dragCurrent!.dx / size.width * videoW;
               final y2 = _dragCurrent!.dy / size.height * videoH;
               if ((x2 - x1).abs() > 10 && (y2 - y1).abs() > 10) {
-                widget.onActionUpdated?.call(
-                  _updateActiveFocusBox(
-                    widget.selectedAction!,
-                    [
-                      x1 < x2 ? x1 : x2,
-                      y1 < y2 ? y1 : y2,
-                      x1 > x2 ? x1 : x2,
-                      y1 > y2 ? y1 : y2,
-                    ],
-                  ),
-                );
+                final newBox = [
+                  x1 < x2 ? x1 : x2,
+                  y1 < y2 ? y1 : y2,
+                  x1 > x2 ? x1 : x2,
+                  y1 > y2 ? y1 : y2,
+                ];
+                if (widget.selectedKeyPoint != null) {
+                  widget.onKeyPointUpdated?.call(
+                    widget.selectedKeyPoint!.copyWith(playerBox: newBox),
+                  );
+                } else if (widget.selectedAction != null) {
+                  widget.onActionUpdated?.call(
+                    _updateActiveFocusBox(
+                      widget.selectedAction!,
+                      newBox,
+                    ),
+                  );
+                }
               }
             }
             setState(() {
@@ -1454,12 +1620,198 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             child: IgnorePointer(
               child: Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.redAccent, width: 2),
-                  color: Colors.redAccent.withAlpha(51),
+                  border: Border.all(
+                    color: widget.selectedKeyPoint != null ? Colors.amber : Colors.redAccent,
+                    width: 2,
+                  ),
+                  color: (widget.selectedKeyPoint != null ? Colors.amber : Colors.redAccent).withAlpha(51),
                 ),
               ),
             ),
           )
+        else if (widget.selectedKeyPoint != null) ...[
+          () {
+            final box = widget.selectedKeyPoint!.playerBox;
+            if (box.length != 4 || box.every((v) => v == 0.0)) {
+              return const SizedBox.shrink();
+            }
+
+            final left = box[0] / videoW * size.width;
+            final top = box[1] / videoH * size.height;
+            final width = ((box[2] - box[0]) / videoW * size.width).abs();
+            final height = ((box[3] - box[1]) / videoH * size.height).abs();
+
+            return Positioned(
+              left: left,
+              top: top,
+              width: width,
+              height: height,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.amber,
+                        width: 2,
+                      ),
+                      color: Colors.amber.withAlpha(51),
+                    ),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        color: Colors.black54,
+                        child: Text(
+                          widget.selectedKeyPoint!.description.isNotEmpty
+                              ? widget.selectedKeyPoint!.description
+                              : "Kluczowy punkt",
+                          style: const TextStyle(
+                            color: Colors.amber,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Lewy górny róg
+                  Positioned(
+                    left: -8,
+                    top: -8,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.resizeUpLeftDownRight,
+                      child: GestureDetector(
+                        onPanUpdate: (d) {
+                          final dx = d.delta.dx / size.width * videoW;
+                          final dy = d.delta.dy / size.height * videoH;
+                          final b = widget.selectedKeyPoint!.playerBox;
+                          final newBox = [
+                            (b[0] + dx).clamp(0.0, b[2] - 10.0),
+                            (b[1] + dy).clamp(0.0, b[3] - 10.0),
+                            b[2],
+                            b[3],
+                          ];
+                          widget.onKeyPointUpdated?.call(
+                            widget.selectedKeyPoint!.copyWith(playerBox: newBox),
+                          );
+                        },
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: Colors.amber,
+                            border: Border.all(color: Colors.black),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Prawy górny róg
+                  Positioned(
+                    right: -8,
+                    top: -8,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.resizeUpRightDownLeft,
+                      child: GestureDetector(
+                        onPanUpdate: (d) {
+                          final dx = d.delta.dx / size.width * videoW;
+                          final dy = d.delta.dy / size.height * videoH;
+                          final b = widget.selectedKeyPoint!.playerBox;
+                          final newBox = [
+                            b[0],
+                            (b[1] + dy).clamp(0.0, b[3] - 10.0),
+                            (b[2] + dx).clamp(b[0] + 10.0, videoW),
+                            b[3],
+                          ];
+                          widget.onKeyPointUpdated?.call(
+                            widget.selectedKeyPoint!.copyWith(playerBox: newBox),
+                          );
+                        },
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: Colors.amber,
+                            border: Border.all(color: Colors.black),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Lewy dolny róg
+                  Positioned(
+                    left: -8,
+                    bottom: -8,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.resizeUpRightDownLeft,
+                      child: GestureDetector(
+                        onPanUpdate: (d) {
+                          final dx = d.delta.dx / size.width * videoW;
+                          final dy = d.delta.dy / size.height * videoH;
+                          final b = widget.selectedKeyPoint!.playerBox;
+                          final newBox = [
+                            (b[0] + dx).clamp(0.0, b[2] - 10.0),
+                            b[1],
+                            b[2],
+                            (b[3] + dy).clamp(b[1] + 10.0, videoH),
+                          ];
+                          widget.onKeyPointUpdated?.call(
+                            widget.selectedKeyPoint!.copyWith(playerBox: newBox),
+                          );
+                        },
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: Colors.amber,
+                            border: Border.all(color: Colors.black),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Prawy dolny róg
+                  Positioned(
+                    right: -8,
+                    bottom: -8,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.resizeUpLeftDownRight,
+                      child: GestureDetector(
+                        onPanUpdate: (d) {
+                          final dx = d.delta.dx / size.width * videoW;
+                          final dy = d.delta.dy / size.height * videoH;
+                          final b = widget.selectedKeyPoint!.playerBox;
+                          final newBox = [
+                            b[0],
+                            b[1],
+                            (b[2] + dx).clamp(b[0] + 10.0, videoW),
+                            (b[3] + dy).clamp(b[1] + 10.0, videoH),
+                          ];
+                          widget.onKeyPointUpdated?.call(
+                            widget.selectedKeyPoint!.copyWith(playerBox: newBox),
+                          );
+                        },
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: Colors.amber,
+                            border: Border.all(color: Colors.black),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }()
+        ]
         else if (widget.selectedAction != null)
           ...widget.selectedAction!.playerFocuses.map((focus) {
             final isActive = focus.id == widget.selectedAction!.activeFocusId;

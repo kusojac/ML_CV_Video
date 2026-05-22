@@ -82,6 +82,7 @@ class AnalyticsService {
         'new_start_ms': action.startMs,
         'new_end_ms': action.endMs,
         'new_sub_actions': actionJson['sub_actions'],
+        'new_key_points': actionJson['key_points'],
         'new_player_box': actionJson['player_box'],
         'new_player_id': actionJson['player_id'],
         'new_player_focuses': actionJson['player_focuses'],

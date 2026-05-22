@@ -6,10 +6,13 @@ class ActionSidebar extends StatefulWidget {
   final Duration? currentPosition;
   final List<ActionModel> actions;
   final ActionModel? selectedAction;
+  final ActionKeyPointModel? selectedKeyPoint;
   final bool isEditMode;
   final ValueChanged<bool> onEditModeChanged;
   final ValueChanged<ActionModel> onActionSelected;
   final ValueChanged<ActionModel> onActionUpdated;
+  final ValueChanged<ActionKeyPointModel?>? onKeyPointSelected;
+  final ValueChanged<ActionKeyPointModel>? onKeyPointUpdated;
   final List<String> selectedActionTypes;
   final List<String> selectedPlayers;
   final ValueChanged<List<String>> onSelectedActionTypesChanged;
@@ -40,10 +43,13 @@ class ActionSidebar extends StatefulWidget {
     this.currentPosition,
     required this.actions,
     required this.selectedAction,
+    this.selectedKeyPoint,
     required this.isEditMode,
     required this.onEditModeChanged,
     required this.onActionSelected,
     required this.onActionUpdated,
+    this.onKeyPointSelected,
+    this.onKeyPointUpdated,
     required this.selectedActionTypes,
     required this.selectedPlayers,
     required this.onSelectedActionTypesChanged,
@@ -628,6 +634,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                         ),
 
                                         _buildSubActionsList(context, action),
+                                        _buildKeyPointsList(context, action),
                                       ],
                                     ),
                                   ),
@@ -1085,64 +1092,70 @@ class _ActionSidebarState extends State<ActionSidebar> {
                   color: isSubSelected ? Colors.purpleAccent.withValues(alpha: 0.4) : Colors.transparent,
                 ),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: subColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => widget.onActionSelected(sub),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            sub.type.toUpperCase(),
-                            style: TextStyle(
-                              color: subColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                          Text(
-                            'Player: ${sub.playerId} • $subTimestamp',
-                            style: const TextStyle(
-                              color: Colors.white54,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: subColor,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => widget.onActionSelected(sub),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                sub.type.toUpperCase(),
+                                style: TextStyle(
+                                  color: subColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              Text(
+                                'Player: ${sub.playerId} • $subTimestamp',
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.play_arrow, size: 16, color: Colors.white70),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => widget.onActionSelected(sub),
+                      ),
+                      if (widget.isEditMode) ...[
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.edit, size: 14, color: Colors.white30),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => _showEditSubActionDialog(context, parentAction, sub),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.delete, size: 14, color: Colors.redAccent),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => _deleteSubAction(context, parentAction, sub),
+                        ),
+                      ],
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.play_arrow, size: 16, color: Colors.white70),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () => widget.onActionSelected(sub),
-                  ),
-                  if (widget.isEditMode) ...[
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.edit, size: 14, color: Colors.white30),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () => _showEditSubActionDialog(context, parentAction, sub),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.delete, size: 14, color: Colors.redAccent),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () => _deleteSubAction(context, parentAction, sub),
-                    ),
-                  ],
+                  _buildKeyPointsList(context, sub, parentAction: parentAction),
                 ],
               ),
             ),
@@ -1171,6 +1184,369 @@ class _ActionSidebarState extends State<ActionSidebar> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildKeyPointsList(BuildContext context, ActionModel action, {ActionModel? parentAction}) {
+    if (action.keyPoints.isEmpty && !widget.isEditMode) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (action.keyPoints.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          ...action.keyPoints.map((kp) {
+            final isKpSelected = widget.selectedKeyPoint?.id == kp.id;
+            final kpTimeStr = Duration(milliseconds: kp.timeMs.round()).toString().split('.').first;
+
+            return Padding(
+              padding: const EdgeInsets.only(left: 12.0, bottom: 4.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isKpSelected ? Colors.amber.withAlpha(40) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: isKpSelected ? Colors.amber : Colors.transparent,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.diamond,
+                      size: 12,
+                      color: Colors.amber,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          widget.onKeyPointSelected?.call(kp);
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              kp.description.isNotEmpty ? kp.description : 'Kluczowy punkt',
+                              style: TextStyle(
+                                color: isKpSelected ? Colors.amber : Colors.white70,
+                                fontSize: 11,
+                                fontWeight: isKpSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                            Text(
+                              'Czas: $kpTimeStr',
+                              style: const TextStyle(
+                                color: Colors.white38,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.play_arrow, size: 14, color: Colors.white54),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        widget.onKeyPointSelected?.call(kp);
+                      },
+                    ),
+                    if (widget.isEditMode) ...[
+                      const SizedBox(width: 6),
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 12, color: Colors.white30),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => _showEditKeyPointDialog(context, action, kp, parentAction: parentAction),
+                      ),
+                      const SizedBox(width: 6),
+                      IconButton(
+                        icon: const Icon(Icons.delete, size: 12, color: Colors.redAccent),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => _deleteKeyPoint(context, action, kp, parentAction: parentAction),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+        if (widget.isEditMode)
+          Padding(
+            padding: const EdgeInsets.only(top: 4.0, left: 12.0),
+            child: InkWell(
+              onTap: () => _showAddKeyPointDialog(context, action, parentAction: parentAction),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add, size: 12, color: Colors.amber),
+                  SizedBox(width: 2),
+                  Text(
+                    'Dodaj kluczowy punkt',
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _showAddKeyPointDialog(BuildContext context, ActionModel action, {ActionModel? parentAction}) {
+    final actionStartSec = action.startMs / 1000.0;
+    final actionEndSec = action.endMs / 1000.0;
+
+    double initialTimeSec = actionStartSec;
+    if (widget.currentPosition != null) {
+      final curPosSec = widget.currentPosition!.inMilliseconds / 1000.0;
+      if (curPosSec >= actionStartSec && curPosSec <= actionEndSec) {
+        initialTimeSec = curPosSec;
+      }
+    }
+
+    final descController = TextEditingController();
+    final timeController = TextEditingController(text: initialTimeSec.toStringAsFixed(2));
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2A2A),
+          title: Text(
+            'Dodaj kluczowy punkt (${action.type})',
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Zakres akcji: ${actionStartSec.toStringAsFixed(2)}s - ${actionEndSec.toStringAsFixed(2)}s',
+                style: const TextStyle(color: Colors.white54, fontSize: 11),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Opis adnotacji',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: timeController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Czas (sekundy)',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+            ),
+            TextButton(
+              onPressed: () {
+                final timeVal = double.tryParse(timeController.text);
+                if (timeVal == null || timeVal < actionStartSec || timeVal > actionEndSec) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Czas musi być w przedziale ${actionStartSec.toStringAsFixed(2)}s - ${actionEndSec.toStringAsFixed(2)}s',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+                final newKp = ActionKeyPointModel(
+                  id: 'kp_${DateTime.now().millisecondsSinceEpoch}',
+                  description: descController.text,
+                  timeMs: timeVal * 1000.0,
+                  playerBox: [0.0, 0.0, 0.0, 0.0],
+                );
+
+                final updatedKeyPoints = List<ActionKeyPointModel>.from(action.keyPoints)..add(newKp);
+                final updatedAction = action.copyWith(keyPoints: updatedKeyPoints);
+
+                if (parentAction != null) {
+                  final subIdx = parentAction.subActions.indexOf(action);
+                  if (subIdx != -1) {
+                    final updatedSubActions = List<ActionModel>.from(parentAction.subActions);
+                    updatedSubActions[subIdx] = updatedAction;
+                    widget.onActionUpdated(parentAction.copyWith(subActions: updatedSubActions));
+                  }
+                } else {
+                  widget.onActionUpdated(updatedAction);
+                }
+
+                Navigator.pop(context);
+                widget.onKeyPointSelected?.call(newKp);
+              },
+              child: const Text('Dodaj', style: TextStyle(color: Colors.amber)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditKeyPointDialog(BuildContext context, ActionModel action, ActionKeyPointModel kp, {ActionModel? parentAction}) {
+    final actionStartSec = action.startMs / 1000.0;
+    final actionEndSec = action.endMs / 1000.0;
+
+    final descController = TextEditingController(text: kp.description);
+    final timeController = TextEditingController(text: (kp.timeMs / 1000.0).toStringAsFixed(2));
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A2A2A),
+          title: const Text(
+            'Edytuj kluczowy punkt',
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Zakres akcji: ${actionStartSec.toStringAsFixed(2)}s - ${actionEndSec.toStringAsFixed(2)}s',
+                style: const TextStyle(color: Colors.white54, fontSize: 11),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Opis adnotacji',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: timeController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Czas (sekundy)',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+            ),
+            TextButton(
+              onPressed: () {
+                final timeVal = double.tryParse(timeController.text);
+                if (timeVal == null || timeVal < actionStartSec || timeVal > actionEndSec) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Czas musi być w przedziale ${actionStartSec.toStringAsFixed(2)}s - ${actionEndSec.toStringAsFixed(2)}s',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                final updatedKp = kp.copyWith(
+                  description: descController.text,
+                  timeMs: timeVal * 1000.0,
+                );
+
+                final kpIdx = action.keyPoints.indexWhere((k) => k.id == kp.id);
+                if (kpIdx != -1) {
+                  final updatedKeyPoints = List<ActionKeyPointModel>.from(action.keyPoints);
+                  updatedKeyPoints[kpIdx] = updatedKp;
+                  final updatedAction = action.copyWith(keyPoints: updatedKeyPoints);
+
+                  if (parentAction != null) {
+                    final subIdx = parentAction.subActions.indexOf(action);
+                    if (subIdx != -1) {
+                      final updatedSubActions = List<ActionModel>.from(parentAction.subActions);
+                      updatedSubActions[subIdx] = updatedAction;
+                      widget.onActionUpdated(parentAction.copyWith(subActions: updatedSubActions));
+                    }
+                  } else {
+                    widget.onActionUpdated(updatedAction);
+                  }
+
+                  if (widget.selectedKeyPoint?.id == kp.id) {
+                    widget.onKeyPointSelected?.call(updatedKp);
+                  }
+                }
+
+                Navigator.pop(context);
+              },
+              child: const Text('Zapisz', style: TextStyle(color: Colors.amber)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteKeyPoint(BuildContext context, ActionModel action, ActionKeyPointModel kp, {ActionModel? parentAction}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E24),
+        title: const Text('Usuń kluczowy punkt', style: TextStyle(color: Colors.white)),
+        content: const Text('Czy na pewno chcesz usunąć ten kluczowy punkt?', style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () {
+              final updatedKeyPoints = action.keyPoints.where((k) => k.id != kp.id).toList();
+              final updatedAction = action.copyWith(keyPoints: updatedKeyPoints);
+
+              if (parentAction != null) {
+                final subIdx = parentAction.subActions.indexOf(action);
+                if (subIdx != -1) {
+                  final updatedSubActions = List<ActionModel>.from(parentAction.subActions);
+                  updatedSubActions[subIdx] = updatedAction;
+                  widget.onActionUpdated(parentAction.copyWith(subActions: updatedSubActions));
+                }
+              } else {
+                widget.onActionUpdated(updatedAction);
+              }
+
+              if (widget.selectedKeyPoint?.id == kp.id) {
+                widget.onKeyPointSelected?.call(null);
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Usuń', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
     );
   }
 

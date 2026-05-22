@@ -37,6 +37,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   String? _jobId;
   List<ActionModel> _actions = [];
   ActionModel? _selectedAction;
+  ActionKeyPointModel? _selectedKeyPoint;
   Duration _currentPosition = Duration.zero;
   VideoController? _videoController;
   // Video player is loaded only on user request (file is very large)
@@ -310,6 +311,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   void _onActionSelected(ActionModel? action) {
     setState(() {
       _selectedAction = action;
+      _selectedKeyPoint = null;
     });
     if (action != null && _videoController != null) {
       _videoController!.player.seek(
@@ -366,6 +368,60 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to sync update with server: $e')),
           );
+        }
+      }
+    }
+  }
+
+  void _handleKeyPointSelected(ActionKeyPointModel? keyPoint) {
+    setState(() {
+      _selectedKeyPoint = keyPoint;
+    });
+    if (keyPoint != null && _videoController != null) {
+      _videoController!.player.seek(
+        Duration(milliseconds: keyPoint.timeMs.round()),
+      );
+    }
+  }
+
+  Future<void> _handleKeyPointUpdated(ActionKeyPointModel keyPoint, {bool updateBackend = true}) async {
+    for (int i = 0; i < _actions.length; i++) {
+      final action = _actions[i];
+      final kpIdx = action.keyPoints.indexWhere((kp) => kp.id == keyPoint.id);
+      if (kpIdx != -1) {
+        final updatedKeyPoints = List<ActionKeyPointModel>.from(action.keyPoints);
+        updatedKeyPoints[kpIdx] = keyPoint;
+        final updatedAction = action.copyWith(keyPoints: updatedKeyPoints);
+        await _handleActionUpdated(updatedAction, updateBackend: updateBackend);
+        
+        if (_selectedKeyPoint?.id == keyPoint.id) {
+          setState(() {
+            _selectedKeyPoint = keyPoint;
+          });
+        }
+        return;
+      }
+      
+      for (int j = 0; j < action.subActions.length; j++) {
+        final sub = action.subActions[j];
+        final subKpIdx = sub.keyPoints.indexWhere((kp) => kp.id == keyPoint.id);
+        if (subKpIdx != -1) {
+          final updatedSubKeyPoints = List<ActionKeyPointModel>.from(sub.keyPoints);
+          updatedSubKeyPoints[subKpIdx] = keyPoint;
+          final updatedSub = sub.copyWith(keyPoints: updatedSubKeyPoints);
+          
+          final updatedSubActions = List<ActionModel>.from(action.subActions);
+          updatedSubActions[j] = updatedSub;
+          
+          final updatedAction = action.copyWith(subActions: updatedSubActions);
+          await _handleActionUpdated(updatedAction, updateBackend: updateBackend);
+          
+          if (_selectedKeyPoint?.id == keyPoint.id) {
+            setState(() {
+              _selectedKeyPoint = keyPoint;
+            });
+          }
+          return;
         }
       }
     }
@@ -964,6 +1020,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                     videoFile: File(widget.videoPath),
                                     actions: _filteredActions,
                                     selectedAction: _selectedAction,
+                                    selectedKeyPoint: _selectedKeyPoint,
                                     playlistActions: _playlist,
                                     isEditMode: _isEditMode,
                                     onPositionChanged: _onPositionChanged,
@@ -984,6 +1041,8 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                     },
                                     onActionSelected: _onActionSelected,
                                     onActionUpdated: _handleActionUpdated,
+                                    onKeyPointSelected: _handleKeyPointSelected,
+                                    onKeyPointUpdated: _handleKeyPointUpdated,
                                     onActionAdded: (action) {
                                       setState(() {
                                         _actions.add(action);
@@ -1151,6 +1210,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               currentPosition: _currentPosition,
               actions: _actions,
               selectedAction: _selectedAction,
+              selectedKeyPoint: _selectedKeyPoint,
               playlist: _playlist,
               isPlayingPlaylist: _isPlayingPlaylist,
               loopPlaylist: _loopPlaylist,
@@ -1210,6 +1270,8 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               },
               onActionSelected: _onActionSelected,
               onActionUpdated: (updatedAction) => _handleActionUpdated(updatedAction, updateBackend: true),
+              onKeyPointSelected: _handleKeyPointSelected,
+              onKeyPointUpdated: (updatedKeyPoint) => _handleKeyPointUpdated(updatedKeyPoint, updateBackend: true),
             ),
           ),
         ],

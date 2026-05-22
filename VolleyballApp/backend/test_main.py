@@ -129,6 +129,65 @@ def test_update_action_success():
         if os.path.exists(json_path):
             os.remove(json_path)
 
+def test_update_action_with_key_points():
+    """Test updating an action including key points successfully."""
+    import json
+
+    video_path = "test_video.mp4"
+    json_path = "test_video_analysis.json"
+    mock_data = {
+        "actions": [
+            {
+                "id": "action123",
+                "type": "serve",
+                "start_ms": 1000.0,
+                "end_ms": 2000.0,
+                "key_points": []
+            }
+        ]
+    }
+    with open(json_path, "w") as f:
+        json.dump(mock_data, f)
+
+    try:
+        key_points = [
+            {
+                "id": "kp1",
+                "description": "Zla pozycja",
+                "time_ms": 1200.0,
+                "player_box": [10.0, 20.0, 30.0, 40.0]
+            }
+        ]
+        response = client.post(
+            "/update_action",
+            json={
+                "video_path": video_path,
+                "action_id": "action123",
+                "new_type": "serve",
+                "new_start_ms": 1000.0,
+                "new_end_ms": 2000.0,
+                "new_key_points": key_points
+            }
+        )
+        assert response.status_code == 200
+        assert response.json()["status"] == "success"
+
+        # Verify that file was updated
+        with open(json_path, "r") as f:
+            updated_data = json.load(f)
+
+        updated_action = updated_data["actions"][0]
+        assert "key_points" in updated_action
+        assert len(updated_action["key_points"]) == 1
+        assert updated_action["key_points"][0]["id"] == "kp1"
+        assert updated_action["key_points"][0]["description"] == "Zla pozycja"
+        assert updated_action["key_points"][0]["time_ms"] == 1200.0
+        assert updated_action["key_points"][0]["player_box"] == [10.0, 20.0, 30.0, 40.0]
+    finally:
+        # Clean up
+        if os.path.exists(json_path):
+            os.remove(json_path)
+
 def test_update_action_not_found_file():
     """Test updating an action when analysis file is missing."""
     response = client.post(

@@ -64,6 +64,7 @@ class UpdateActionRequest(BaseModel):
     new_start_ms: float
     new_end_ms: float
     new_sub_actions: Optional[List[Dict[str, Any]]] = None
+    new_key_points: Optional[List[Dict[str, Any]]] = None
     new_player_box: Optional[List[float]] = None
     new_player_id: Optional[str] = None
     new_player_focuses: Optional[List[Dict[str, Any]]] = None
@@ -261,6 +262,8 @@ def update_action(req: UpdateActionRequest):
         action["end_ms"] = req.new_end_ms
         if req.new_sub_actions is not None:
             action["sub_actions"] = req.new_sub_actions
+        if req.new_key_points is not None:
+            action["key_points"] = req.new_key_points
         if req.new_player_box is not None:
             action["player_box"] = req.new_player_box
         if req.new_player_id is not None:
