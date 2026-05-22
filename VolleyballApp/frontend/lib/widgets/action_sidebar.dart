@@ -136,7 +136,8 @@ class _ActionSidebarState extends State<ActionSidebar> {
 
       if (matchingParent != null) {
         _filterType = matchingParent.type;
-        if (_filterPlayer != 'All' && matchingParent.playerId != _filterPlayer) {
+        if (_filterPlayer != 'All' &&
+            matchingParent.playerId != _filterPlayer) {
           _filterPlayer = 'All';
         }
       }
@@ -415,20 +416,20 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                                   if (val == true) {
                                                     widget.onPlaylistChanged
                                                         ?.call([
-                                                      ...widget.playlist!,
-                                                      action,
-                                                    ]);
+                                                          ...widget.playlist!,
+                                                          action,
+                                                        ]);
                                                   } else {
                                                     widget.onPlaylistChanged
                                                         ?.call(
-                                                      widget.playlist!
-                                                          .where(
-                                                            (a) =>
-                                                                a.id !=
-                                                                action.id,
-                                                          )
-                                                          .toList(),
-                                                    );
+                                                          widget.playlist!
+                                                              .where(
+                                                                (a) =>
+                                                                    a.id !=
+                                                                    action.id,
+                                                              )
+                                                              .toList(),
+                                                        );
                                                   }
                                                 },
                                               ),
@@ -438,9 +439,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                               decoration: BoxDecoration(
                                                 color: accentColor,
                                                 borderRadius:
-                                                    BorderRadius.circular(
-                                                  2,
-                                                ),
+                                                    BorderRadius.circular(2),
                                               ),
                                             ),
                                             const SizedBox(width: 12),
@@ -489,22 +488,21 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                                   Padding(
                                                     padding:
                                                         const EdgeInsets.only(
-                                                      top: 8.0,
-                                                    ),
+                                                          top: 8.0,
+                                                        ),
                                                     child: Row(
                                                       children: [
                                                         InkWell(
                                                           onTap: () =>
                                                               _editAction(
-                                                            context,
-                                                            action,
-                                                          ),
+                                                                context,
+                                                                action,
+                                                              ),
                                                           child: const Row(
                                                             children: [
                                                               Text(
                                                                 'EDIT',
-                                                                style:
-                                                                    TextStyle(
+                                                                style: TextStyle(
                                                                   color: Colors
                                                                       .white30,
                                                                   fontSize: 10,
@@ -531,29 +529,21 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                                         InkWell(
                                                           onTap: () async {
                                                             final bool?
-                                                            confirm =
-                                                                await showDialog<
-                                                                  bool
-                                                                >(
-                                                              context:
-                                                                  context,
-                                                              builder:
-                                                                  (context) =>
-                                                                      AlertDialog(
+                                                            confirm = await showDialog<bool>(
+                                                              context: context,
+                                                              builder: (context) => AlertDialog(
                                                                 backgroundColor:
                                                                     const Color(
                                                                       0xFF1E1E24,
                                                                     ),
-                                                                title:
-                                                                    const Text(
+                                                                title: const Text(
                                                                   'Usuń akcję',
                                                                   style: TextStyle(
                                                                     color: Colors
                                                                         .white,
                                                                   ),
                                                                 ),
-                                                                content:
-                                                                    const Text(
+                                                                content: const Text(
                                                                   'Czy na pewno chcesz usunąć tę akcję?',
                                                                   style: TextStyle(
                                                                     color: Colors
@@ -562,15 +552,12 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                                                 ),
                                                                 actions: [
                                                                   TextButton(
-                                                                    onPressed:
-                                                                        () =>
-                                                                            Navigator
-                                                                                .pop(
-                                                                              context,
-                                                                              false,
-                                                                            ),
-                                                                    child:
-                                                                        const Text(
+                                                                    onPressed: () =>
+                                                                        Navigator.pop(
+                                                                          context,
+                                                                          false,
+                                                                        ),
+                                                                    child: const Text(
                                                                       'Anuluj',
                                                                       style: TextStyle(
                                                                         color: Colors
@@ -579,15 +566,12 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                                                     ),
                                                                   ),
                                                                   TextButton(
-                                                                    onPressed:
-                                                                        () =>
-                                                                            Navigator
-                                                                                .pop(
-                                                                              context,
-                                                                              true,
-                                                                            ),
-                                                                    child:
-                                                                        const Text(
+                                                                    onPressed: () =>
+                                                                        Navigator.pop(
+                                                                          context,
+                                                                          true,
+                                                                        ),
+                                                                    child: const Text(
                                                                       'Usuń',
                                                                       style: TextStyle(
                                                                         color: Colors
@@ -614,8 +598,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                                             children: [
                                                               Text(
                                                                 'DEL',
-                                                                style:
-                                                                    TextStyle(
+                                                                style: TextStyle(
                                                                   color: Colors
                                                                       .redAccent,
                                                                   fontSize: 10,
@@ -667,7 +650,10 @@ class _ActionSidebarState extends State<ActionSidebar> {
                           children: [
                             Expanded(
                               child: DropdownButtonFormField<String>(
-                                initialValue: widget.availablePlaylists!.any((p) => p.id == widget.currentPlaylistId)
+                                initialValue:
+                                    widget.availablePlaylists!.any(
+                                      (p) => p.id == widget.currentPlaylistId,
+                                    )
                                     ? widget.currentPlaylistId
                                     : null,
                                 dropdownColor: const Color(0xFF2E2E2E),
@@ -1032,7 +1018,11 @@ class _ActionSidebarState extends State<ActionSidebar> {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.add_circle_outline, size: 14, color: Colors.blueAccent),
+                Icon(
+                  Icons.add_circle_outline,
+                  size: 14,
+                  color: Colors.blueAccent,
+                ),
                 SizedBox(width: 4),
                 Text(
                   'Dodaj pod-akcję',
@@ -1198,12 +1188,19 @@ class _ActionSidebarState extends State<ActionSidebar> {
         initialStartSec = curPosSec;
       }
     }
-    double initialEndSec = (initialStartSec + 2.0).clamp(parentStartSec, parentEndSec);
+    double initialEndSec = (initialStartSec + 2.0).clamp(
+      parentStartSec,
+      parentEndSec,
+    );
 
     final typeController = TextEditingController(text: 'RECEIVE');
     final playerController = TextEditingController();
-    final startController = TextEditingController(text: initialStartSec.toStringAsFixed(2));
-    final endController = TextEditingController(text: initialEndSec.toStringAsFixed(2));
+    final startController = TextEditingController(
+      text: initialStartSec.toStringAsFixed(2),
+    );
+    final endController = TextEditingController(
+      text: initialEndSec.toStringAsFixed(2),
+    );
 
     showDialog(
       context: context,
@@ -1258,7 +1255,9 @@ class _ActionSidebarState extends State<ActionSidebar> {
                     Expanded(
                       child: TextField(
                         controller: startController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         style: const TextStyle(color: Colors.white),
                         decoration: const InputDecoration(
                           labelText: 'Start (s)',
@@ -1271,7 +1270,9 @@ class _ActionSidebarState extends State<ActionSidebar> {
                     Expanded(
                       child: TextField(
                         controller: endController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         style: const TextStyle(color: Colors.white),
                         decoration: const InputDecoration(
                           labelText: 'Koniec (s)',
@@ -1288,17 +1289,30 @@ class _ActionSidebarState extends State<ActionSidebar> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white54),
+              ),
             ),
             TextButton(
               onPressed: () {
                 final type = typeController.text;
-                final player = playerController.text.trim().isEmpty ? 'Unknown' : playerController.text.trim();
-                final startSec = double.tryParse(startController.text) ?? initialStartSec;
-                final endSec = double.tryParse(endController.text) ?? initialEndSec;
+                final player = playerController.text.trim().isEmpty
+                    ? 'Unknown'
+                    : playerController.text.trim();
+                final startSec =
+                    double.tryParse(startController.text) ?? initialStartSec;
+                final endSec =
+                    double.tryParse(endController.text) ?? initialEndSec;
 
-                final subStartMs = (startSec * 1000.0).clamp(parent.startMs, parent.endMs);
-                final subEndMs = (endSec * 1000.0).clamp(subStartMs, parent.endMs);
+                final subStartMs = (startSec * 1000.0).clamp(
+                  parent.startMs,
+                  parent.endMs,
+                );
+                final subEndMs = (endSec * 1000.0).clamp(
+                  subStartMs,
+                  parent.endMs,
+                );
 
                 final sub = ActionModel(
                   id: 'sub_${DateTime.now().millisecondsSinceEpoch}',
@@ -1310,7 +1324,8 @@ class _ActionSidebarState extends State<ActionSidebar> {
                   confidence: 1.0,
                 );
 
-                final newSubs = List<ActionModel>.from(parent.subActions)..add(sub);
+                final newSubs = List<ActionModel>.from(parent.subActions)
+                  ..add(sub);
 
                 final updatedParent = parent.copyWith(
                   subActions: newSubs,
@@ -1319,7 +1334,10 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 widget.onActionUpdated(updatedParent);
                 Navigator.pop(context);
               },
-              child: const Text('Zapisz', style: TextStyle(color: Colors.purpleAccent)),
+              child: const Text(
+                'Zapisz',
+                style: TextStyle(color: Colors.purpleAccent),
+              ),
             ),
           ],
         );
@@ -1327,14 +1345,22 @@ class _ActionSidebarState extends State<ActionSidebar> {
     );
   }
 
-  void _showEditSubActionDialog(BuildContext context, ActionModel parent, ActionModel sub) {
+  void _showEditSubActionDialog(
+    BuildContext context,
+    ActionModel parent,
+    ActionModel sub,
+  ) {
     final parentStartSec = parent.startMs / 1000.0;
     final parentEndSec = parent.endMs / 1000.0;
 
     final typeController = TextEditingController(text: sub.type);
     final playerController = TextEditingController(text: sub.playerId);
-    final startController = TextEditingController(text: (sub.startMs / 1000.0).toStringAsFixed(2));
-    final endController = TextEditingController(text: (sub.endMs / 1000.0).toStringAsFixed(2));
+    final startController = TextEditingController(
+      text: (sub.startMs / 1000.0).toStringAsFixed(2),
+    );
+    final endController = TextEditingController(
+      text: (sub.endMs / 1000.0).toStringAsFixed(2),
+    );
 
     showDialog(
       context: context,
@@ -1355,7 +1381,8 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  initialValue: kVolleyballActions.contains(sub.type.toUpperCase())
+                  initialValue:
+                      kVolleyballActions.contains(sub.type.toUpperCase())
                       ? sub.type.toUpperCase()
                       : kVolleyballActions.first,
                   dropdownColor: const Color(0xFF3A3A3A),
@@ -1391,7 +1418,9 @@ class _ActionSidebarState extends State<ActionSidebar> {
                     Expanded(
                       child: TextField(
                         controller: startController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         style: const TextStyle(color: Colors.white),
                         decoration: const InputDecoration(
                           labelText: 'Start (s)',
@@ -1404,7 +1433,9 @@ class _ActionSidebarState extends State<ActionSidebar> {
                     Expanded(
                       child: TextField(
                         controller: endController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         style: const TextStyle(color: Colors.white),
                         decoration: const InputDecoration(
                           labelText: 'Koniec (s)',
@@ -1421,17 +1452,31 @@ class _ActionSidebarState extends State<ActionSidebar> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white54),
+              ),
             ),
             TextButton(
               onPressed: () {
                 final type = typeController.text;
-                final player = playerController.text.trim().isEmpty ? 'Unknown' : playerController.text.trim();
-                final startSec = double.tryParse(startController.text) ?? (sub.startMs / 1000.0);
-                final endSec = double.tryParse(endController.text) ?? (sub.endMs / 1000.0);
+                final player = playerController.text.trim().isEmpty
+                    ? 'Unknown'
+                    : playerController.text.trim();
+                final startSec =
+                    double.tryParse(startController.text) ??
+                    (sub.startMs / 1000.0);
+                final endSec =
+                    double.tryParse(endController.text) ?? (sub.endMs / 1000.0);
 
-                final subStartMs = (startSec * 1000.0).clamp(parent.startMs, parent.endMs);
-                final subEndMs = (endSec * 1000.0).clamp(subStartMs, parent.endMs);
+                final subStartMs = (startSec * 1000.0).clamp(
+                  parent.startMs,
+                  parent.endMs,
+                );
+                final subEndMs = (endSec * 1000.0).clamp(
+                  subStartMs,
+                  parent.endMs,
+                );
 
                 final updatedFocuses = sub.playerFocuses.map((f) {
                   if (f.id == sub.activeFocusId) {
@@ -1461,7 +1506,10 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 widget.onActionUpdated(updatedParent);
                 Navigator.pop(context);
               },
-              child: const Text('Zapisz', style: TextStyle(color: Colors.purpleAccent)),
+              child: const Text(
+                'Zapisz',
+                style: TextStyle(color: Colors.purpleAccent),
+              ),
             ),
           ],
         );
@@ -1469,18 +1517,28 @@ class _ActionSidebarState extends State<ActionSidebar> {
     );
   }
 
-  void _deleteSubAction(BuildContext context, ActionModel parent, ActionModel sub) {
+  void _deleteSubAction(
+    BuildContext context,
+    ActionModel parent,
+    ActionModel sub,
+  ) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF1E1E24),
-          title: const Text('Usuń pod-akcję', style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Usuń pod-akcję',
+            style: TextStyle(color: Colors.white),
+          ),
           content: Text('Czy na pewno chcesz usunąć pod-akcję: ${sub.type}?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white54),
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -1493,7 +1551,10 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 widget.onActionUpdated(updatedParent);
                 Navigator.pop(context);
               },
-              child: const Text('Usuń', style: TextStyle(color: Colors.redAccent)),
+              child: const Text(
+                'Usuń',
+                style: TextStyle(color: Colors.redAccent),
+              ),
             ),
           ],
         );

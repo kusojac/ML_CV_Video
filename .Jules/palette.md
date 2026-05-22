@@ -1,3 +1,3 @@
-## 2024-05-14 - Add Tooltips to ActionSidebar IconButtons
-**Learning:** In Flutter, icon-only interactive elements like `IconButton` require an explicit `tooltip` (or `semanticLabel`) property. Without it, screen readers cannot deduce the action's purpose, which makes dense lists—such as sub-actions and focus points in `ActionSidebar`—inaccessible.
-**Action:** Always provide descriptive `tooltip` attributes when using `IconButton` or other non-text interactive widgets, to ensure visual and screen reader accessibility are maintained simultaneously.
+## 2024-05-20 - Empty State Improvements
+**Learning:** Replacing plain text empty states with visually distinct layouts containing actionable icons and buttons significantly reduces friction for first-time users. In this app, many empty lists (like projects or artifacts) default to plain Text widgets.
+**Action:** Always scan for `isEmpty` conditionals in lists or grids and replace generic `Text` fallbacks with structured empty states featuring a clear Call-To-Action.
