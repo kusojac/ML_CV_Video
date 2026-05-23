@@ -1133,6 +1133,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.play_arrow, size: 16, color: Colors.white70),
+                        tooltip: 'Odtwórz sub-akcję',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () => widget.onActionSelected(sub),
@@ -1141,6 +1142,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                         const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.edit, size: 14, color: Colors.white30),
+                          tooltip: 'Edytuj sub-akcję',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () => _showEditSubActionDialog(context, parentAction, sub),
@@ -1148,6 +1150,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                         const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.delete, size: 14, color: Colors.redAccent),
+                          tooltip: 'Usuń sub-akcję',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () => _deleteSubAction(context, parentAction, sub),
@@ -1250,6 +1253,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.play_arrow, size: 14, color: Colors.white54),
+                      tooltip: 'Odtwórz punkt kluczowy',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       onPressed: () {
@@ -1260,6 +1264,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                       const SizedBox(width: 6),
                       IconButton(
                         icon: const Icon(Icons.edit, size: 12, color: Colors.white30),
+                        tooltip: 'Edytuj punkt kluczowy',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () => _showEditKeyPointDialog(context, action, kp, parentAction: parentAction),
@@ -1267,6 +1272,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                       const SizedBox(width: 6),
                       IconButton(
                         icon: const Icon(Icons.delete, size: 12, color: Colors.redAccent),
+                        tooltip: 'Usuń punkt kluczowy',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () => _deleteKeyPoint(context, action, kp, parentAction: parentAction),
