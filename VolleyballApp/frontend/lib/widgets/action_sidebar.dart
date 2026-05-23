@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/action_model.dart';
 import '../models/artifact_model.dart';
+import '../theme/kinetic_theme.dart';
 
 class ActionSidebar extends StatefulWidget {
   final Duration? currentPosition;
@@ -184,7 +185,7 @@ class ActionSidebarState extends State<ActionSidebar> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            color: const Color(0xFF161616),
+            color: KineticTheme.surfaceContainerLowest,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -389,8 +390,8 @@ class ActionSidebarState extends State<ActionSidebar> {
                               padding: const EdgeInsets.only(bottom: 4),
                               child: Card(
                                 color: isSelected
-                                    ? const Color(0xFF2A2A35)
-                                    : const Color(0xFF1E1E24),
+                                    ? KineticTheme.surfaceContainerHighest
+                                    : KineticTheme.surfaceContainerLow,
                                 margin: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 2,

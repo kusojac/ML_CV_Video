@@ -11,6 +11,7 @@ import '../widgets/action_sidebar.dart';
 import '../widgets/focus_player_widget.dart';
 import '../models/artifact_model.dart';
 import '../services/project_data_service.dart';
+import '../theme/kinetic_theme.dart';
 
 class VideoAnalysisScreen extends StatefulWidget {
   final String videoPath;
@@ -1378,8 +1379,8 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           Container(
             width: 350,
             decoration: const BoxDecoration(
-              color: Color(0xFF1E1E1E),
-              border: Border(left: BorderSide(color: Colors.white12)),
+              color: KineticTheme.surfaceContainerLow,
+              border: Border(left: BorderSide(color: KineticTheme.outlineVariant)),
             ),
             child: ActionSidebar(
               key: _sidebarKey,
