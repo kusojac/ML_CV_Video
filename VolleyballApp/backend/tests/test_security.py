@@ -46,3 +46,15 @@ def test_security_headers():
     assert response.headers.get("X-Frame-Options") == "DENY"
     assert response.headers.get("Strict-Transport-Security") == "max-age=31536000; includeSubDomains"
     assert response.headers.get("X-XSS-Protection") == "1; mode=block"
+
+def test_update_action_dos_optional():
+    long_string = "a" * 5000
+    response = client.post("/update_action", json={
+        "video_path": "test.mp4",
+        "action_id": "test",
+        "new_type": "test",
+        "new_start_ms": 0.0,
+        "new_end_ms": 1.0,
+        "new_player_id": long_string
+    })
+    assert response.status_code == 422 # Unprocessable Entity

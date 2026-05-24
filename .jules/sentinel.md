@@ -86,3 +86,8 @@
 **Vulnerability:** The application was missing basic standard HTTP security headers across its responses.
 **Learning:** Default framework configurations (like bare FastAPI) do not typically add fundamental security headers automatically. Relying solely on CORS middleware leaves gaps in defense-in-depth protection for other common browser-based attack vectors.
 **Prevention:** Implement a global HTTP middleware that automatically injects fundamental security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security`, and `X-XSS-Protection`) to enforce defense-in-depth across all endpoints.
+
+## $(date +%Y-%m-%d) - Denial of Service via Missing Length Limits on Optional Pydantic Fields
+**Vulnerability:** Optional string fields in Pydantic models (e.g., `new_player_id: Optional[str]`) were missing `max_length` constraints, allowing attackers to send arbitrarily large payloads that could cause memory exhaustion (DoS).
+**Learning:** Even if a field is `Optional`, Pydantic will still parse and allocate memory for it if provided in the payload. Missing length limits on any user-provided string field is a Denial of Service vector.
+**Prevention:** Ensure all string inputs in Pydantic models, including `Optional` ones, enforce strict `max_length` constraints using `pydantic.Field(default=None, max_length=X)`.
