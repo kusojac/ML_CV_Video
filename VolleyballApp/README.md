@@ -2,6 +2,11 @@
 
 A seamless, real-time desktop application built with a **Flutter** frontend and **Python/FastAPI** backend for automated volleyball video analysis. The system detects the ball, players, and key actions (Bump, Set, Attack) to enrich videos with metadata and specialized interfaces like "Focus Mode."
 
+### 📖 Podręcznik Użytkownika (User Guide)
+Szczegółowy przewodnik po instalacji, architekturze, skrótach klawiszowych oraz funkcjach zaawansowanych znajdziesz w pliku [**USER_GUIDE.md**](USER_GUIDE.md).
+
+---
+
 ## 🚀 How to Run the Application
 
 The project is split into two independent runtimes that communicate locally on your machine. You must run both the **Backend** and the **Frontend** simultaneously.
@@ -129,7 +134,11 @@ Możesz mieć wiele wersji roboczych:
 - **Project Manager:** Click `Import Video` to add `.mp4` or `.mov` files from your disk. Files stay cached natively via `shared_preferences`.
 - **Automated AI Run:** Open an imported video and select "Analyze Video." The Flutter app will quietly ping the continuous python daemon instance, awaiting results without freezing your CPU.
 - **Dynamic Bounding Boxes & Triggers:** The Python engine automatically runs YOLO tracking, and whenever the ball changes sudden directional speed, it queries MediaPipe to recognize pose joints and determines the Action Event.
-- **Player Focus Mode:** Once analysis finishes, simply clicking on an event like **'Set'** will engage a 200x200 crop overlay specifically fixed onto that individual player utilizing dynamic scale transformation over the base video player.
+- **Player Focus Mode:** Once analysis finishes, clicking on an event engages a crop overlay fixed onto that individual player utilizing dynamic scale transformation over the base video player. Includes top dragging handles and bottom-right resizing handles.
+- **Multiple Player Focus Support (New):** Support for adding multiple focus targets inside a single action (e.g., tracking both the setter and the attacker). Switch between active targets seamlessly using the sidebar.
+- **Sub-Actions Support (New):** Break down long rallies into hierarchical sub-actions (e.g. Bump, Set, Attack) with individual time frames, players, and custom key points.
+- **Interactive Timeline (New):** Color-coded horizontal bar visualization for events. Zoom in/out and drag-scroll to navigate long recordings with frame-level precision.
+- **Key Points:** Insert diamond key frame markers with custom text descriptions to tag specific moments (e.g. ball contact).
 - **Corrections Toolkit:** Filter by player jersey (auto-inferred or tracked) or action type to clean false positives, simply hit edit to fix a tag!
 
 <br>

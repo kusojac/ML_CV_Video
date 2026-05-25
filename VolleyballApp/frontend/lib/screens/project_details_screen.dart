@@ -6,6 +6,7 @@ import '../models/artifact_model.dart';
 import '../services/project_data_service.dart';
 import 'video_analysis_screen.dart';
 import 'artifact_edit_screen.dart';
+import '../theme/kinetic_theme.dart';
 
 class ProjectDetailsScreen extends StatefulWidget {
   final ProjectModel project;
@@ -232,11 +233,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   Color _getColorForArtifact(ArtifactType type) {
     switch (type) {
       case ArtifactType.video:
-        return Colors.blueAccent;
+        return KineticTheme.secondary;
       case ArtifactType.playlist:
-        return Colors.greenAccent;
+        return const Color(0xFF00C853);
       case ArtifactType.action:
-        return Colors.orangeAccent;
+        return KineticTheme.primary;
     }
   }
 
@@ -404,22 +405,22 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2A2A),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white24),
+        color: KineticTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: KineticTheme.outlineVariant),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           hint: Text(
             'Filtruj: $label',
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
+            style: const TextStyle(color: KineticTheme.onSurfaceVariant, fontSize: 13),
           ),
-          dropdownColor: const Color(0xFF2E2E2E),
-          style: const TextStyle(color: Colors.white, fontSize: 13),
+          dropdownColor: KineticTheme.surfaceContainer,
+          style: const TextStyle(color: KineticTheme.onSurface, fontSize: 13),
           value: null,
           icon: const Icon(
             Icons.add_circle_outline,
-            color: Colors.white70,
+            color: KineticTheme.onSurfaceVariant,
             size: 16,
           ),
           items: available
@@ -441,7 +442,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
   Widget _buildFilterChip(String label, VoidCallback onDeleted) {
     return InputChip(
       label: Text(label, style: const TextStyle(fontSize: 12)),
-      backgroundColor: Colors.purple.withValues(alpha: 0.3),
+      backgroundColor: KineticTheme.primary.withAlpha(40),
       deleteIcon: const Icon(Icons.close, size: 16),
       onDeleted: onDeleted,
     );
@@ -476,7 +477,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             width: double.infinity,
-            color: const Color(0xFF1E1E24),
+            color: KineticTheme.surfaceContainerLow,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -492,9 +493,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                         .map(
                           (tag) => Chip(
                             label: Text(tag),
-                            backgroundColor: Colors.purple.withValues(
-                              alpha: 0.3,
-                            ),
+                            backgroundColor: KineticTheme.primary.withAlpha(40),
                           ),
                         )
                         .toList(),
@@ -515,7 +514,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                         _selectedTags.isNotEmpty ||
                         _selectedTeams.isNotEmpty ||
                         _searchController.text.isNotEmpty)
-                    ? Colors.purpleAccent
+                    ? KineticTheme.primary
                     : null,
               ),
               subtitle: Builder(
@@ -540,7 +539,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                   return Text(
                     parts.join(' · '),
                     style: const TextStyle(
-                      color: Colors.purpleAccent,
+                      color: KineticTheme.primary,
                       fontSize: 12,
                     ),
                     maxLines: 1,
@@ -564,14 +563,14 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.purpleAccent.withValues(alpha: 0.2),
+                        color: KineticTheme.primary.withAlpha(40),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.purpleAccent),
+                        border: Border.all(color: KineticTheme.primary),
                       ),
                       child: Text(
                         '$count',
                         style: const TextStyle(
-                          color: Colors.purpleAccent,
+                          color: KineticTheme.primary,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
@@ -593,10 +592,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                           hintText: 'Filtruj artefakty...',
                           prefixIcon: const Icon(Icons.search),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           filled: true,
-                          fillColor: const Color(0xFF2A2A2A),
+                          fillColor: KineticTheme.surfaceContainerLowest,
                         ),
                       ),
                     ),
@@ -604,16 +603,16 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2A2A2A),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white24),
+                        color: KineticTheme.surfaceContainerLowest,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: KineticTheme.outlineVariant),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: _sortOption,
-                          icon: const Icon(Icons.sort, color: Colors.white70),
-                          dropdownColor: const Color(0xFF2E2E2E),
-                          style: const TextStyle(color: Colors.white),
+                          icon: const Icon(Icons.sort, color: KineticTheme.onSurfaceVariant),
+                          dropdownColor: KineticTheme.surfaceContainer,
+                          style: const TextStyle(color: KineticTheme.onSurface),
                           items: const [
                             DropdownMenuItem(
                               value: 'date_desc',

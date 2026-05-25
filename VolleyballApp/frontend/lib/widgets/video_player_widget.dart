@@ -2250,7 +2250,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                       color: Colors.white70,
                       size: 22,
                     ),
-                    tooltip: 'Cofnij 5 sekund / Rewind 5 seconds',
+                    tooltip: 'Cofnij 5 sekund (Shift + ←) / Rewind 5 seconds (Shift + ←)',
                     onPressed: () {
                       final newMs = (_currentPos.inMilliseconds - 5000).clamp(
                         0,
@@ -2272,8 +2272,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                         color: Colors.white,
                       ),
                       tooltip: _isPlaying
-                          ? 'Pauza / Pause'
-                          : 'Odtwarzaj / Play',
+                          ? 'Pauza (Spacja) / Pause (Space)'
+                          : 'Odtwarzaj (Spacja) / Play (Space)',
                       onPressed: () =>
                           _isPlaying ? _player.pause() : _player.play(),
                     ),
@@ -2285,7 +2285,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                       color: Colors.white70,
                       size: 22,
                     ),
-                    tooltip: 'Do przodu 5 sekund / Forward 5 seconds',
+                    tooltip: 'Do przodu 5 sekund (Shift + →) / Forward 5 seconds (Shift + →)',
                     onPressed: () {
                       final newMs = (_currentPos.inMilliseconds + 5000).clamp(
                         0,

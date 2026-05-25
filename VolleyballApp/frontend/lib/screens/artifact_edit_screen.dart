@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/artifact_model.dart';
 import '../models/team_metadata.dart';
+import '../theme/kinetic_theme.dart';
 
 class ArtifactEditScreen extends StatefulWidget {
   final ArtifactModel artifact;
@@ -87,7 +88,7 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
     final result = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E24),
+        backgroundColor: KineticTheme.surfaceContainerLow,
         icon: const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 36),
         title: const Text('Niezapisane zmiany', style: TextStyle(color: Colors.white)),
         content: const Text(
@@ -188,7 +189,7 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
 
   Widget _buildTeamSection(TeamMetadata team, String title) {
     return Card(
-      color: const Color(0xFF1E1E24),
+      color: KineticTheme.surfaceContainerLow,
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
