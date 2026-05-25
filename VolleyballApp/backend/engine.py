@@ -140,8 +140,8 @@ class VolleyballAnalyticsEngine:
             # ⚡ Bolt Optimization: target_class_id=0 extracts only the person class, avoiding slow np.max across all 80 COCO classes
             coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_output(coco_outs[0], original_shape, conf_threshold=0.5, target_class_id=0)
             
-            # ⚡ Bolt Optimization: Use numpy boolean indexing instead of list comprehension
-            person_boxes = coco_boxes[coco_class_ids == 0]
+            # ⚡ Bolt Optimization: We requested only class 0 above, so coco_boxes are already only person boxes
+            person_boxes = coco_boxes
             
             if len(person_boxes) > 0:
                 ball_box_index = np.argmax(ball_scores)
@@ -260,7 +260,7 @@ class VolleyballAnalyticsEngine:
             # ⚡ Bolt Optimization: target_class_id=0 extracts only the person class, avoiding slow np.max across all 80 COCO classes
             coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_output(coco_outs[0], original_shape, conf_threshold=0.5, target_class_id=0)
 
-            person_boxes = coco_boxes[coco_class_ids == 0]
+            person_boxes = coco_boxes
 
             if len(person_boxes) > 0:
                 ball_box_index = np.argmax(ball_scores)
