@@ -86,6 +86,10 @@
 **Vulnerability:** The application was missing basic standard HTTP security headers across its responses.
 **Learning:** Default framework configurations (like bare FastAPI) do not typically add fundamental security headers automatically. Relying solely on CORS middleware leaves gaps in defense-in-depth protection for other common browser-based attack vectors.
 **Prevention:** Implement a global HTTP middleware that automatically injects fundamental security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security`, and `X-XSS-Protection`) to enforce defense-in-depth across all endpoints.
+## 2026-05-24 - Secure Exception Logging in Background Tasks
+**Vulnerability:** The application was catching exceptions in background tasks (e.g., `process_video_task`) but silently swallowing them by mutating the job state without writing the original exception trace to a server log. This prevented internal operational visibility and incident response capabilities while properly avoiding information leakage to the client.
+**Learning:** Proper security logging means masking errors sent to external clients (already done via "An internal error occurred") while simultaneously maintaining an internal, non-repudiable audit trail of the actual failure (including the stack trace). Swallowing errors entirely leads to silent failures, leaving administrators blind to potential operational issues or abuse attempts.
+**Prevention:** In background workers, always log the full exception securely using `logging.error(..., exc_info=True)` *before* mutating the user-facing job state to a safe generic fallback.
 
 ## $(date +%Y-%m-%d) - Denial of Service via Missing Length Limits on Optional Pydantic Fields
 **Vulnerability:** Optional string fields in Pydantic models (e.g., `new_player_id: Optional[str]`) were missing `max_length` constraints, allowing attackers to send arbitrarily large payloads that could cause memory exhaustion (DoS).
