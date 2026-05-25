@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/action_model.dart';
 import '../models/artifact_model.dart';
+import '../theme/kinetic_theme.dart';
 
 class ActionSidebar extends StatefulWidget {
   final Duration? currentPosition;
@@ -75,10 +76,10 @@ class ActionSidebar extends StatefulWidget {
   });
 
   @override
-  State<ActionSidebar> createState() => _ActionSidebarState();
+  State<ActionSidebar> createState() => ActionSidebarState();
 }
 
-class _ActionSidebarState extends State<ActionSidebar> {
+class ActionSidebarState extends State<ActionSidebar> {
   final ScrollController _scrollController = ScrollController();
   final Map<String, GlobalKey> _itemKeys = {};
   final String _sortOption = 'time_asc';
@@ -184,7 +185,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            color: const Color(0xFF161616),
+            color: KineticTheme.surfaceContainerLowest,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -208,10 +209,13 @@ class _ActionSidebarState extends State<ActionSidebar> {
                           'Edit',
                           style: TextStyle(color: Colors.white70, fontSize: 12),
                         ),
-                        Switch(
-                          value: widget.isEditMode,
-                          onChanged: widget.onEditModeChanged,
-                          activeThumbColor: Colors.purpleAccent,
+                        Tooltip(
+                          message: 'Przełącz tryb edycji (Skrót: E) / Toggle edit mode (Shortcut: E)',
+                          child: Switch(
+                            value: widget.isEditMode,
+                            onChanged: widget.onEditModeChanged,
+                            activeThumbColor: Colors.purpleAccent,
+                          ),
                         ),
                       ],
                     ),
@@ -288,16 +292,19 @@ class _ActionSidebarState extends State<ActionSidebar> {
                 if (widget.isEditMode)
                   Padding(
                     padding: const EdgeInsets.only(top: 12.0),
-                    child: ElevatedButton.icon(
-                      onPressed: widget.onActionAdded,
-                      icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Dodaj nową akcję'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purpleAccent.withValues(
-                          alpha: 0.2,
+                    child: Tooltip(
+                      message: 'Dodaj nową akcję (Skrót: A lub N) / Add new action (Shortcut: A or N)',
+                      child: ElevatedButton.icon(
+                        onPressed: widget.onActionAdded,
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Dodaj nową akcję'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purpleAccent.withValues(
+                            alpha: 0.2,
+                          ),
+                          foregroundColor: Colors.purpleAccent,
+                          side: const BorderSide(color: Colors.purpleAccent),
                         ),
-                        foregroundColor: Colors.purpleAccent,
-                        side: const BorderSide(color: Colors.purpleAccent),
                       ),
                     ),
                   ),
@@ -383,8 +390,8 @@ class _ActionSidebarState extends State<ActionSidebar> {
                               padding: const EdgeInsets.only(bottom: 4),
                               child: Card(
                                 color: isSelected
-                                    ? const Color(0xFF2A2A35)
-                                    : const Color(0xFF1E1E24),
+                                    ? KineticTheme.surfaceContainerHighest
+                                    : KineticTheme.surfaceContainerLow,
                                 margin: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                   vertical: 2,
@@ -498,131 +505,137 @@ class _ActionSidebarState extends State<ActionSidebar> {
                                                         ),
                                                     child: Row(
                                                       children: [
-                                                        InkWell(
-                                                          onTap: () =>
-                                                              _editAction(
-                                                                context,
-                                                                action,
-                                                              ),
-                                                          child: const Row(
-                                                            children: [
-                                                              Text(
-                                                                'EDIT',
-                                                                style: TextStyle(
+                                                        Tooltip(
+                                                          message: 'Edytuj akcję / Edit action',
+                                                          child: InkWell(
+                                                            onTap: () =>
+                                                                _editAction(
+                                                                  context,
+                                                                  action,
+                                                                ),
+                                                            child: const Row(
+                                                              children: [
+                                                                Text(
+                                                                  'EDIT',
+                                                                  style: TextStyle(
+                                                                    color: Colors
+                                                                        .white30,
+                                                                    fontSize: 10,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                  ),
+                                                                ),
+                                                                SizedBox(
+                                                                  width: 4,
+                                                                ),
+                                                                Icon(
+                                                                  Icons.edit,
                                                                   color: Colors
                                                                       .white30,
-                                                                  fontSize: 10,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
+                                                                  size: 14,
                                                                 ),
-                                                              ),
-                                                              SizedBox(
-                                                                width: 4,
-                                                              ),
-                                                              Icon(
-                                                                Icons.edit,
-                                                                color: Colors
-                                                                    .white30,
-                                                                size: 14,
-                                                              ),
-                                                            ],
+                                                              ],
+                                                            ),
                                                           ),
                                                         ),
                                                         const SizedBox(
                                                           width: 12,
                                                         ),
-                                                        InkWell(
-                                                          onTap: () async {
-                                                            final bool?
-                                                            confirm = await showDialog<bool>(
-                                                              context: context,
-                                                              builder: (context) => AlertDialog(
-                                                                backgroundColor:
-                                                                    const Color(
-                                                                      0xFF1E1E24,
+                                                        Tooltip(
+                                                          message: 'Usuń akcję (Skrót: Delete/Backspace przy zaznaczeniu) / Delete action (Shortcut: Delete/Backspace when selected)',
+                                                          child: InkWell(
+                                                            onTap: () async {
+                                                              final bool?
+                                                              confirm = await showDialog<bool>(
+                                                                context: context,
+                                                                builder: (context) => AlertDialog(
+                                                                  backgroundColor:
+                                                                      const Color(
+                                                                        0xFF1E1E24,
+                                                                      ),
+                                                                  title: const Text(
+                                                                    'Usuń akcję',
+                                                                    style: TextStyle(
+                                                                      color: Colors
+                                                                          .white,
                                                                     ),
-                                                                title: const Text(
-                                                                  'Usuń akcję',
-                                                                  style: TextStyle(
-                                                                    color: Colors
-                                                                        .white,
                                                                   ),
-                                                                ),
-                                                                content: const Text(
-                                                                  'Czy na pewno chcesz usunąć tę akcję?',
-                                                                  style: TextStyle(
-                                                                    color: Colors
-                                                                        .white70,
+                                                                  content: const Text(
+                                                                    'Czy na pewno chcesz usunąć tę akcję?',
+                                                                    style: TextStyle(
+                                                                      color: Colors
+                                                                          .white70,
+                                                                    ),
                                                                   ),
-                                                                ),
-                                                                actions: [
-                                                                  TextButton(
-                                                                    onPressed: () =>
-                                                                        Navigator.pop(
-                                                                          context,
-                                                                          false,
+                                                                  actions: [
+                                                                    TextButton(
+                                                                      onPressed: () =>
+                                                                          Navigator.pop(
+                                                                            context,
+                                                                            false,
+                                                                          ),
+                                                                      child: const Text(
+                                                                        'Anuluj',
+                                                                        style: TextStyle(
+                                                                          color: Colors
+                                                                              .white54,
                                                                         ),
-                                                                    child: const Text(
-                                                                      'Anuluj',
-                                                                      style: TextStyle(
-                                                                        color: Colors
-                                                                            .white54,
                                                                       ),
                                                                     ),
-                                                                  ),
-                                                                  TextButton(
-                                                                    onPressed: () =>
-                                                                        Navigator.pop(
-                                                                          context,
-                                                                          true,
+                                                                    TextButton(
+                                                                      onPressed: () =>
+                                                                          Navigator.pop(
+                                                                            context,
+                                                                            true,
+                                                                          ),
+                                                                      child: const Text(
+                                                                        'Usuń',
+                                                                        style: TextStyle(
+                                                                          color: Colors
+                                                                              .redAccent,
                                                                         ),
-                                                                    child: const Text(
-                                                                      'Usuń',
-                                                                      style: TextStyle(
-                                                                        color: Colors
-                                                                            .redAccent,
                                                                       ),
                                                                     ),
+                                                                  ],
+                                                                ),
+                                                              );
+                                                              if (!mounted) {
+                                                                return;
+                                                              }
+                                                              if (confirm ==
+                                                                  true) {
+                                                                widget
+                                                                    .onActionDeleted
+                                                                    ?.call(
+                                                                      action,
+                                                                    );
+                                                              }
+                                                            },
+                                                            child: const Row(
+                                                              children: [
+                                                                Text(
+                                                                  'DEL',
+                                                                  style: TextStyle(
+                                                                    color: Colors
+                                                                        .redAccent,
+                                                                    fontSize: 10,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
                                                                   ),
-                                                                ],
-                                                              ),
-                                                            );
-                                                            if (!mounted) {
-                                                              return;
-                                                            }
-                                                            if (confirm ==
-                                                                true) {
-                                                              widget
-                                                                  .onActionDeleted
-                                                                  ?.call(
-                                                                    action,
-                                                                  );
-                                                            }
-                                                          },
-                                                          child: const Row(
-                                                            children: [
-                                                              Text(
-                                                                'DEL',
-                                                                style: TextStyle(
+                                                                ),
+                                                                SizedBox(
+                                                                  width: 4,
+                                                                ),
+                                                                Icon(
+                                                                  Icons.delete,
                                                                   color: Colors
                                                                       .redAccent,
-                                                                  fontSize: 10,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
+                                                                  size: 14,
                                                                 ),
-                                                              ),
-                                                              SizedBox(
-                                                                width: 4,
-                                                              ),
-                                                              Icon(
-                                                                Icons.delete,
-                                                                color: Colors
-                                                                    .redAccent,
-                                                                size: 14,
-                                                              ),
-                                                            ],
+                                                              ],
+                                                            ),
                                                           ),
                                                         ),
                                                       ],
@@ -1020,26 +1033,29 @@ class _ActionSidebarState extends State<ActionSidebar> {
       if (widget.isEditMode) {
         return Padding(
           padding: const EdgeInsets.only(top: 8.0, left: 16.0),
-          child: InkWell(
-            onTap: () => _showAddSubActionDialog(context, parentAction),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.add_circle_outline,
-                  size: 14,
-                  color: Colors.blueAccent,
-                ),
-                SizedBox(width: 4),
-                Text(
-                  'Dodaj pod-akcję',
-                  style: TextStyle(
+          child: Tooltip(
+            message: 'Dodaj pod-akcję (Skrót: S) / Add sub-action (Shortcut: S)',
+            child: InkWell(
+              onTap: () => _showAddSubActionDialog(context, parentAction),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.add_circle_outline,
+                    size: 14,
                     color: Colors.blueAccent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
                   ),
-                ),
-              ],
+                  SizedBox(width: 4),
+                  Text(
+                    'Dodaj pod-akcję',
+                    style: TextStyle(
+                      color: Colors.blueAccent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -1142,7 +1158,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                         const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.edit, size: 14, color: Colors.white30),
-                          tooltip: 'Edytuj sub-akcję',
+                          tooltip: 'Edytuj pod-akcję / Edit sub-action',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () => _showEditSubActionDialog(context, parentAction, sub),
@@ -1150,7 +1166,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                         const SizedBox(width: 8),
                         IconButton(
                           icon: const Icon(Icons.delete, size: 14, color: Colors.redAccent),
-                          tooltip: 'Usuń sub-akcję',
+                          tooltip: 'Usuń pod-akcję (Skrót: Delete/Backspace przy zaznaczeniu) / Delete sub-action (Shortcut: Delete/Backspace when selected)',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () => _deleteSubAction(context, parentAction, sub),
@@ -1167,22 +1183,25 @@ class _ActionSidebarState extends State<ActionSidebar> {
         if (widget.isEditMode)
           Padding(
             padding: const EdgeInsets.only(top: 4.0, left: 16.0),
-            child: InkWell(
-              onTap: () => _showAddSubActionDialog(context, parentAction),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.add, size: 14, color: Colors.blueAccent),
-                  SizedBox(width: 2),
-                  Text(
-                    'Dodaj pod-akcję',
-                    style: TextStyle(
-                      color: Colors.blueAccent,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
+            child: Tooltip(
+              message: 'Dodaj pod-akcję (Skrót: S) / Add sub-action (Shortcut: S)',
+              child: InkWell(
+                onTap: () => _showAddSubActionDialog(context, parentAction),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add, size: 14, color: Colors.blueAccent),
+                    SizedBox(width: 2),
+                    Text(
+                      'Dodaj pod-akcję',
+                      style: TextStyle(
+                        color: Colors.blueAccent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -1264,7 +1283,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                       const SizedBox(width: 6),
                       IconButton(
                         icon: const Icon(Icons.edit, size: 12, color: Colors.white30),
-                        tooltip: 'Edytuj punkt kluczowy',
+                        tooltip: 'Edytuj kluczowy punkt / Edit key point',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () => _showEditKeyPointDialog(context, action, kp, parentAction: parentAction),
@@ -1272,7 +1291,7 @@ class _ActionSidebarState extends State<ActionSidebar> {
                       const SizedBox(width: 6),
                       IconButton(
                         icon: const Icon(Icons.delete, size: 12, color: Colors.redAccent),
-                        tooltip: 'Usuń punkt kluczowy',
+                        tooltip: 'Usuń kluczowy punkt (Skrót: Delete/Backspace przy zaznaczeniu) / Delete key point (Shortcut: Delete/Backspace when selected)',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () => _deleteKeyPoint(context, action, kp, parentAction: parentAction),
@@ -1287,22 +1306,25 @@ class _ActionSidebarState extends State<ActionSidebar> {
         if (widget.isEditMode)
           Padding(
             padding: const EdgeInsets.only(top: 4.0, left: 12.0),
-            child: InkWell(
-              onTap: () => _showAddKeyPointDialog(context, action, parentAction: parentAction),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.add, size: 12, color: Colors.amber),
-                  SizedBox(width: 2),
-                  Text(
-                    'Dodaj kluczowy punkt',
-                    style: TextStyle(
-                      color: Colors.amber,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+            child: Tooltip(
+              message: 'Dodaj kluczowy punkt (Skrót: K) / Add key point (Shortcut: K)',
+              child: InkWell(
+                onTap: () => _showAddKeyPointDialog(context, action, parentAction: parentAction),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add, size: 12, color: Colors.amber),
+                    SizedBox(width: 2),
+                    Text(
+                      'Dodaj kluczowy punkt',
+                      style: TextStyle(
+                        color: Colors.amber,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -2459,6 +2481,60 @@ class _ActionSidebarState extends State<ActionSidebar> {
           ],
         );
       },
+    );
+  }
+
+  // ─── Programmatic Dialog Triggers ──────────────────────────────────────────
+
+  void triggerAddSubActionDialog(ActionModel parent) {
+    _showAddSubActionDialog(context, parent);
+  }
+
+  void triggerAddKeyPointDialog(ActionModel action, {ActionModel? parentAction}) {
+    _showAddKeyPointDialog(context, action, parentAction: parentAction);
+  }
+
+  void triggerDeleteKeyPoint(ActionModel action, ActionKeyPointModel kp, {ActionModel? parentAction}) {
+    _deleteKeyPoint(context, action, kp, parentAction: parentAction);
+  }
+
+  void triggerDeleteSubAction(ActionModel parent, ActionModel sub) {
+    _deleteSubAction(context, parent, sub);
+  }
+
+  void triggerDeleteAction(ActionModel action) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E24),
+        title: const Text(
+          'Usuń akcję / Delete action',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Czy na pewno chcesz usunąć tę akcję? / Are you sure you want to delete this action?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Anuluj / Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onActionDeleted?.call(action);
+            },
+            child: const Text(
+              'Usuń / Delete',
+              style: TextStyle(color: Colors.redAccent),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

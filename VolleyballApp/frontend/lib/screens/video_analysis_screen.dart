@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import '../services/analytics_service.dart';
 import '../services/analysis_file_service.dart';
@@ -10,6 +11,7 @@ import '../widgets/action_sidebar.dart';
 import '../widgets/focus_player_widget.dart';
 import '../models/artifact_model.dart';
 import '../services/project_data_service.dart';
+import '../theme/kinetic_theme.dart';
 
 class VideoAnalysisScreen extends StatefulWidget {
   final String videoPath;
@@ -46,6 +48,8 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   // JSON state
   bool _hasUnsavedChanges = false;
   String? _loadedFromPath; // null = default path obok wideo
+
+  final GlobalKey<ActionSidebarState> _sidebarKey = GlobalKey<ActionSidebarState>();
 
   // Playlist state
   List<ActionModel> _playlist = [];
@@ -109,6 +113,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   void initState() {
     super.initState();
     _analyticsService = widget.analyticsService ?? AnalyticsService();
+    HardwareKeyboard.instance.addHandler(_handleGlobalKeyEvent);
     // Check existing analysis in background
     Future.microtask(() async {
       await _loadAvailablePlaylists();
@@ -117,6 +122,12 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         _loadInitialPlaylist(widget.initialPlaylistPath!);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleGlobalKeyEvent);
+    super.dispose();
   }
 
   Future<void> _loadAvailablePlaylists() async {
@@ -822,6 +833,208 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     ),
   );
 
+  bool _isInputFieldFocused() {
+    final primaryFocus = FocusManager.instance.primaryFocus;
+    if (primaryFocus == null) return false;
+    final focusContext = primaryFocus.context;
+    if (focusContext == null) return false;
+    return focusContext.findAncestorWidgetOfExactType<EditableText>() != null;
+  }
+
+  ActionModel? get _selectedParentAction {
+    if (_selectedAction == null) return null;
+    final parentIdx = _actions.indexWhere((a) => a.id == _selectedAction!.id);
+    if (parentIdx != -1) return _selectedAction;
+    for (final action in _actions) {
+      if (action.subActions.any((sub) => sub.id == _selectedAction!.id)) {
+        return action;
+      }
+    }
+    return null;
+  }
+
+  void _togglePlayPause() {
+    if (_videoController != null) {
+      if (_videoController!.player.state.playing) {
+        _videoController!.player.pause();
+      } else {
+        _videoController!.player.play();
+      }
+    }
+  }
+
+  bool _handleGlobalKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return false;
+    }
+
+    if (_isInputFieldFocused()) {
+      return false;
+    }
+
+    // Space: Toggle play/pause
+    if (event.logicalKey == LogicalKeyboardKey.space) {
+      _togglePlayPause();
+      return true;
+    }
+
+    // E: Toggle Edit Mode
+    if (event.logicalKey == LogicalKeyboardKey.keyE) {
+      setState(() {
+        _isEditMode = !_isEditMode;
+      });
+      return true;
+    }
+
+    // A or N: Add manual action at current position
+    if (event.logicalKey == LogicalKeyboardKey.keyA || event.logicalKey == LogicalKeyboardKey.keyN) {
+      if (!_isEditMode) {
+        setState(() {
+          _isEditMode = true;
+        });
+      }
+      _onActionAdded();
+      return true;
+    }
+
+    // S: Add sub-action to selected parent action
+    if (event.logicalKey == LogicalKeyboardKey.keyS) {
+      final parent = _selectedParentAction;
+      if (parent != null) {
+        if (!_isEditMode) {
+          setState(() {
+            _isEditMode = true;
+          });
+        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _sidebarKey.currentState?.triggerAddSubActionDialog(parent);
+        });
+      }
+      return true;
+    }
+
+    // K: Add key point to selected action/sub-action
+    if (event.logicalKey == LogicalKeyboardKey.keyK) {
+      if (_selectedAction != null) {
+        if (!_isEditMode) {
+          setState(() {
+            _isEditMode = true;
+          });
+        }
+        ActionModel? parentAction;
+        int parentIdx = _actions.indexWhere((a) => a.id == _selectedAction!.id);
+        if (parentIdx == -1) {
+          for (final a in _actions) {
+            if (a.subActions.any((sub) => sub.id == _selectedAction!.id)) {
+              parentAction = a;
+              break;
+            }
+          }
+        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _sidebarKey.currentState?.triggerAddKeyPointDialog(_selectedAction!, parentAction: parentAction);
+        });
+      }
+      return true;
+    }
+
+    // Delete or Backspace: delete currently selected element
+    if (event.logicalKey == LogicalKeyboardKey.delete || event.logicalKey == LogicalKeyboardKey.backspace) {
+      if (!_isEditMode) {
+        return false;
+      }
+      if (_selectedKeyPoint != null) {
+        ActionModel? ownerAction;
+        ActionModel? parentAction;
+        for (final a in _actions) {
+          if (a.keyPoints.any((kp) => kp.id == _selectedKeyPoint!.id)) {
+            ownerAction = a;
+            break;
+          }
+          for (final sub in a.subActions) {
+            if (sub.keyPoints.any((kp) => kp.id == _selectedKeyPoint!.id)) {
+              ownerAction = sub;
+              parentAction = a;
+              break;
+            }
+          }
+        }
+        if (ownerAction != null) {
+          _sidebarKey.currentState?.triggerDeleteKeyPoint(ownerAction, _selectedKeyPoint!, parentAction: parentAction);
+        }
+      } else if (_selectedAction != null) {
+        int parentIdx = _actions.indexWhere((a) => a.id == _selectedAction!.id);
+        if (parentIdx != -1) {
+          _sidebarKey.currentState?.triggerDeleteAction(_selectedAction!);
+        } else {
+          ActionModel? parent;
+          for (final a in _actions) {
+            if (a.subActions.any((sub) => sub.id == _selectedAction!.id)) {
+              parent = a;
+              break;
+            }
+          }
+          if (parent != null) {
+            _sidebarKey.currentState?.triggerDeleteSubAction(parent, _selectedAction!);
+          }
+        }
+      }
+      return true;
+    }
+
+    // Arrow Left: seek backward 500ms (or 5s if Shift is held)
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      final duration = _videoController?.player.state.duration.inMilliseconds ?? 0;
+      final step = HardwareKeyboard.instance.isShiftPressed ? 5000 : 500;
+      final newPos = _currentPosition.inMilliseconds - step;
+      final clampedPos = duration > 0 ? newPos.clamp(0, duration) : newPos.clamp(0, 99999999);
+      _videoController?.player.seek(Duration(milliseconds: clampedPos));
+      return true;
+    }
+
+    // Arrow Right: seek forward 500ms (or 5s if Shift is held)
+    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      final duration = _videoController?.player.state.duration.inMilliseconds ?? 0;
+      final step = HardwareKeyboard.instance.isShiftPressed ? 5000 : 500;
+      final newPos = _currentPosition.inMilliseconds + step;
+      final clampedPos = duration > 0 ? newPos.clamp(0, duration) : newPos.clamp(0, 99999999);
+      _videoController?.player.seek(Duration(milliseconds: clampedPos));
+      return true;
+    }
+
+    // Arrow Up: select previous action in filtered list
+    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      final parent = _selectedParentAction;
+      int currentIdx = -1;
+      if (parent != null) {
+        currentIdx = _filteredActions.indexWhere((a) => a.id == parent.id);
+      }
+      int nextIdx = currentIdx == -1 ? 0 : currentIdx - 1;
+      if (_filteredActions.isNotEmpty) {
+        nextIdx = nextIdx.clamp(0, _filteredActions.length - 1);
+        _onActionSelected(_filteredActions[nextIdx]);
+      }
+      return true;
+    }
+
+    // Arrow Down: select next action in filtered list
+    if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      final parent = _selectedParentAction;
+      int currentIdx = -1;
+      if (parent != null) {
+        currentIdx = _filteredActions.indexWhere((a) => a.id == parent.id);
+      }
+      int nextIdx = currentIdx == -1 ? 0 : currentIdx + 1;
+      if (_filteredActions.isNotEmpty) {
+        nextIdx = nextIdx.clamp(0, _filteredActions.length - 1);
+        _onActionSelected(_filteredActions[nextIdx]);
+      }
+      return true;
+    }
+
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1124,77 +1337,34 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                             final right = _getFocusPlayerRight(focusId);
                             final width = _getFocusPlayerWidth(focusId);
 
-                            return Positioned(
-                              top: top,
-                              right: right,
-                              width: width,
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  MouseRegion(
-                                    cursor: SystemMouseCursors.move,
-                                    child: GestureDetector(
-                                      onPanUpdate: (details) {
+                            return PositionedFocusPlayerWrapper(
+                              focusId: focusId,
+                              index: index,
+                              initialTop: top,
+                              initialRight: right,
+                              initialWidth: width,
+                              isFocusActive: isFocusActive,
+                              onPositionChanged: (newTop, newRight) {
+                                _focusPlayerTops[focusId] = newTop;
+                                _focusPlayerRights[focusId] = newRight;
+                              },
+                              onWidthChanged: (newWidth) {
+                                _focusPlayerWidths[focusId] = newWidth;
+                              },
+                              child: FocusPlayerWidget(
+                                controller: _videoController!,
+                                focus: focus,
+                                isActive: isFocusActive,
+                                mainPosition: _currentPosition,
+                                isUpdatingFocus: _isUpdatingFocus && isFocusActive,
+                                onResetFocus: _isEditMode && isFocusActive
+                                    ? () {
+                                        // Start updating focus mode instead of resetting action to 0
                                         setState(() {
-                                          _focusPlayerTops[focusId] = top + details.delta.dy;
-                                          _focusPlayerRights[focusId] = right - details.delta.dx;
+                                          _isUpdatingFocus = true;
                                         });
-                                      },
-                                      child: FocusPlayerWidget(
-                                        controller: _videoController!,
-                                        focus: focus,
-                                        isActive: isFocusActive,
-                                        mainPosition: _currentPosition,
-                                        isUpdatingFocus: _isUpdatingFocus && isFocusActive,
-                                        onResetFocus: _isEditMode && isFocusActive
-                                            ? () {
-                                                // Start updating focus mode instead of resetting action to 0
-                                                setState(() {
-                                                  _isUpdatingFocus = true;
-                                                });
-                                              }
-                                            : null,
-                                      ),
-                                    ),
-                                  ),
-                                  // Uchwyt do zmiany rozmiaru (lewy dolny róg)
-                                  Positioned(
-                                    bottom: -10,
-                                    left: -10,
-                                    child: MouseRegion(
-                                      cursor: SystemMouseCursors
-                                          .resizeUpRightDownLeft,
-                                      child: GestureDetector(
-                                        onPanUpdate: (details) {
-                                          setState(() {
-                                            // delta.dx ujemna => ruch w lewo => szerokość rośnie
-                                            _focusPlayerWidths[focusId] =
-                                                (width - details.delta.dx)
-                                                    .clamp(100.0, 800.0);
-                                          });
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                            color: isFocusActive ? Colors.purpleAccent : Colors.grey,
-                                            shape: BoxShape.circle,
-                                            boxShadow: const [
-                                              BoxShadow(
-                                                color: Colors.black54,
-                                                blurRadius: 4,
-                                              ),
-                                            ],
-                                          ),
-                                          child: const Icon(
-                                            Icons.open_in_full,
-                                            size: 16,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                      }
+                                    : null,
                               ),
                             );
                           }),
@@ -1209,10 +1379,11 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           Container(
             width: 350,
             decoration: const BoxDecoration(
-              color: Color(0xFF1E1E1E),
-              border: Border(left: BorderSide(color: Colors.white12)),
+              color: KineticTheme.surfaceContainerLow,
+              border: Border(left: BorderSide(color: KineticTheme.outlineVariant)),
             ),
             child: ActionSidebar(
+              key: _sidebarKey,
               currentPosition: _currentPosition,
               actions: _actions,
               selectedAction: _selectedAction,
@@ -1278,6 +1449,122 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               onActionUpdated: (updatedAction) => _handleActionUpdated(updatedAction, updateBackend: true),
               onKeyPointSelected: _handleKeyPointSelected,
               onKeyPointUpdated: (updatedKeyPoint) => _handleKeyPointUpdated(updatedKeyPoint, updateBackend: true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PositionedFocusPlayerWrapper extends StatefulWidget {
+  final String focusId;
+  final int index;
+  final double initialTop;
+  final double initialRight;
+  final double initialWidth;
+  final Widget child;
+  final Function(double top, double right) onPositionChanged;
+  final Function(double width) onWidthChanged;
+  final bool isFocusActive;
+
+  const PositionedFocusPlayerWrapper({
+    super.key,
+    required this.focusId,
+    required this.index,
+    required this.initialTop,
+    required this.initialRight,
+    required this.initialWidth,
+    required this.child,
+    required this.onPositionChanged,
+    required this.onWidthChanged,
+    required this.isFocusActive,
+  });
+
+  @override
+  State<PositionedFocusPlayerWrapper> createState() => _PositionedFocusPlayerWrapperState();
+}
+
+class _PositionedFocusPlayerWrapperState extends State<PositionedFocusPlayerWrapper> {
+  late double _top;
+  late double _right;
+  late double _width;
+
+  @override
+  void initState() {
+    super.initState();
+    _top = widget.initialTop;
+    _right = widget.initialRight;
+    _width = widget.initialWidth;
+  }
+
+  @override
+  void didUpdateWidget(PositionedFocusPlayerWrapper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusId != widget.focusId ||
+        oldWidget.initialTop != widget.initialTop ||
+        oldWidget.initialRight != widget.initialRight ||
+        oldWidget.initialWidth != widget.initialWidth) {
+      _top = widget.initialTop;
+      _right = widget.initialRight;
+      _width = widget.initialWidth;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: _top,
+      right: _right,
+      width: _width,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          MouseRegion(
+            cursor: SystemMouseCursors.move,
+            child: GestureDetector(
+              onPanUpdate: (details) {
+                setState(() {
+                  _top += details.delta.dy;
+                  _right -= details.delta.dx;
+                });
+                widget.onPositionChanged(_top, _right);
+              },
+              child: widget.child,
+            ),
+          ),
+          // Uchwyt do zmiany rozmiaru (lewy dolny róg)
+          Positioned(
+            bottom: -10,
+            left: -10,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.resizeUpRightDownLeft,
+              child: GestureDetector(
+                onPanUpdate: (details) {
+                  setState(() {
+                    _width = (_width - details.delta.dx).clamp(100.0, 800.0);
+                  });
+                  widget.onWidthChanged(_width);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: widget.isFocusActive ? Colors.purpleAccent : Colors.grey,
+                    shape: BoxShape.circle,
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black54,
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.open_in_full,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
