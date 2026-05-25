@@ -47,14 +47,24 @@ def test_security_headers():
     assert response.headers.get("Strict-Transport-Security") == "max-age=31536000; includeSubDomains"
     assert response.headers.get("X-XSS-Protection") == "1; mode=block"
 
-def test_update_action_dos_optional():
-    long_string = "a" * 5000
+def test_update_action_dos_player_id():
     response = client.post("/update_action", json={
-        "video_path": "test.mp4",
-        "action_id": "test",
-        "new_type": "test",
-        "new_start_ms": 0.0,
-        "new_end_ms": 1.0,
-        "new_player_id": long_string
+        "video_path": "a.mp4",
+        "action_id": "123",
+        "new_type": "Serve",
+        "new_start_ms": 1.0,
+        "new_end_ms": 2.0,
+        "new_player_id": "a" * 101
     })
-    assert response.status_code == 422 # Unprocessable Entity
+    assert response.status_code == 422
+
+def test_update_action_dos_active_focus_id():
+    response = client.post("/update_action", json={
+        "video_path": "a.mp4",
+        "action_id": "123",
+        "new_type": "Serve",
+        "new_start_ms": 1.0,
+        "new_end_ms": 2.0,
+        "new_active_focus_id": "a" * 101
+    })
+    assert response.status_code == 422

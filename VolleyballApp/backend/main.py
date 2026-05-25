@@ -66,9 +66,9 @@ class UpdateActionRequest(BaseModel):
     new_sub_actions: Optional[List[Dict[str, Any]]] = None
     new_key_points: Optional[List[Dict[str, Any]]] = None
     new_player_box: Optional[List[float]] = None
-    new_player_id: Optional[str] = Field(default=None, max_length=100)
+    new_player_id: Optional[str] = Field(None, max_length=100)
     new_player_focuses: Optional[List[Dict[str, Any]]] = None
-    new_active_focus_id: Optional[str] = Field(default=None, max_length=100)
+    new_active_focus_id: Optional[str] = Field(None, max_length=100)
 
 def secure_path(file_path: str) -> str:
     """Validates that the given path does not contain directory traversal characters."""
