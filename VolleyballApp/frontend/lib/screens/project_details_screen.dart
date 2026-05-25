@@ -805,19 +805,20 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                           style: TextStyle(color: Colors.white54),
                         ),
                         const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        Wrap(
+                          spacing: 16,
+                          runSpacing: 16,
+                          alignment: WrapAlignment.center,
                           children: [
                             ElevatedButton.icon(
                               onPressed: _importVideoArtifact,
                               icon: const Icon(Icons.add_to_drive),
-                              label: const Text('IMPORTUJ NOWE WIDEO'),
+                              label: const Text('Importuj wideo'),
                             ),
-                            const SizedBox(width: 16),
-                            OutlinedButton.icon(
+                            ElevatedButton.icon(
                               onPressed: _linkExistingArtifactDialog,
                               icon: const Icon(Icons.link),
-                              label: const Text('PODEPNIJ ISTNIEJĄCY'),
+                              label: const Text('Podepnij artefakt'),
                             ),
                           ],
                         ),
