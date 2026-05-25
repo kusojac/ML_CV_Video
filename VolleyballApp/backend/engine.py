@@ -137,6 +137,7 @@ class VolleyballAnalyticsEngine:
         if len(ball_boxes) > 0:
             # 2. Detect Persons
             coco_outs = self.session_coco.run([self.output_name_coco], {self.input_name_coco: yolo_input})
+            # ⚡ Bolt Optimization: target_class_id=0 extracts only the person class, avoiding slow np.max across all 80 COCO classes
             coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_output(coco_outs[0], original_shape, conf_threshold=0.5, target_class_id=0)
             
             # ⚡ Bolt Optimization: We requested only class 0 above, so coco_boxes are already only person boxes
@@ -256,6 +257,7 @@ class VolleyballAnalyticsEngine:
 
         if len(ball_boxes) > 0:
             coco_outs = self.session_coco.run([self.output_name_coco], {self.input_name_coco: yolo_input})
+            # ⚡ Bolt Optimization: target_class_id=0 extracts only the person class, avoiding slow np.max across all 80 COCO classes
             coco_boxes, coco_scores, coco_class_ids = postprocess_yolo_output(coco_outs[0], original_shape, conf_threshold=0.5, target_class_id=0)
 
             person_boxes = coco_boxes

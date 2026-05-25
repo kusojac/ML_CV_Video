@@ -210,7 +210,8 @@ class ActionSidebarState extends State<ActionSidebar> {
                           style: TextStyle(color: Colors.white70, fontSize: 12),
                         ),
                         Tooltip(
-                          message: 'Przełącz tryb edycji (Skrót: E) / Toggle edit mode (Shortcut: E)',
+                          message:
+                              'Przełącz tryb edycji (Skrót: E) / Toggle edit mode (Shortcut: E)',
                           child: Switch(
                             value: widget.isEditMode,
                             onChanged: widget.onEditModeChanged,
@@ -293,7 +294,8 @@ class ActionSidebarState extends State<ActionSidebar> {
                   Padding(
                     padding: const EdgeInsets.only(top: 12.0),
                     child: Tooltip(
-                      message: 'Dodaj nową akcję (Skrót: A lub N) / Add new action (Shortcut: A or N)',
+                      message:
+                          'Dodaj nową akcję (Skrót: A lub N) / Add new action (Shortcut: A or N)',
                       child: ElevatedButton.icon(
                         onPressed: widget.onActionAdded,
                         icon: const Icon(Icons.add, size: 18),
@@ -506,7 +508,8 @@ class ActionSidebarState extends State<ActionSidebar> {
                                                     child: Row(
                                                       children: [
                                                         Tooltip(
-                                                          message: 'Edytuj akcję / Edit action',
+                                                          message:
+                                                              'Edytuj akcję / Edit action',
                                                           child: InkWell(
                                                             onTap: () =>
                                                                 _editAction(
@@ -520,7 +523,8 @@ class ActionSidebarState extends State<ActionSidebar> {
                                                                   style: TextStyle(
                                                                     color: Colors
                                                                         .white30,
-                                                                    fontSize: 10,
+                                                                    fontSize:
+                                                                        10,
                                                                     fontWeight:
                                                                         FontWeight
                                                                             .bold,
@@ -543,12 +547,14 @@ class ActionSidebarState extends State<ActionSidebar> {
                                                           width: 12,
                                                         ),
                                                         Tooltip(
-                                                          message: 'Usuń akcję (Skrót: Delete/Backspace przy zaznaczeniu) / Delete action (Shortcut: Delete/Backspace when selected)',
+                                                          message:
+                                                              'Usuń akcję (Skrót: Delete/Backspace przy zaznaczeniu) / Delete action (Shortcut: Delete/Backspace when selected)',
                                                           child: InkWell(
                                                             onTap: () async {
                                                               final bool?
                                                               confirm = await showDialog<bool>(
-                                                                context: context,
+                                                                context:
+                                                                    context,
                                                                 builder: (context) => AlertDialog(
                                                                   backgroundColor:
                                                                       const Color(
@@ -578,8 +584,8 @@ class ActionSidebarState extends State<ActionSidebar> {
                                                                       child: const Text(
                                                                         'Anuluj',
                                                                         style: TextStyle(
-                                                                          color: Colors
-                                                                              .white54,
+                                                                          color:
+                                                                              Colors.white54,
                                                                         ),
                                                                       ),
                                                                     ),
@@ -592,8 +598,8 @@ class ActionSidebarState extends State<ActionSidebar> {
                                                                       child: const Text(
                                                                         'Usuń',
                                                                         style: TextStyle(
-                                                                          color: Colors
-                                                                              .redAccent,
+                                                                          color:
+                                                                              Colors.redAccent,
                                                                         ),
                                                                       ),
                                                                     ),
@@ -619,7 +625,8 @@ class ActionSidebarState extends State<ActionSidebar> {
                                                                   style: TextStyle(
                                                                     color: Colors
                                                                         .redAccent,
-                                                                    fontSize: 10,
+                                                                    fontSize:
+                                                                        10,
                                                                     fontWeight:
                                                                         FontWeight
                                                                             .bold,
@@ -1011,9 +1018,7 @@ class ActionSidebarState extends State<ActionSidebar> {
             ),
             TextButton(
               onPressed: () {
-                final newAction = action.copyWith(
-                  type: typeController.text,
-                );
+                final newAction = action.copyWith(type: typeController.text);
                 widget.onActionUpdated(newAction);
                 Navigator.pop(context);
               },
@@ -1034,7 +1039,8 @@ class ActionSidebarState extends State<ActionSidebar> {
         return Padding(
           padding: const EdgeInsets.only(top: 8.0, left: 16.0),
           child: Tooltip(
-            message: 'Dodaj pod-akcję (Skrót: S) / Add sub-action (Shortcut: S)',
+            message:
+                'Dodaj pod-akcję (Skrót: S) / Add sub-action (Shortcut: S)',
             child: InkWell(
               onTap: () => _showAddSubActionDialog(context, parentAction),
               child: const Row(
@@ -1102,10 +1108,14 @@ class ActionSidebarState extends State<ActionSidebar> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
-                color: isSubSelected ? const Color(0xFF2A2438) : Colors.transparent,
+                color: isSubSelected
+                    ? const Color(0xFF2A2438)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: isSubSelected ? Colors.purpleAccent.withValues(alpha: 0.4) : Colors.transparent,
+                  color: isSubSelected
+                      ? Colors.purpleAccent.withValues(alpha: 0.4)
+                      : Colors.transparent,
                 ),
               ),
               child: Column(
@@ -1149,6 +1159,7 @@ class ActionSidebarState extends State<ActionSidebar> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.play_arrow, size: 16, color: Colors.white70),
+                        tooltip: 'Odtwórz sub-akcję',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () => widget.onActionSelected(sub),
@@ -1156,19 +1167,33 @@ class ActionSidebarState extends State<ActionSidebar> {
                       if (widget.isEditMode) ...[
                         const SizedBox(width: 8),
                         IconButton(
-                          icon: const Icon(Icons.edit, size: 14, color: Colors.white30),
+                          icon: const Icon(
+                            Icons.edit,
+                            size: 14,
+                            color: Colors.white30,
+                          ),
                           tooltip: 'Edytuj pod-akcję / Edit sub-action',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          onPressed: () => _showEditSubActionDialog(context, parentAction, sub),
+                          onPressed: () => _showEditSubActionDialog(
+                            context,
+                            parentAction,
+                            sub,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         IconButton(
-                          icon: const Icon(Icons.delete, size: 14, color: Colors.redAccent),
-                          tooltip: 'Usuń pod-akcję (Skrót: Delete/Backspace przy zaznaczeniu) / Delete sub-action (Shortcut: Delete/Backspace when selected)',
+                          icon: const Icon(
+                            Icons.delete,
+                            size: 14,
+                            color: Colors.redAccent,
+                          ),
+                          tooltip:
+                              'Usuń pod-akcję (Skrót: Delete/Backspace przy zaznaczeniu) / Delete sub-action (Shortcut: Delete/Backspace when selected)',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          onPressed: () => _deleteSubAction(context, parentAction, sub),
+                          onPressed: () =>
+                              _deleteSubAction(context, parentAction, sub),
                         ),
                       ],
                     ],
@@ -1183,7 +1208,8 @@ class ActionSidebarState extends State<ActionSidebar> {
           Padding(
             padding: const EdgeInsets.only(top: 4.0, left: 16.0),
             child: Tooltip(
-              message: 'Dodaj pod-akcję (Skrót: S) / Add sub-action (Shortcut: S)',
+              message:
+                  'Dodaj pod-akcję (Skrót: S) / Add sub-action (Shortcut: S)',
               child: InkWell(
                 onTap: () => _showAddSubActionDialog(context, parentAction),
                 child: const Row(
@@ -1208,7 +1234,11 @@ class ActionSidebarState extends State<ActionSidebar> {
     );
   }
 
-  Widget _buildKeyPointsList(BuildContext context, ActionModel action, {ActionModel? parentAction}) {
+  Widget _buildKeyPointsList(
+    BuildContext context,
+    ActionModel action, {
+    ActionModel? parentAction,
+  }) {
     if (action.keyPoints.isEmpty && !widget.isEditMode) {
       return const SizedBox.shrink();
     }
@@ -1220,14 +1250,18 @@ class ActionSidebarState extends State<ActionSidebar> {
           const SizedBox(height: 6),
           ...action.keyPoints.map((kp) {
             final isKpSelected = widget.selectedKeyPoint?.id == kp.id;
-            final kpTimeStr = Duration(milliseconds: kp.timeMs.round()).toString().split('.').first;
+            final kpTimeStr = Duration(
+              milliseconds: kp.timeMs.round(),
+            ).toString().split('.').first;
 
             return Padding(
               padding: const EdgeInsets.only(left: 12.0, bottom: 4.0),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isKpSelected ? Colors.amber.withAlpha(40) : Colors.transparent,
+                  color: isKpSelected
+                      ? Colors.amber.withAlpha(40)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(
                     color: isKpSelected ? Colors.amber : Colors.transparent,
@@ -1236,11 +1270,7 @@ class ActionSidebarState extends State<ActionSidebar> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.diamond,
-                      size: 12,
-                      color: Colors.amber,
-                    ),
+                    const Icon(Icons.diamond, size: 12, color: Colors.amber),
                     const SizedBox(width: 6),
                     Expanded(
                       child: InkWell(
@@ -1251,11 +1281,17 @@ class ActionSidebarState extends State<ActionSidebar> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              kp.description.isNotEmpty ? kp.description : 'Kluczowy punkt',
+                              kp.description.isNotEmpty
+                                  ? kp.description
+                                  : 'Kluczowy punkt',
                               style: TextStyle(
-                                color: isKpSelected ? Colors.amber : Colors.white70,
+                                color: isKpSelected
+                                    ? Colors.amber
+                                    : Colors.white70,
                                 fontSize: 11,
-                                fontWeight: isKpSelected ? FontWeight.bold : FontWeight.normal,
+                                fontWeight: isKpSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
                             ),
                             Text(
@@ -1271,6 +1307,7 @@ class ActionSidebarState extends State<ActionSidebar> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.play_arrow, size: 14, color: Colors.white54),
+                      tooltip: 'Odtwórz punkt kluczowy',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       onPressed: () {
@@ -1280,19 +1317,38 @@ class ActionSidebarState extends State<ActionSidebar> {
                     if (widget.isEditMode) ...[
                       const SizedBox(width: 6),
                       IconButton(
-                        icon: const Icon(Icons.edit, size: 12, color: Colors.white30),
+                        icon: const Icon(
+                          Icons.edit,
+                          size: 12,
+                          color: Colors.white30,
+                        ),
                         tooltip: 'Edytuj kluczowy punkt / Edit key point',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        onPressed: () => _showEditKeyPointDialog(context, action, kp, parentAction: parentAction),
+                        onPressed: () => _showEditKeyPointDialog(
+                          context,
+                          action,
+                          kp,
+                          parentAction: parentAction,
+                        ),
                       ),
                       const SizedBox(width: 6),
                       IconButton(
-                        icon: const Icon(Icons.delete, size: 12, color: Colors.redAccent),
-                        tooltip: 'Usuń kluczowy punkt (Skrót: Delete/Backspace przy zaznaczeniu) / Delete key point (Shortcut: Delete/Backspace when selected)',
+                        icon: const Icon(
+                          Icons.delete,
+                          size: 12,
+                          color: Colors.redAccent,
+                        ),
+                        tooltip:
+                            'Usuń kluczowy punkt (Skrót: Delete/Backspace przy zaznaczeniu) / Delete key point (Shortcut: Delete/Backspace when selected)',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                        onPressed: () => _deleteKeyPoint(context, action, kp, parentAction: parentAction),
+                        onPressed: () => _deleteKeyPoint(
+                          context,
+                          action,
+                          kp,
+                          parentAction: parentAction,
+                        ),
                       ),
                     ],
                   ],
@@ -1305,9 +1361,14 @@ class ActionSidebarState extends State<ActionSidebar> {
           Padding(
             padding: const EdgeInsets.only(top: 4.0, left: 12.0),
             child: Tooltip(
-              message: 'Dodaj kluczowy punkt (Skrót: K) / Add key point (Shortcut: K)',
+              message:
+                  'Dodaj kluczowy punkt (Skrót: K) / Add key point (Shortcut: K)',
               child: InkWell(
-                onTap: () => _showAddKeyPointDialog(context, action, parentAction: parentAction),
+                onTap: () => _showAddKeyPointDialog(
+                  context,
+                  action,
+                  parentAction: parentAction,
+                ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1330,7 +1391,11 @@ class ActionSidebarState extends State<ActionSidebar> {
     );
   }
 
-  void _showAddKeyPointDialog(BuildContext context, ActionModel action, {ActionModel? parentAction}) {
+  void _showAddKeyPointDialog(
+    BuildContext context,
+    ActionModel action, {
+    ActionModel? parentAction,
+  }) {
     final actionStartSec = action.startMs / 1000.0;
     final actionEndSec = action.endMs / 1000.0;
 
@@ -1343,7 +1408,9 @@ class ActionSidebarState extends State<ActionSidebar> {
     }
 
     final descController = TextEditingController();
-    final timeController = TextEditingController(text: initialTimeSec.toStringAsFixed(2));
+    final timeController = TextEditingController(
+      text: initialTimeSec.toStringAsFixed(2),
+    );
 
     showDialog(
       context: context,
@@ -1374,7 +1441,9 @@ class ActionSidebarState extends State<ActionSidebar> {
               const SizedBox(height: 12),
               TextField(
                 controller: timeController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
                   labelText: 'Czas (sekundy)',
@@ -1387,12 +1456,17 @@ class ActionSidebarState extends State<ActionSidebar> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white54),
+              ),
             ),
             TextButton(
               onPressed: () {
                 final timeVal = double.tryParse(timeController.text);
-                if (timeVal == null || timeVal < actionStartSec || timeVal > actionEndSec) {
+                if (timeVal == null ||
+                    timeVal < actionStartSec ||
+                    timeVal > actionEndSec) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
@@ -1409,15 +1483,23 @@ class ActionSidebarState extends State<ActionSidebar> {
                   playerBox: [0.0, 0.0, 0.0, 0.0],
                 );
 
-                final updatedKeyPoints = List<ActionKeyPointModel>.from(action.keyPoints)..add(newKp);
-                final updatedAction = action.copyWith(keyPoints: updatedKeyPoints);
+                final updatedKeyPoints = List<ActionKeyPointModel>.from(
+                  action.keyPoints,
+                )..add(newKp);
+                final updatedAction = action.copyWith(
+                  keyPoints: updatedKeyPoints,
+                );
 
                 if (parentAction != null) {
                   final subIdx = parentAction.subActions.indexOf(action);
                   if (subIdx != -1) {
-                    final updatedSubActions = List<ActionModel>.from(parentAction.subActions);
+                    final updatedSubActions = List<ActionModel>.from(
+                      parentAction.subActions,
+                    );
                     updatedSubActions[subIdx] = updatedAction;
-                    widget.onActionUpdated(parentAction.copyWith(subActions: updatedSubActions));
+                    widget.onActionUpdated(
+                      parentAction.copyWith(subActions: updatedSubActions),
+                    );
                   }
                 } else {
                   widget.onActionUpdated(updatedAction);
@@ -1434,12 +1516,19 @@ class ActionSidebarState extends State<ActionSidebar> {
     );
   }
 
-  void _showEditKeyPointDialog(BuildContext context, ActionModel action, ActionKeyPointModel kp, {ActionModel? parentAction}) {
+  void _showEditKeyPointDialog(
+    BuildContext context,
+    ActionModel action,
+    ActionKeyPointModel kp, {
+    ActionModel? parentAction,
+  }) {
     final actionStartSec = action.startMs / 1000.0;
     final actionEndSec = action.endMs / 1000.0;
 
     final descController = TextEditingController(text: kp.description);
-    final timeController = TextEditingController(text: (kp.timeMs / 1000.0).toStringAsFixed(2));
+    final timeController = TextEditingController(
+      text: (kp.timeMs / 1000.0).toStringAsFixed(2),
+    );
 
     showDialog(
       context: context,
@@ -1470,7 +1559,9 @@ class ActionSidebarState extends State<ActionSidebar> {
               const SizedBox(height: 12),
               TextField(
                 controller: timeController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
                   labelText: 'Czas (sekundy)',
@@ -1483,12 +1574,17 @@ class ActionSidebarState extends State<ActionSidebar> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white54),
+              ),
             ),
             TextButton(
               onPressed: () {
                 final timeVal = double.tryParse(timeController.text);
-                if (timeVal == null || timeVal < actionStartSec || timeVal > actionEndSec) {
+                if (timeVal == null ||
+                    timeVal < actionStartSec ||
+                    timeVal > actionEndSec) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
@@ -1506,16 +1602,24 @@ class ActionSidebarState extends State<ActionSidebar> {
 
                 final kpIdx = action.keyPoints.indexWhere((k) => k.id == kp.id);
                 if (kpIdx != -1) {
-                  final updatedKeyPoints = List<ActionKeyPointModel>.from(action.keyPoints);
+                  final updatedKeyPoints = List<ActionKeyPointModel>.from(
+                    action.keyPoints,
+                  );
                   updatedKeyPoints[kpIdx] = updatedKp;
-                  final updatedAction = action.copyWith(keyPoints: updatedKeyPoints);
+                  final updatedAction = action.copyWith(
+                    keyPoints: updatedKeyPoints,
+                  );
 
                   if (parentAction != null) {
                     final subIdx = parentAction.subActions.indexOf(action);
                     if (subIdx != -1) {
-                      final updatedSubActions = List<ActionModel>.from(parentAction.subActions);
+                      final updatedSubActions = List<ActionModel>.from(
+                        parentAction.subActions,
+                      );
                       updatedSubActions[subIdx] = updatedAction;
-                      widget.onActionUpdated(parentAction.copyWith(subActions: updatedSubActions));
+                      widget.onActionUpdated(
+                        parentAction.copyWith(subActions: updatedSubActions),
+                      );
                     }
                   } else {
                     widget.onActionUpdated(updatedAction);
@@ -1528,7 +1632,10 @@ class ActionSidebarState extends State<ActionSidebar> {
 
                 Navigator.pop(context);
               },
-              child: const Text('Zapisz', style: TextStyle(color: Colors.amber)),
+              child: const Text(
+                'Zapisz',
+                style: TextStyle(color: Colors.amber),
+              ),
             ),
           ],
         );
@@ -1536,29 +1643,51 @@ class ActionSidebarState extends State<ActionSidebar> {
     );
   }
 
-  void _deleteKeyPoint(BuildContext context, ActionModel action, ActionKeyPointModel kp, {ActionModel? parentAction}) {
+  void _deleteKeyPoint(
+    BuildContext context,
+    ActionModel action,
+    ActionKeyPointModel kp, {
+    ActionModel? parentAction,
+  }) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E24),
-        title: const Text('Usuń kluczowy punkt', style: TextStyle(color: Colors.white)),
-        content: const Text('Czy na pewno chcesz usunąć ten kluczowy punkt?', style: TextStyle(color: Colors.white70)),
+        title: const Text(
+          'Usuń kluczowy punkt',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Czy na pewno chcesz usunąć ten kluczowy punkt?',
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Anuluj',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           TextButton(
             onPressed: () {
-              final updatedKeyPoints = action.keyPoints.where((k) => k.id != kp.id).toList();
-              final updatedAction = action.copyWith(keyPoints: updatedKeyPoints);
+              final updatedKeyPoints = action.keyPoints
+                  .where((k) => k.id != kp.id)
+                  .toList();
+              final updatedAction = action.copyWith(
+                keyPoints: updatedKeyPoints,
+              );
 
               if (parentAction != null) {
                 final subIdx = parentAction.subActions.indexOf(action);
                 if (subIdx != -1) {
-                  final updatedSubActions = List<ActionModel>.from(parentAction.subActions);
+                  final updatedSubActions = List<ActionModel>.from(
+                    parentAction.subActions,
+                  );
                   updatedSubActions[subIdx] = updatedAction;
-                  widget.onActionUpdated(parentAction.copyWith(subActions: updatedSubActions));
+                  widget.onActionUpdated(
+                    parentAction.copyWith(subActions: updatedSubActions),
+                  );
                 }
               } else {
                 widget.onActionUpdated(updatedAction);
@@ -1569,7 +1698,10 @@ class ActionSidebarState extends State<ActionSidebar> {
               }
               Navigator.pop(context);
             },
-            child: const Text('Usuń', style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              'Usuń',
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),
@@ -1726,9 +1858,7 @@ class ActionSidebarState extends State<ActionSidebar> {
                 final newSubs = List<ActionModel>.from(parent.subActions)
                   ..add(sub);
 
-                final updatedParent = parent.copyWith(
-                  subActions: newSubs,
-                );
+                final updatedParent = parent.copyWith(subActions: newSubs);
 
                 widget.onActionUpdated(updatedParent);
                 Navigator.pop(context);
@@ -1898,9 +2028,7 @@ class ActionSidebarState extends State<ActionSidebar> {
                   newSubs[idx] = updatedSub;
                 }
 
-                final updatedParent = parent.copyWith(
-                  subActions: newSubs,
-                );
+                final updatedParent = parent.copyWith(subActions: newSubs);
 
                 widget.onActionUpdated(updatedParent);
                 Navigator.pop(context);
@@ -1944,9 +2072,7 @@ class ActionSidebarState extends State<ActionSidebar> {
                 final newSubs = List<ActionModel>.from(parent.subActions)
                   ..removeWhere((s) => s.id == sub.id);
 
-                final updatedParent = parent.copyWith(
-                  subActions: newSubs,
-                );
+                final updatedParent = parent.copyWith(subActions: newSubs);
                 widget.onActionUpdated(updatedParent);
                 Navigator.pop(context);
               },
@@ -2012,7 +2138,10 @@ class ActionSidebarState extends State<ActionSidebar> {
     );
   }
 
-  Widget _buildFocusManagementPanel(BuildContext context, ActionModel selectedAction) {
+  Widget _buildFocusManagementPanel(
+    BuildContext context,
+    ActionModel selectedAction,
+  ) {
     // Find parent action if it's a sub-action
     ActionModel? parentAction;
     for (final a in widget.actions) {
@@ -2059,10 +2188,16 @@ class ActionSidebarState extends State<ActionSidebar> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.center_focus_weak, size: 16, color: Colors.purpleAccent),
+                  const Icon(
+                    Icons.center_focus_weak,
+                    size: 16,
+                    color: Colors.purpleAccent,
+                  ),
                   const SizedBox(width: 8),
                   Text(
-                    isSubAction ? 'Śledzenie pod-akcji (PIP)' : 'Śledzenie akcji (PIP)',
+                    isSubAction
+                        ? 'Śledzenie pod-akcji (PIP)'
+                        : 'Śledzenie akcji (PIP)',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
@@ -2073,14 +2208,29 @@ class ActionSidebarState extends State<ActionSidebar> {
               ),
               if (widget.isEditMode)
                 TextButton.icon(
-                  onPressed: () => _addPlayerFocus(context, selectedAction, parentAction: parentAction),
-                  icon: const Icon(Icons.add, size: 14, color: Colors.purpleAccent),
+                  onPressed: () => _addPlayerFocus(
+                    context,
+                    selectedAction,
+                    parentAction: parentAction,
+                  ),
+                  icon: const Icon(
+                    Icons.add,
+                    size: 14,
+                    color: Colors.purpleAccent,
+                  ),
                   label: const Text(
                     'Dodaj',
-                    style: TextStyle(color: Colors.purpleAccent, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.purpleAccent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -2088,7 +2238,7 @@ class ActionSidebarState extends State<ActionSidebar> {
             ],
           ),
           const SizedBox(height: 8),
-          
+
           // Badge showing action info
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -2120,7 +2270,11 @@ class ActionSidebarState extends State<ActionSidebar> {
                 const SizedBox(width: 6),
                 Text(
                   timestamp,
-                  style: const TextStyle(color: Colors.white54, fontSize: 10, fontFamily: 'monospace'),
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 10,
+                    fontFamily: 'monospace',
+                  ),
                 ),
               ],
             ),
@@ -2137,10 +2291,14 @@ class ActionSidebarState extends State<ActionSidebar> {
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   decoration: BoxDecoration(
-                    color: isActive ? const Color(0xFF2A2438) : const Color(0xFF16161C),
+                    color: isActive
+                        ? const Color(0xFF2A2438)
+                        : const Color(0xFF16161C),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: isActive ? Colors.purpleAccent.withValues(alpha: 0.5) : Colors.white10,
+                      color: isActive
+                          ? Colors.purpleAccent.withValues(alpha: 0.5)
+                          : Colors.white10,
                     ),
                   ),
                   child: Row(
@@ -2162,7 +2320,9 @@ class ActionSidebarState extends State<ActionSidebar> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isActive ? Colors.purpleAccent : Colors.white30,
+                                color: isActive
+                                    ? Colors.purpleAccent
+                                    : Colors.white30,
                                 width: 2,
                               ),
                             ),
@@ -2199,8 +2359,12 @@ class ActionSidebarState extends State<ActionSidebar> {
                                 Text(
                                   focus.name,
                                   style: TextStyle(
-                                    color: isActive ? Colors.white : Colors.white70,
-                                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                                    color: isActive
+                                        ? Colors.white
+                                        : Colors.white70,
+                                    fontWeight: isActive
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -2208,7 +2372,11 @@ class ActionSidebarState extends State<ActionSidebar> {
                                 Text(
                                   'Gracz: ${focus.playerId}',
                                   style: TextStyle(
-                                    color: isActive ? Colors.purpleAccent.withValues(alpha: 0.8) : Colors.white38,
+                                    color: isActive
+                                        ? Colors.purpleAccent.withValues(
+                                            alpha: 0.8,
+                                          )
+                                        : Colors.white38,
                                     fontSize: 10,
                                   ),
                                 ),
@@ -2219,11 +2387,20 @@ class ActionSidebarState extends State<ActionSidebar> {
                       ),
                       if (widget.isEditMode) ...[
                         IconButton(
-                          icon: const Icon(Icons.edit, size: 14, color: Colors.white30),
+                          icon: const Icon(
+                            Icons.edit,
+                            size: 14,
+                            color: Colors.white30,
+                          ),
                           tooltip: 'Edytuj obszar śledzenia',
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          onPressed: () => _editPlayerFocus(context, selectedAction, focus, parentAction: parentAction),
+                          onPressed: () => _editPlayerFocus(
+                            context,
+                            selectedAction,
+                            focus,
+                            parentAction: parentAction,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         IconButton(
@@ -2238,7 +2415,12 @@ class ActionSidebarState extends State<ActionSidebar> {
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: selectedAction.playerFocuses.length > 1
-                              ? () => _deletePlayerFocus(context, selectedAction, focus, parentAction: parentAction)
+                              ? () => _deletePlayerFocus(
+                                  context,
+                                  selectedAction,
+                                  focus,
+                                  parentAction: parentAction,
+                                )
                               : null,
                         ),
                         const SizedBox(width: 12),
@@ -2284,7 +2466,9 @@ class ActionSidebarState extends State<ActionSidebar> {
     ActionModel action, {
     ActionModel? parentAction,
   }) {
-    final nameController = TextEditingController(text: 'Focus ${action.playerFocuses.length + 1}');
+    final nameController = TextEditingController(
+      text: 'Focus ${action.playerFocuses.length + 1}',
+    );
     final playerController = TextEditingController(text: action.playerId);
 
     showDialog(
@@ -2292,7 +2476,10 @@ class ActionSidebarState extends State<ActionSidebar> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A2A),
-          title: const Text('Dodaj obszar śledzenia', style: TextStyle(color: Colors.white, fontSize: 16)),
+          title: const Text(
+            'Dodaj obszar śledzenia',
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -2302,8 +2489,12 @@ class ActionSidebarState extends State<ActionSidebar> {
                 decoration: const InputDecoration(
                   labelText: 'Nazwa (np. Atak / Obrona)',
                   labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
-                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.purpleAccent)),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white30),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purpleAccent),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -2313,8 +2504,12 @@ class ActionSidebarState extends State<ActionSidebar> {
                 decoration: const InputDecoration(
                   labelText: 'ID Zawodnika',
                   labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
-                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.purpleAccent)),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white30),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purpleAccent),
+                  ),
                 ),
               ),
             ],
@@ -2322,12 +2517,17 @@ class ActionSidebarState extends State<ActionSidebar> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white54),
+              ),
             ),
             TextButton(
               onPressed: () {
                 final name = nameController.text.trim();
-                final playerId = playerController.text.trim().isEmpty ? 'Unknown' : playerController.text.trim();
+                final playerId = playerController.text.trim().isEmpty
+                    ? 'Unknown'
+                    : playerController.text.trim();
                 if (name.isNotEmpty) {
                   final activeFocus = action.playerFocuses.firstWhere(
                     (f) => f.id == action.activeFocusId,
@@ -2342,7 +2542,9 @@ class ActionSidebarState extends State<ActionSidebar> {
                     playerId: playerId,
                   );
 
-                  final newFocuses = List<PlayerFocusModel>.from(action.playerFocuses)..add(newFocus);
+                  final newFocuses = List<PlayerFocusModel>.from(
+                    action.playerFocuses,
+                  )..add(newFocus);
                   _updateActionFocuses(
                     action,
                     newFocuses,
@@ -2352,7 +2554,10 @@ class ActionSidebarState extends State<ActionSidebar> {
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Dodaj', style: TextStyle(color: Colors.purpleAccent)),
+              child: const Text(
+                'Dodaj',
+                style: TextStyle(color: Colors.purpleAccent),
+              ),
             ),
           ],
         );
@@ -2374,7 +2579,10 @@ class ActionSidebarState extends State<ActionSidebar> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A2A),
-          title: const Text('Edytuj obszar śledzenia', style: TextStyle(color: Colors.white, fontSize: 16)),
+          title: const Text(
+            'Edytuj obszar śledzenia',
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -2384,8 +2592,12 @@ class ActionSidebarState extends State<ActionSidebar> {
                 decoration: const InputDecoration(
                   labelText: 'Nazwa',
                   labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
-                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.purpleAccent)),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white30),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purpleAccent),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -2395,8 +2607,12 @@ class ActionSidebarState extends State<ActionSidebar> {
                 decoration: const InputDecoration(
                   labelText: 'ID Zawodnika',
                   labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
-                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.purpleAccent)),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white30),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purpleAccent),
+                  ),
                 ),
               ),
             ],
@@ -2404,12 +2620,17 @@ class ActionSidebarState extends State<ActionSidebar> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white54),
+              ),
             ),
             TextButton(
               onPressed: () {
                 final name = nameController.text.trim();
-                final playerId = playerController.text.trim().isEmpty ? 'Unknown' : playerController.text.trim();
+                final playerId = playerController.text.trim().isEmpty
+                    ? 'Unknown'
+                    : playerController.text.trim();
                 if (name.isNotEmpty) {
                   final newFocuses = action.playerFocuses.map((f) {
                     if (f.id == focus.id) {
@@ -2427,7 +2648,10 @@ class ActionSidebarState extends State<ActionSidebar> {
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Zapisz', style: TextStyle(color: Colors.purpleAccent)),
+              child: const Text(
+                'Zapisz',
+                style: TextStyle(color: Colors.purpleAccent),
+              ),
             ),
           ],
         );
@@ -2446,7 +2670,10 @@ class ActionSidebarState extends State<ActionSidebar> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF2A2A2A),
-          title: const Text('Usuń obszar śledzenia?', style: TextStyle(color: Colors.white, fontSize: 16)),
+          title: const Text(
+            'Usuń obszar śledzenia?',
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
           content: Text(
             'Czy na pewno chcesz usunąć "${focus.name}"?',
             style: const TextStyle(color: Colors.white70, fontSize: 14),
@@ -2454,16 +2681,22 @@ class ActionSidebarState extends State<ActionSidebar> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white54),
+              ),
             ),
             TextButton(
               onPressed: () {
-                final newFocuses = List<PlayerFocusModel>.from(action.playerFocuses)
-                  ..removeWhere((f) => f.id == focus.id);
+                final newFocuses = List<PlayerFocusModel>.from(
+                  action.playerFocuses,
+                )..removeWhere((f) => f.id == focus.id);
 
                 String? newActiveId = action.activeFocusId;
                 if (newActiveId == focus.id) {
-                  newActiveId = newFocuses.isNotEmpty ? newFocuses.first.id : null;
+                  newActiveId = newFocuses.isNotEmpty
+                      ? newFocuses.first.id
+                      : null;
                 }
 
                 _updateActionFocuses(
@@ -2474,7 +2707,10 @@ class ActionSidebarState extends State<ActionSidebar> {
                 );
                 Navigator.pop(context);
               },
-              child: const Text('Usuń', style: TextStyle(color: Colors.redAccent)),
+              child: const Text(
+                'Usuń',
+                style: TextStyle(color: Colors.redAccent),
+              ),
             ),
           ],
         );
@@ -2488,11 +2724,18 @@ class ActionSidebarState extends State<ActionSidebar> {
     _showAddSubActionDialog(context, parent);
   }
 
-  void triggerAddKeyPointDialog(ActionModel action, {ActionModel? parentAction}) {
+  void triggerAddKeyPointDialog(
+    ActionModel action, {
+    ActionModel? parentAction,
+  }) {
     _showAddKeyPointDialog(context, action, parentAction: parentAction);
   }
 
-  void triggerDeleteKeyPoint(ActionModel action, ActionKeyPointModel kp, {ActionModel? parentAction}) {
+  void triggerDeleteKeyPoint(
+    ActionModel action,
+    ActionKeyPointModel kp, {
+    ActionModel? parentAction,
+  }) {
     _deleteKeyPoint(context, action, kp, parentAction: parentAction);
   }
 

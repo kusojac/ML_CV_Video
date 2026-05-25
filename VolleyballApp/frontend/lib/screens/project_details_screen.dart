@@ -413,7 +413,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
         child: DropdownButton<T>(
           hint: Text(
             'Filtruj: $label',
-            style: const TextStyle(color: KineticTheme.onSurfaceVariant, fontSize: 13),
+            style: const TextStyle(
+              color: KineticTheme.onSurfaceVariant,
+              fontSize: 13,
+            ),
           ),
           dropdownColor: KineticTheme.surfaceContainer,
           style: const TextStyle(color: KineticTheme.onSurface, fontSize: 13),
@@ -610,7 +613,10 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: _sortOption,
-                          icon: const Icon(Icons.sort, color: KineticTheme.onSurfaceVariant),
+                          icon: const Icon(
+                            Icons.sort,
+                            color: KineticTheme.onSurfaceVariant,
+                          ),
                           dropdownColor: KineticTheme.surfaceContainer,
                           style: const TextStyle(color: KineticTheme.onSurface),
                           items: const [
@@ -797,6 +803,24 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                         const Text(
                           'Podepnij lub zaimportuj artefakt, aby go przeanalizować.',
                           style: TextStyle(color: Colors.white54),
+                        ),
+                        const SizedBox(height: 24),
+                        Wrap(
+                          spacing: 16,
+                          runSpacing: 16,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: _importVideoArtifact,
+                              icon: const Icon(Icons.add_to_drive),
+                              label: const Text('Importuj wideo'),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: _linkExistingArtifactDialog,
+                              icon: const Icon(Icons.link),
+                              label: const Text('Podepnij artefakt'),
+                            ),
+                          ],
                         ),
                       ],
                     ),
