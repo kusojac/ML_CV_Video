@@ -1149,6 +1149,7 @@ class ActionSidebarState extends State<ActionSidebar> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.play_arrow, size: 16, color: Colors.white70),
+                        tooltip: 'Odtwórz sub-akcję',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () => widget.onActionSelected(sub),
@@ -1271,6 +1272,7 @@ class ActionSidebarState extends State<ActionSidebar> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.play_arrow, size: 14, color: Colors.white54),
+                      tooltip: 'Odtwórz punkt kluczowy',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       onPressed: () {
