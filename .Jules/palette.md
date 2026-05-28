@@ -8,3 +8,7 @@
 ## 2024-05-20 - Missing Tooltips on IconButtons
 **Learning:** Icon-only interactive elements (`IconButton`) lacking `tooltip` or `semanticLabel` properties are inaccessible to screen readers and offer poor UX without hover text.
 **Action:** Always verify `IconButton` implementations include a localized `tooltip` attribute to provide context and ensure accessibility compliance.
+
+## 2024-05-28 - Missing CTAs in Empty States
+**Learning:** Empty states without a clear Call-To-Action (CTA) inside the view can leave users confused or force them to rely on less discoverable navigation elements outside the main focus area.
+**Action:** Always insert explicitly visible `ElevatedButton` or similar actionable elements directly into `isEmpty` blocks.
