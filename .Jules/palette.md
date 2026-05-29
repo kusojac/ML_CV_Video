@@ -8,3 +8,7 @@
 ## 2024-05-20 - Missing Tooltips on IconButtons
 **Learning:** Icon-only interactive elements (`IconButton`) lacking `tooltip` or `semanticLabel` properties are inaccessible to screen readers and offer poor UX without hover text.
 **Action:** Always verify `IconButton` implementations include a localized `tooltip` attribute to provide context and ensure accessibility compliance.
+
+## 2025-02-24 - Add explicit CTA button for empty player list
+**Learning:** Empty states with plain text ("No players") rely on users finding contextual buttons elsewhere on the screen. Providing an explicit Call-To-Action (CTA) directly within the empty state drastically reduces friction and makes the interface more intuitive for users resolving the empty state.
+**Action:** When designing or refactoring empty list/grid states, always integrate an explicit CTA button relevant to the user's workflow rather than relying on generic fallback text.

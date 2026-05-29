@@ -27,16 +27,18 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
     super.initState();
     _titleController = TextEditingController(text: widget.artifact.title);
     _descController = TextEditingController(text: widget.artifact.description);
-    _tagsController = TextEditingController(text: widget.artifact.tags.join(', '));
-    
+    _tagsController = TextEditingController(
+      text: widget.artifact.tags.join(', '),
+    );
+
     _videoCategory = widget.artifact.videoCategory;
-    
-    _teamA = widget.artifact.teamA != null 
-        ? TeamMetadata.fromJson(widget.artifact.teamA!.toJson()) 
+
+    _teamA = widget.artifact.teamA != null
+        ? TeamMetadata.fromJson(widget.artifact.teamA!.toJson())
         : TeamMetadata(name: 'Gospodarze');
-        
-    _teamB = widget.artifact.teamB != null 
-        ? TeamMetadata.fromJson(widget.artifact.teamB!.toJson()) 
+
+    _teamB = widget.artifact.teamB != null
+        ? TeamMetadata.fromJson(widget.artifact.teamB!.toJson())
         : TeamMetadata(name: 'Goście');
 
     _titleController.addListener(_markDirty);
@@ -89,8 +91,15 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: KineticTheme.surfaceContainerLow,
-        icon: const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent, size: 36),
-        title: const Text('Niezapisane zmiany', style: TextStyle(color: Colors.white)),
+        icon: const Icon(
+          Icons.warning_amber_rounded,
+          color: Colors.orangeAccent,
+          size: 36,
+        ),
+        title: const Text(
+          'Niezapisane zmiany',
+          style: TextStyle(color: Colors.white),
+        ),
         content: const Text(
           'Masz niezapisane zmiany w edytowanych metadanych. Co chcesz zrobić?',
           style: TextStyle(color: Colors.white70),
@@ -98,11 +107,17 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, 'cancel'),
-            child: const Text('Anuluj', style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Anuluj',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, 'discard'),
-            child: const Text('Odrzuć zmiany', style: TextStyle(color: Colors.orangeAccent)),
+            child: const Text(
+              'Odrzuć zmiany',
+              style: TextStyle(color: Colors.orangeAccent),
+            ),
           ),
           ElevatedButton.icon(
             icon: const Icon(Icons.save, size: 16),
@@ -139,7 +154,9 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
               children: [
                 TextField(
                   controller: nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Imię i nazwisko'),
+                  decoration: const InputDecoration(
+                    labelText: 'Imię i nazwisko',
+                  ),
                 ),
                 TextField(
                   controller: numCtrl,
@@ -150,9 +167,18 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
                 DropdownButtonFormField<String>(
                   initialValue: position,
                   decoration: const InputDecoration(labelText: 'Pozycja'),
-                  items: ['Rozgrywający', 'Przyjmujący', 'Atakujący', 'Środkowy', 'Libero']
-                      .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                      .toList(),
+                  items:
+                      [
+                            'Rozgrywający',
+                            'Przyjmujący',
+                            'Atakujący',
+                            'Środkowy',
+                            'Libero',
+                          ]
+                          .map(
+                            (p) => DropdownMenuItem(value: p, child: Text(p)),
+                          )
+                          .toList(),
                   onChanged: (v) {
                     if (v != null) setDialogState(() => position = v);
                   },
@@ -168,11 +194,13 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
                 onPressed: () {
                   if (nameCtrl.text.isNotEmpty) {
                     setState(() {
-                      team.players.add(PlayerMetadata(
-                        name: nameCtrl.text.trim(),
-                        number: numCtrl.text.trim(),
-                        position: position,
-                      ));
+                      team.players.add(
+                        PlayerMetadata(
+                          name: nameCtrl.text.trim(),
+                          number: numCtrl.text.trim(),
+                          position: position,
+                        ),
+                      );
                       _isDirty = true;
                     });
                     Navigator.pop(context);
@@ -217,7 +245,14 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
             ),
             const SizedBox(height: 12),
             if (team.players.isEmpty)
-              const Text('Brak zawodników', style: TextStyle(color: Colors.white54)),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: OutlinedButton.icon(
+                  onPressed: () => _addPlayer(team),
+                  icon: const Icon(Icons.person_add, size: 18),
+                  label: const Text('DODAJ ZAWODNIKA'),
+                ),
+              ),
             ...team.players.asMap().entries.map((entry) {
               final idx = entry.key;
               final p = entry.value;
@@ -230,7 +265,11 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
                 title: Text(p.name),
                 subtitle: Text(p.position),
                 trailing: IconButton(
-                  icon: const Icon(Icons.remove_circle, color: Colors.redAccent, size: 20),
+                  icon: const Icon(
+                    Icons.remove_circle,
+                    color: Colors.redAccent,
+                    size: 20,
+                  ),
                   tooltip: 'Usuń zawodnika',
                   onPressed: () {
                     setState(() {
@@ -267,7 +306,11 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
                 padding: EdgeInsets.symmetric(vertical: 18, horizontal: 4),
                 child: Tooltip(
                   message: 'Niezapisane zmiany',
-                  child: Icon(Icons.circle, color: Colors.orangeAccent, size: 10),
+                  child: Icon(
+                    Icons.circle,
+                    color: Colors.orangeAccent,
+                    size: 10,
+                  ),
                 ),
               ),
             IconButton(
@@ -287,16 +330,25 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Podstawowe dane
-              const Text('Podstawowe informacje', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Podstawowe informacje',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Tytuł wideo', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Tytuł wideo',
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _descController,
-                decoration: const InputDecoration(labelText: 'Opis', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Opis',
+                  border: OutlineInputBorder(),
+                ),
                 maxLines: 3,
               ),
               const SizedBox(height: 12),
@@ -309,9 +361,12 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Kategoria wideo
-              const Text('Kategoria', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Kategoria',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               SegmentedButton<String?>(
                 segments: const [
@@ -331,10 +386,16 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
 
               // Drużyny i zawodnicy
               if (_videoCategory == 'Trening') ...[
-                const Text('Zawodnicy / Drużyna (Trening)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Zawodnicy / Drużyna (Trening)',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 _buildTeamSection(_teamA, 'Nazwa grupy / drużyny'),
               ] else if (_videoCategory == 'Mecz') ...[
-                const Text('Drużyny (Mecz)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Drużyny (Mecz)',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 _buildTeamSection(_teamA, 'Drużyna A (np. Gospodarze)'),
                 _buildTeamSection(_teamB, 'Drużyna B (np. Goście)'),
               ],
