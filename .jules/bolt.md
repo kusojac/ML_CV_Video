@@ -91,3 +91,6 @@
 ## 2024-05-19 - Optimize YOLO Multi-Class Post-Processing
 **Learning:** In multi-class YOLO model processing (like the 80-class COCO model), when only a single specific class is needed (e.g., person detection), applying `np.max` across all class probabilities for every anchor box is computationally expensive and unnecessary. In our benchmark, this reduced post-processing time from ~0.42s to ~0.03s per 1000 frames.
 **Action:** When evaluating YOLO output where only one class matters, explicitly slice the class probabilities array by index (e.g., `class_scores[:, target_class_id]`) instead of evaluating the maximum probability across all classes.
+## 2024-05-29 - Virtualization of Long Lists in Action Sidebar
+**Learning:** In Flutter, wrapping a dynamically mapped `Column` of list items inside a `SingleChildScrollView` triggers synchronous instantiation and layout of every element simultaneously, causing severe O(n) rendering overhead and jank when dealing with long `filteredActions` lists in `action_sidebar.dart`.
+**Action:** Always prefer `ListView.builder` over `SingleChildScrollView` + `Column` for any dynamically sizable lists to guarantee proper lazy loading (virtualization) and maintain fluid 60fps rendering.
