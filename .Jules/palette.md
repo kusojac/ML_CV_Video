@@ -8,3 +8,6 @@
 ## 2024-05-20 - Missing Tooltips on IconButtons
 **Learning:** Icon-only interactive elements (`IconButton`) lacking `tooltip` or `semanticLabel` properties are inaccessible to screen readers and offer poor UX without hover text.
 **Action:** Always verify `IconButton` implementations include a localized `tooltip` attribute to provide context and ensure accessibility compliance.
+## 2026-05-30 - Actionable Empty States
+**Learning:** Replaced plain text fallbacks with structured empty states including explicit CTAs reduces friction.
+**Action:** Always provide contextual actions when rendering empty states.
