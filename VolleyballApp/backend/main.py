@@ -47,6 +47,9 @@ _file_lock = threading.Lock()
 _parsed_json_cache: Dict[str, Any] = {}
 _action_dict_cache: Dict[str, Dict[str, Any]] = {}
 
+
+_global_process_pool = concurrent.futures.ProcessPoolExecutor()
+
 # Initialize VolleyballAnalyticsEngine only in the main process to avoid loading heavy models in multiprocessing children
 MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
 if multiprocessing.current_process().name == 'MainProcess':
@@ -227,8 +230,7 @@ def get_results(video_path: str = Query(..., max_length=2048)):
 
     # ⚡ Bolt Optimization: Bypass FastAPI's slow default JSON serialization for large results
     # and perform serialization outside of the thread lock to prevent blocking event loops.
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        json_str = executor.submit(json.dumps, data).result()
+    json_str = _global_process_pool.submit(json.dumps, data).result()
     return Response(content=json_str, media_type="application/json")
 
 @app.post("/update_action")
