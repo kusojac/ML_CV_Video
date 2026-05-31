@@ -99,3 +99,8 @@
 **Vulnerability:** The `/update_action` endpoint in FastAPI accepted arbitrarily large string payloads for the `new_player_id` and `new_active_focus_id` optional fields. Without length bounds, attackers could exploit this by sending requests with exceptionally large strings, exhausting server memory and causing a Denial of Service (DoS) attack.
 **Learning:** By default, Pydantic `Optional[str]` fields do not enforce any limits on the length of string input unless explicitly specified using `pydantic.Field(..., max_length=...)`. Because FastApi parses incoming request JSON payloads directly, unbounded string parameters pose a memory exhaustion risk at the API boundary before any custom application logic runs.
 **Prevention:** Always specify strict boundaries such as `max_length` using `pydantic.Field` on string parameters within Pydantic models—including `Optional[str]` fields. Doing so guarantees a 422 Unprocessable Entity gracefully limits payload size at the framework layer.
+
+## 2026-05-31 - Enhance Security Headers with Content-Security-Policy
+**Vulnerability:** The FastAPI backend did not include a `Content-Security-Policy` header, increasing vulnerability to XSS attacks and other cross-site injections.
+**Learning:** Implementing strict Content-Security-Policy (CSP) headers (e.g., `default-src 'none'`) via global middleware is a good defense-in-depth practice. However, explicitly bypassing documentation paths (`/docs`, `/redoc`, `/openapi.json`) is required to prevent breaking the built-in Swagger UI and ReDoc pages which rely on inline scripts and external resources.
+**Prevention:** When adding strict CSP rules, make sure to bypass or specify relaxed rules for interactive documentation endpoints to maintain their functionality.
