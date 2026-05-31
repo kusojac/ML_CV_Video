@@ -36,6 +36,11 @@ async def add_security_headers(request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers["X-XSS-Protection"] = "1; mode=block"
+
+    # Add strict Content-Security-Policy (CSP) but bypass documentation paths
+    if not request.url.path.startswith(("/docs", "/redoc", "/openapi.json")):
+        response.headers["Content-Security-Policy"] = "default-src 'none'"
+
     return response
 
 # In-memory job state (In production, replace with DB/Redis)
