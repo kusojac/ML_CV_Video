@@ -359,6 +359,39 @@ class ActionSidebarState extends State<ActionSidebar> {
                                 ),
                                 textAlign: TextAlign.center,
                               ),
+                              const SizedBox(height: 16),
+                              if (_filterType != 'All' ||
+                                  _filterPlayer != 'All')
+                                TextButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      _filterType = 'All';
+                                      _filterPlayer = 'All';
+                                    });
+                                  },
+                                  icon: const Icon(Icons.clear_all, size: 18),
+                                  label: const Text('Wyczyść filtry'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.white70,
+                                  ),
+                                ),
+                              if (widget.isEditMode) ...[
+                                const SizedBox(height: 8),
+                                ElevatedButton.icon(
+                                  onPressed: widget.onActionAdded,
+                                  icon: const Icon(Icons.add, size: 18),
+                                  label: const Text('Dodaj nową akcję'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.purpleAccent
+                                        .withValues(alpha: 0.2),
+                                    foregroundColor: Colors.purpleAccent,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         )
@@ -1158,7 +1191,11 @@ class ActionSidebarState extends State<ActionSidebar> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.play_arrow, size: 16, color: Colors.white70),
+                        icon: const Icon(
+                          Icons.play_arrow,
+                          size: 16,
+                          color: Colors.white70,
+                        ),
                         tooltip: 'Odtwórz sub-akcję',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -1306,7 +1343,11 @@ class ActionSidebarState extends State<ActionSidebar> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.play_arrow, size: 14, color: Colors.white54),
+                      icon: const Icon(
+                        Icons.play_arrow,
+                        size: 14,
+                        color: Colors.white54,
+                      ),
                       tooltip: 'Odtwórz punkt kluczowy',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
