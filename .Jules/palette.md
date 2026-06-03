@@ -8,3 +8,7 @@
 ## 2024-05-20 - Missing Tooltips on IconButtons
 **Learning:** Icon-only interactive elements (`IconButton`) lacking `tooltip` or `semanticLabel` properties are inaccessible to screen readers and offer poor UX without hover text.
 **Action:** Always verify `IconButton` implementations include a localized `tooltip` attribute to provide context and ensure accessibility compliance.
+
+## 2026-06-03 - Empty State Filter CTA
+**Learning:** Structured empty states need specific CTAs like 'Clear filters' when triggered by active filters to reduce user friction.
+**Action:** Always conditionally add a 'Wyczyść filtry' button alongside the 'Add' action in the empty state when filters are active.
