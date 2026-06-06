@@ -359,6 +359,23 @@ class ActionSidebarState extends State<ActionSidebar> {
                                 ),
                                 textAlign: TextAlign.center,
                               ),
+                              if (_filterType != 'All' ||
+                                  _filterPlayer != 'All') ...[
+                                const SizedBox(height: 16),
+                                TextButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      _filterType = 'All';
+                                      _filterPlayer = 'All';
+                                    });
+                                  },
+                                  icon: const Icon(Icons.clear, size: 18),
+                                  label: const Text('Wyczyść filtry'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.purpleAccent,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         )
@@ -1158,7 +1175,11 @@ class ActionSidebarState extends State<ActionSidebar> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.play_arrow, size: 16, color: Colors.white70),
+                        icon: const Icon(
+                          Icons.play_arrow,
+                          size: 16,
+                          color: Colors.white70,
+                        ),
                         tooltip: 'Odtwórz sub-akcję',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -1306,7 +1327,11 @@ class ActionSidebarState extends State<ActionSidebar> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.play_arrow, size: 14, color: Colors.white54),
+                      icon: const Icon(
+                        Icons.play_arrow,
+                        size: 14,
+                        color: Colors.white54,
+                      ),
                       tooltip: 'Odtwórz punkt kluczowy',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
