@@ -8,3 +8,7 @@
 ## 2024-05-20 - Missing Tooltips on IconButtons
 **Learning:** Icon-only interactive elements (`IconButton`) lacking `tooltip` or `semanticLabel` properties are inaccessible to screen readers and offer poor UX without hover text.
 **Action:** Always verify `IconButton` implementations include a localized `tooltip` attribute to provide context and ensure accessibility compliance.
+
+## 2024-06-07 - Clear Filters CTA
+**Learning:** If an empty list view is triggered because the user applied a filter, showing a generic empty state isn't enough. Users benefit from a fast way to revert to a populated state.
+**Action:** Always conditionally include a 'Wyczyść filtry' button alongside standard empty state actions when active filters lead to an empty result set.
