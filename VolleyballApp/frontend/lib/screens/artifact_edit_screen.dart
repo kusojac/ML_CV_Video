@@ -246,11 +246,15 @@ class _ArtifactEditScreenState extends State<ArtifactEditScreen> {
             const SizedBox(height: 12),
             if (team.players.isEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: OutlinedButton.icon(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: ElevatedButton.icon(
                   onPressed: () => _addPlayer(team),
-                  icon: const Icon(Icons.person_add, size: 18),
-                  label: const Text('DODAJ ZAWODNIKA'),
+                  icon: const Icon(Icons.person_add),
+                  label: const Text('Dodaj zawodnika'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple.withValues(alpha: 0.2),
+                    foregroundColor: Colors.white,
+                  ),
                 ),
               ),
             ...team.players.asMap().entries.map((entry) {

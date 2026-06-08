@@ -9,6 +9,10 @@
 **Learning:** Icon-only interactive elements (`IconButton`) lacking `tooltip` or `semanticLabel` properties are inaccessible to screen readers and offer poor UX without hover text.
 **Action:** Always verify `IconButton` implementations include a localized `tooltip` attribute to provide context and ensure accessibility compliance.
 
-## 2025-02-24 - Add explicit CTA button for empty player list
-**Learning:** Empty states with plain text ("No players") rely on users finding contextual buttons elsewhere on the screen. Providing an explicit Call-To-Action (CTA) directly within the empty state drastically reduces friction and makes the interface more intuitive for users resolving the empty state.
-**Action:** When designing or refactoring empty list/grid states, always integrate an explicit CTA button relevant to the user's workflow rather than relying on generic fallback text.
+## 2026-05-26 - Actionable Empty States in Project Artifacts
+**Learning:** Dead-end empty states (like generic 'Brak zawodników' texts) create friction. Replacing them with structured Call-To-Action buttons (e.g., 'Dodaj zawodnika') guides users directly to the next logical step.
+**Action:** Scan for  list conditionals and replace plain generic text fallbacks with structured layouts featuring explicit  CTAs.
+
+## 2024-05-24 - Actionable Empty States in Project Artifacts
+**Learning:** Dead-end empty states (like generic 'Brak zawodników' texts) create friction. Replacing them with structured Call-To-Action buttons (e.g., 'Dodaj zawodnika') guides users directly to the next logical step.
+**Action:** Scan for isEmpty list conditionals and replace plain generic text fallbacks with structured layouts featuring explicit ElevatedButton.icon CTAs.
