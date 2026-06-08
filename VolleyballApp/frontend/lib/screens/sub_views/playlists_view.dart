@@ -66,7 +66,9 @@ class _PlaylistsViewState extends State<PlaylistsView> {
     if (!videoFile.existsSync()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Nie odnaleziono oryginalnego wideo: ${playlist.sourceVideoPath}'),
+          content: Text(
+            'Nie odnaleziono oryginalnego wideo: ${playlist.sourceVideoPath}',
+          ),
           backgroundColor: KineticTheme.errorContainer,
         ),
       );
@@ -99,14 +101,19 @@ class _PlaylistsViewState extends State<PlaylistsView> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Usuń playlistę'),
-        content: Text('Czy na pewno chcesz usunąć playlistę "${playlist.title}"?\nPlik JSON zostanie trwale usunięty z dysku.'),
+        content: Text(
+          'Czy na pewno chcesz usunąć playlistę "${playlist.title}"?\nPlik JSON zostanie trwale usunięty z dysku.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Anuluj'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: KineticTheme.errorContainer, foregroundColor: KineticTheme.onErrorContainer),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KineticTheme.errorContainer,
+              foregroundColor: KineticTheme.onErrorContainer,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Usuń'),
           ),
@@ -162,12 +169,13 @@ class _PlaylistsViewState extends State<PlaylistsView> {
             child: playlists.isEmpty
                 ? _buildEmptyState()
                 : GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 450,
-                      childAspectRatio: 1.5,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 450,
+                          childAspectRatio: 1.5,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
                     itemCount: playlists.length,
                     itemBuilder: (context, index) {
                       final playlist = playlists[index];
@@ -186,7 +194,11 @@ class _PlaylistsViewState extends State<PlaylistsView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.playlist_play_rounded, color: KineticTheme.onSurfaceVariant.withAlpha(50), size: 80),
+          Icon(
+            Icons.playlist_play_rounded,
+            color: KineticTheme.onSurfaceVariant.withAlpha(50),
+            size: 80,
+          ),
           const SizedBox(height: 16),
           Text(
             'Brak utworzonych playlist',
@@ -211,7 +223,8 @@ class _PlaylistsViewState extends State<PlaylistsView> {
   }
 
   Widget _buildPlaylistCard(ArtifactModel playlist, int clipsCount) {
-    final dateStr = '${playlist.createdAt.day.toString().padLeft(2, '0')}.${playlist.createdAt.month.toString().padLeft(2, '0')}.${playlist.createdAt.year}';
+    final dateStr =
+        '${playlist.createdAt.day.toString().padLeft(2, '0')}.${playlist.createdAt.month.toString().padLeft(2, '0')}.${playlist.createdAt.year}';
 
     return Card(
       color: KineticTheme.surfaceContainerLow,
@@ -236,7 +249,11 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline_rounded, color: KineticTheme.tertiary, size: 20),
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: KineticTheme.tertiary,
+                    size: 20,
+                  ),
                   tooltip: 'Usuń playlistę',
                   constraints: const BoxConstraints(),
                   padding: EdgeInsets.zero,
@@ -246,7 +263,9 @@ class _PlaylistsViewState extends State<PlaylistsView> {
             ),
             const SizedBox(height: 4),
             Text(
-              playlist.description.isNotEmpty ? playlist.description : 'Brak opisu.',
+              playlist.description.isNotEmpty
+                  ? playlist.description
+                  : 'Brak opisu.',
               style: KineticTheme.getDisplayFont(
                 fontSize: 13,
                 color: KineticTheme.onSurfaceVariant,
@@ -284,8 +303,14 @@ class _PlaylistsViewState extends State<PlaylistsView> {
                   icon: const Icon(Icons.play_arrow_rounded, size: 18),
                   label: const Text('ODTWÓRZ'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    textStyle: KineticTheme.getMonoFont(fontSize: 12, fontWeight: FontWeight.bold),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    textStyle: KineticTheme.getMonoFont(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],

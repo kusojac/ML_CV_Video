@@ -154,6 +154,7 @@ def process_video_task(job_id: str, video_path: str):
             "json_path": json_path
         })
     except Exception as e:
+        logging.error(f"Error processing video task for job {job_id}: {e}", exc_info=True)
         if job_id not in analysis_jobs:
             analysis_jobs[job_id] = {}
         analysis_jobs[job_id]["status"] = "error"
