@@ -91,3 +91,7 @@
 ## 2024-05-19 - Optimize YOLO Multi-Class Post-Processing
 **Learning:** In multi-class YOLO model processing (like the 80-class COCO model), when only a single specific class is needed (e.g., person detection), applying `np.max` across all class probabilities for every anchor box is computationally expensive and unnecessary. In our benchmark, this reduced post-processing time from ~0.42s to ~0.03s per 1000 frames.
 **Action:** When evaluating YOLO output where only one class matters, explicitly slice the class probabilities array by index (e.g., `class_scores[:, target_class_id]`) instead of evaluating the maximum probability across all classes.
+
+## 2024-05-24 - Global ProcessPoolExecutor for JSON Serialization
+**Learning:** Instantiating a new `concurrent.futures.ProcessPoolExecutor` on every API request adds significant overhead (e.g. ~1s vs ~0.06s for 10 requests). This is especially noticeable for high frequency requests and negates the benefits of offloading CPU bound tasks.
+**Action:** Use a globally initialized `ProcessPoolExecutor` to avoid per-request instantiation overhead.
