@@ -8,3 +8,6 @@
 ## 2024-05-20 - Missing Tooltips on IconButtons
 **Learning:** Icon-only interactive elements (`IconButton`) lacking `tooltip` or `semanticLabel` properties are inaccessible to screen readers and offer poor UX without hover text.
 **Action:** Always verify `IconButton` implementations include a localized `tooltip` attribute to provide context and ensure accessibility compliance.
+## 2025-02-23 - Empty State Search Context
+**Learning:** Relying solely on a generic "No items" empty state causes confusion when a user has active filters applied but receives zero results. Users might think the data was deleted.
+**Action:** When creating or updating filtered list/grid views (`isEmpty` blocks), conditionally render a "No search results" empty state containing a "Clear filters" call-to-action button when filters are active, and reserve the generic empty state for truly empty datasets.
