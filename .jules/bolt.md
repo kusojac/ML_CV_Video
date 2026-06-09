@@ -84,6 +84,9 @@
 ## 2026-05-20 - Vectorized Minimum Distance Search in Inference Loops
 **Learning:** Found an instance in `VolleyballApp/backend/engine.py` where a Python `for` loop was used to find the closest person detection to a ball detection using `get_distance_person_ball_np`. Iterating over detections in Python is a significant bottleneck compared to NumPy vectorization, especially when calculating Euclidean distances which often involve expensive `sqrt` calls.
 **Action:** Always replace Python loops with NumPy vectorized operations (broadcasting) for spatial calculations. Use squared Euclidean distance (`dist_sq = (x1-x2)**2 + (y1-y2)**2`) for finding minimums/maximums to avoid redundant square root calculations. Use NumPy boolean indexing for filtering instead of list comprehensions.
+## 2026-05-18 - Target Class ID Extraction in YOLO Post-processing (Update)
+**Learning:** After updating `VolleyballApp/backend/frame_utilities.py` to use `target_class_id=0` in `postprocess_yolo_output` to optimize the COCO model processing, there was still an unneeded step where `person_boxes = coco_boxes[coco_class_ids == 0]` was used. Since the post-processor was correctly filtering down to `target_class_id`, the boolean indexing mask in the caller `engine.py` had become redundant.
+**Action:** When delegating class-specific filtering to a highly-optimized helper function (e.g., using `target_class_id=0`), ensure that the caller method directly consumes the returned arrays instead of unnecessarily re-filtering them via list comprehensions or boolean masks like `coco_boxes[coco_class_ids == 0]`.
 
 ## 2025-05-25 - Optimize YOLO multiclass postprocessing
 **Learning:** When parsing YOLO COCO output containing multiple classes (e.g., 80 classes), calculating `np.max` across all classes is a major performance bottleneck if we only care about a single target class (e.g., class 0 for person). Benchmarking shows that slicing the class score array directly for the specific class instead of using `np.max` drops processing time from ~0.45s down to ~0.03s.
@@ -91,7 +94,6 @@
 ## 2024-05-19 - Optimize YOLO Multi-Class Post-Processing
 **Learning:** In multi-class YOLO model processing (like the 80-class COCO model), when only a single specific class is needed (e.g., person detection), applying `np.max` across all class probabilities for every anchor box is computationally expensive and unnecessary. In our benchmark, this reduced post-processing time from ~0.42s to ~0.03s per 1000 frames.
 **Action:** When evaluating YOLO output where only one class matters, explicitly slice the class probabilities array by index (e.g., `class_scores[:, target_class_id]`) instead of evaluating the maximum probability across all classes.
-
-## 2024-05-24 - Global ProcessPoolExecutor for JSON Serialization
-**Learning:** Instantiating a new `concurrent.futures.ProcessPoolExecutor` on every API request adds significant overhead (e.g. ~1s vs ~0.06s for 10 requests). This is especially noticeable for high frequency requests and negates the benefits of offloading CPU bound tasks.
-**Action:** Use a globally initialized `ProcessPoolExecutor` to avoid per-request instantiation overhead.
+## 2024-05-29 - Virtualization of Long Lists in Action Sidebar
+**Learning:** In Flutter, wrapping a dynamically mapped `Column` of list items inside a `SingleChildScrollView` triggers synchronous instantiation and layout of every element simultaneously, causing severe O(n) rendering overhead and jank when dealing with long `filteredActions` lists in `action_sidebar.dart`.
+**Action:** Always prefer `ListView.builder` over `SingleChildScrollView` + `Column` for any dynamically sizable lists to guarantee proper lazy loading (virtualization) and maintain fluid 60fps rendering.
