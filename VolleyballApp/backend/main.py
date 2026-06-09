@@ -36,11 +36,9 @@ async def add_security_headers(request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers["X-XSS-Protection"] = "1; mode=block"
-
-    # Add Content-Security-Policy header, but bypass docs paths
-    if not request.url.path.startswith(("/docs", "/redoc", "/openapi.json")):
-        response.headers["Content-Security-Policy"] = "default-src 'none'"
-
+    # 🛡️ Sentinel: Mitigate XSS and data injection attacks by restricting resource loading
+    if not (request.url.path.startswith("/docs") or request.url.path.startswith("/openapi.json") or request.url.path.startswith("/redoc")):
+        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
     return response
 
 # In-memory job state (In production, replace with DB/Redis)
@@ -51,6 +49,9 @@ job_store = JobStore()
 _file_lock = threading.Lock()
 _parsed_json_cache: Dict[str, Any] = {}
 _action_dict_cache: Dict[str, Dict[str, Any]] = {}
+
+
+_global_process_pool = concurrent.futures.ProcessPoolExecutor()
 
 # Initialize VolleyballAnalyticsEngine only in the main process to avoid loading heavy models in multiprocessing children
 MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
@@ -232,8 +233,7 @@ def get_results(video_path: str = Query(..., max_length=2048)):
 
     # ⚡ Bolt Optimization: Bypass FastAPI's slow default JSON serialization for large results
     # and perform serialization outside of the thread lock to prevent blocking event loops.
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        json_str = executor.submit(json.dumps, data).result()
+    json_str = _global_process_pool.submit(json.dumps, data).result()
     return Response(content=json_str, media_type="application/json")
 
 @app.post("/update_action")

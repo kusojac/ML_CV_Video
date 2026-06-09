@@ -60,6 +60,7 @@ def test_security_headers_docs():
     response = client.get("/openapi.json")
     assert response.status_code == 200
     assert "Content-Security-Policy" not in response.headers
+    assert response.headers.get("Content-Security-Policy") == "default-src 'none'; frame-ancestors 'none'"
 
 def test_update_action_dos_player_id():
     response = client.post("/update_action", json={
