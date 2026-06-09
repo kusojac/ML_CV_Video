@@ -359,6 +359,21 @@ class ActionSidebarState extends State<ActionSidebar> {
                                 ),
                                 textAlign: TextAlign.center,
                               ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    _filterType = 'All';
+                                    _filterPlayer = 'All';
+                                  });
+                                },
+                                icon: const Icon(Icons.clear_all),
+                                label: const Text('Wyczyść filtry'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white10,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
                             ],
                           ),
                         ),

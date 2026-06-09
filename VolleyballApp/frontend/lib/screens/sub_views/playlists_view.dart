@@ -7,7 +7,8 @@ import '../../theme/kinetic_theme.dart';
 import '../video_analysis_screen.dart';
 
 class PlaylistsView extends StatefulWidget {
-  const PlaylistsView({super.key});
+  final VoidCallback? onGoToProjectsTap;
+  const PlaylistsView({super.key, this.onGoToProjectsTap});
 
   @override
   State<PlaylistsView> createState() => _PlaylistsViewState();
@@ -216,6 +217,12 @@ class _PlaylistsViewState extends State<PlaylistsView> {
               fontSize: 14,
               color: KineticTheme.onSurfaceVariant,
             ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: widget.onGoToProjectsTap,
+            icon: const Icon(Icons.folder_open_rounded),
+            label: const Text('PRZEJDŹ DO PROJEKTÓW'),
           ),
         ],
       ),
