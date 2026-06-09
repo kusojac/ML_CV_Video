@@ -831,54 +831,41 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                               ),
                             ],
                           ),
-                        );
-                      }
-
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.videocam_off,
-                              size: 64,
-                              color: Colors.white30,
-                            ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Brak powiązanych artefaktów',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white70,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Podepnij lub zaimportuj artefakt, aby go przeanalizować.',
-                              style: TextStyle(color: Colors.white54),
-                            ),
-                            const SizedBox(height: 24),
-                            Wrap(
-                              spacing: 16,
-                              runSpacing: 16,
-                              alignment: WrapAlignment.center,
-                              children: [
-                                ElevatedButton.icon(
-                                  onPressed: _importVideoArtifact,
-                                  icon: const Icon(Icons.add_to_drive),
-                                  label: const Text('Importuj wideo'),
-                                ),
-                                ElevatedButton.icon(
-                                  onPressed: _linkExistingArtifactDialog,
-                                  icon: const Icon(Icons.link),
-                                  label: const Text('Podepnij artefakt'),
-                                ),
-                              ],
-                            ),
-                          ],
                         ),
-                      );
-                    },
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Podepnij lub zaimportuj artefakt, aby go przeanalizować.',
+                          style: TextStyle(color: Colors.white54),
+                        ),
+                        const SizedBox(height: 24),
+                        if (_searchController.text.isNotEmpty)
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _searchController.clear();
+                            },
+                            icon: const Icon(Icons.clear),
+                            label: const Text('Wyczyść filtry'),
+                          )
+                        else
+                          Wrap(
+                            spacing: 16,
+                            runSpacing: 16,
+                            alignment: WrapAlignment.center,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: _importVideoArtifact,
+                                icon: const Icon(Icons.add_to_drive),
+                                label: const Text('Importuj wideo'),
+                              ),
+                              ElevatedButton.icon(
+                                onPressed: _linkExistingArtifactDialog,
+                                icon: const Icon(Icons.link),
+                                label: const Text('Podepnij artefakt'),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
                   )
                 : GridView.builder(
                     padding: const EdgeInsets.all(16),
