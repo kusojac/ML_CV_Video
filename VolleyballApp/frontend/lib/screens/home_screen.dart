@@ -321,7 +321,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     onNewSessionTap: _showAddProjectDialog,
                   ),
                   _buildProjectsScreen(),
-                  const PlaylistsView(),
+                  PlaylistsView(
+                    onGoToProjectsTap: () => setState(() => _currentTab = 1),
+                  ),
                   const TeamStatsView(),
                 ],
               ),

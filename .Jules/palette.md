@@ -8,6 +8,11 @@
 ## 2024-05-20 - Missing Tooltips on IconButtons
 **Learning:** Icon-only interactive elements (`IconButton`) lacking `tooltip` or `semanticLabel` properties are inaccessible to screen readers and offer poor UX without hover text.
 **Action:** Always verify `IconButton` implementations include a localized `tooltip` attribute to provide context and ensure accessibility compliance.
-## 2026-05-24 - Empty States with Clear Filters CTA
-**Learning:** When lists or grids are empty because active filters or search terms yield no results, the user needs an immediate and obvious way to reset their view. Relying on users to manually clear the search bar or filter dropdowns creates friction.
-**Action:** When creating empty states for filtered lists (e.g. `isEmpty` combined with `_searchController.text.isNotEmpty` or active filters), conditionally replace or supplement the standard "Add" action with a "Clear filters" ("Wyczyść filtry") CTA button that immediately resets the search and filter state.
+
+## 2026-05-26 - Actionable Empty States in Project Artifacts
+**Learning:** Dead-end empty states (like generic 'Brak zawodników' texts) create friction. Replacing them with structured Call-To-Action buttons (e.g., 'Dodaj zawodnika') guides users directly to the next logical step.
+**Action:** Scan for  list conditionals and replace plain generic text fallbacks with structured layouts featuring explicit  CTAs.
+
+## 2024-05-24 - Actionable Empty States in Project Artifacts
+**Learning:** Dead-end empty states (like generic 'Brak zawodników' texts) create friction. Replacing them with structured Call-To-Action buttons (e.g., 'Dodaj zawodnika') guides users directly to the next logical step.
+**Action:** Scan for isEmpty list conditionals and replace plain generic text fallbacks with structured layouts featuring explicit ElevatedButton.icon CTAs.
