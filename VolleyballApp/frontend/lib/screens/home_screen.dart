@@ -321,7 +321,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     onNewSessionTap: _showAddProjectDialog,
                   ),
                   _buildProjectsScreen(),
-                  const PlaylistsView(),
+                  PlaylistsView(
+                    onGoToProjectsTap: () => setState(() => _currentTab = 1),
+                  ),
                   const TeamStatsView(),
                 ],
               ),
@@ -611,31 +613,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _showAddProjectDialog,
-                              icon: const Icon(Icons.add),
-                              label: const Text('NOWY PROJEKT'),
-                            ),
-                            if (_searchController.text.isNotEmpty ||
-                                _selectedFilterTags.isNotEmpty) ...[
-                              const SizedBox(width: 16),
-                              OutlinedButton.icon(
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() {
-                                    _selectedFilterTags.clear();
-                                  });
-                                  _filterProjects();
-                                },
-                                icon: const Icon(Icons.clear),
-                                label: const Text('Wyczyść filtry'),
-                              ),
-                            ],
-                          ],
-                        ),
+                        if (_searchController.text.isNotEmpty ||
+                            _selectedFilterTags.isNotEmpty)
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _selectedFilterTags.clear();
+                              });
+                              _filterProjects();
+                            },
+                            icon: const Icon(Icons.clear),
+                            label: const Text('Wyczyść filtry'),
+                          )
+                        else
+                          ElevatedButton.icon(
+                            onPressed: _showAddProjectDialog,
+                            icon: const Icon(Icons.add),
+                            label: const Text('NOWY PROJEKT'),
+                          ),
                       ],
                     ),
                   )

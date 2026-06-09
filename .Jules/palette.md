@@ -9,6 +9,10 @@
 **Learning:** Icon-only interactive elements (`IconButton`) lacking `tooltip` or `semanticLabel` properties are inaccessible to screen readers and offer poor UX without hover text.
 **Action:** Always verify `IconButton` implementations include a localized `tooltip` attribute to provide context and ensure accessibility compliance.
 
-## 2026-06-03 - Empty State Filter CTA
-**Learning:** Structured empty states need specific CTAs like 'Clear filters' when triggered by active filters to reduce user friction.
-**Action:** Always conditionally add a 'Wyczyść filtry' button alongside the 'Add' action in the empty state when filters are active.
+## 2026-05-26 - Actionable Empty States in Project Artifacts
+**Learning:** Dead-end empty states (like generic 'Brak zawodników' texts) create friction. Replacing them with structured Call-To-Action buttons (e.g., 'Dodaj zawodnika') guides users directly to the next logical step.
+**Action:** Scan for  list conditionals and replace plain generic text fallbacks with structured layouts featuring explicit  CTAs.
+
+## 2024-05-24 - Actionable Empty States in Project Artifacts
+**Learning:** Dead-end empty states (like generic 'Brak zawodników' texts) create friction. Replacing them with structured Call-To-Action buttons (e.g., 'Dodaj zawodnika') guides users directly to the next logical step.
+**Action:** Scan for isEmpty list conditionals and replace plain generic text fallbacks with structured layouts featuring explicit ElevatedButton.icon CTAs.
