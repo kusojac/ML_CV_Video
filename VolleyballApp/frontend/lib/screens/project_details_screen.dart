@@ -820,6 +820,15 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                               icon: const Icon(Icons.link),
                               label: const Text('Podepnij artefakt'),
                             ),
+                            if (_searchController.text.isNotEmpty)
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _filterArtifacts();
+                                },
+                                icon: const Icon(Icons.clear_all),
+                                label: const Text('Wyczyść filtry'),
+                              ),
                           ],
                         ),
                       ],

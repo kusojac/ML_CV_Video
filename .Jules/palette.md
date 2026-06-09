@@ -16,3 +16,6 @@
 ## 2024-05-24 - Actionable Empty States in Project Artifacts
 **Learning:** Dead-end empty states (like generic 'Brak zawodników' texts) create friction. Replacing them with structured Call-To-Action buttons (e.g., 'Dodaj zawodnika') guides users directly to the next logical step.
 **Action:** Scan for isEmpty list conditionals and replace plain generic text fallbacks with structured layouts featuring explicit ElevatedButton.icon CTAs.
+## 2026-05-24 - Actionable Empty States for Filtered Lists
+**Learning:** Providing a dead-end empty state (like 'Brak projektów spełniających kryteria.') when a search/filter yields no results forces the user to manually seek out the search bar or clear filters button elsewhere.
+**Action:** When an empty state is explicitly triggered by an active search query (e.g., `_searchController.text.isNotEmpty`), immediately provide a 'Clear filters' ('Wyczyść filtry') CTA within the empty state layout to allow users to quickly recover to the full list view. Ensure to re-invoke the filtering logic upon clearing the controller.

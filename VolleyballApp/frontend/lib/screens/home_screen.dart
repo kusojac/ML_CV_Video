@@ -613,10 +613,26 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: _showAddProjectDialog,
-                          icon: const Icon(Icons.add),
-                          label: const Text('NOWY PROJEKT'),
+                        Wrap(
+                          spacing: 16,
+                          runSpacing: 16,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: _showAddProjectDialog,
+                              icon: const Icon(Icons.add),
+                              label: const Text('NOWY PROJEKT'),
+                            ),
+                            if (_searchController.text.isNotEmpty)
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _filterProjects();
+                                },
+                                icon: const Icon(Icons.clear_all),
+                                label: const Text('Wyczyść filtry'),
+                              ),
+                          ],
                         ),
                       ],
                     ),
