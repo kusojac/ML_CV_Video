@@ -781,22 +781,55 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
           // Siatka artefaktów
           Expanded(
             child: _filteredArtifacts.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.videocam_off,
-                          size: 64,
-                          color: Colors.white30,
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Brak powiązanych artefaktów',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white70,
+                ? Builder(
+                    builder: (context) {
+                      final hasFilters =
+                          _selectedTypes.isNotEmpty ||
+                          _selectedCategories.isNotEmpty ||
+                          _selectedTags.isNotEmpty ||
+                          _selectedTeams.isNotEmpty ||
+                          _searchController.text.isNotEmpty;
+
+                      if (hasFilters) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.search_off,
+                                size: 64,
+                                color: Colors.white30,
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'Brak wyników wyszukiwania',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Żaden artefakt nie pasuje do wybranych filtrów.',
+                                style: TextStyle(color: Colors.white54),
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  setState(() {
+                                    _searchController.clear();
+                                    _selectedTypes.clear();
+                                    _selectedCategories.clear();
+                                    _selectedTags.clear();
+                                    _selectedTeams.clear();
+                                  });
+                                  _filterArtifacts();
+                                },
+                                icon: const Icon(Icons.clear_all),
+                                label: const Text('Wyczyścić filtry'),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 8),
