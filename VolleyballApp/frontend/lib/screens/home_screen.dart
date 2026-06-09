@@ -613,27 +613,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 16,
-                          runSpacing: 16,
-                          alignment: WrapAlignment.center,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _showAddProjectDialog,
-                              icon: const Icon(Icons.add),
-                              label: const Text('NOWY PROJEKT'),
-                            ),
-                            if (_searchController.text.isNotEmpty)
-                              ElevatedButton.icon(
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _filterProjects();
-                                },
-                                icon: const Icon(Icons.clear_all),
-                                label: const Text('Wyczyść filtry'),
-                              ),
-                          ],
-                        ),
+                        if (_searchController.text.isNotEmpty ||
+                            _selectedFilterTags.isNotEmpty)
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _selectedFilterTags.clear();
+                              });
+                              _filterProjects();
+                            },
+                            icon: const Icon(Icons.clear),
+                            label: const Text('Wyczyść filtry'),
+                          )
+                        else
+                          ElevatedButton.icon(
+                            onPressed: _showAddProjectDialog,
+                            icon: const Icon(Icons.add),
+                            label: const Text('NOWY PROJEKT'),
+                          ),
                       ],
                     ),
                   )
