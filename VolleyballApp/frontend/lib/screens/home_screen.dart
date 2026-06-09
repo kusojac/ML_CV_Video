@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final String _sortOption = 'date_desc';
   final List<String> _selectedFilterTags = [];
   bool _isGraphView = false;
-  
+
   // Stan nawigacji bocznej
   int _currentTab = 0;
 
@@ -155,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       await _dataService.createProject(newProject);
       _filterProjects();
-      
+
       // Po utworzeniu, przejdź do widoku projektów (tab 1)
       setState(() {
         _currentTab = 1;
@@ -250,7 +250,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const Text('Anuluj'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: KineticTheme.tertiary, foregroundColor: KineticTheme.onTertiary),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KineticTheme.tertiary,
+              foregroundColor: KineticTheme.onTertiary,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Usuń'),
           ),
@@ -280,12 +283,16 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
             color: active ? KineticTheme.primaryContainer : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: active ? Colors.transparent : KineticTheme.outline),
+            border: Border.all(
+              color: active ? Colors.transparent : KineticTheme.outline,
+            ),
           ),
           child: Icon(
             icon,
             size: 18,
-            color: active ? KineticTheme.onPrimaryContainer : KineticTheme.onSurfaceVariant,
+            color: active
+                ? KineticTheme.onPrimaryContainer
+                : KineticTheme.onSurfaceVariant,
           ),
         ),
       ),
@@ -314,7 +321,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     onNewSessionTap: _showAddProjectDialog,
                   ),
                   _buildProjectsScreen(),
-                  const PlaylistsView(),
+                  PlaylistsView(
+                    onGoToProjectsTap: () => setState(() => _currentTab = 1),
+                  ),
                   const TeamStatsView(),
                 ],
               ),
@@ -419,7 +428,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 8),
                 ListTile(
                   dense: true,
-                  leading: const Icon(Icons.settings_rounded, color: KineticTheme.onSurfaceVariant),
+                  leading: const Icon(
+                    Icons.settings_rounded,
+                    color: KineticTheme.onSurfaceVariant,
+                  ),
                   title: Text(
                     'Ustawienia',
                     style: KineticTheme.getDisplayFont(
@@ -430,7 +442,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Wersja Kinetic Analytics v1.0.0')),
+                      const SnackBar(
+                        content: Text('Wersja Kinetic Analytics v1.0.0'),
+                      ),
                     );
                   },
                 ),
@@ -455,24 +469,32 @@ class _HomeScreenState extends State<HomeScreen> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? KineticTheme.primaryContainer.withAlpha(25) : Colors.transparent,
+          color: isSelected
+              ? KineticTheme.primaryContainer.withAlpha(25)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? KineticTheme.primary.withAlpha(50) : Colors.transparent,
+            color: isSelected
+                ? KineticTheme.primary.withAlpha(50)
+                : Colors.transparent,
           ),
         ),
         child: Row(
           children: [
             Icon(
               icon,
-              color: isSelected ? KineticTheme.primary : KineticTheme.onSurfaceVariant,
+              color: isSelected
+                  ? KineticTheme.primary
+                  : KineticTheme.onSurfaceVariant,
               size: 20,
             ),
             const SizedBox(width: 16),
             Text(
               label,
               style: KineticTheme.getDisplayFont(
-                color: isSelected ? KineticTheme.primary : KineticTheme.onSurfaceVariant,
+                color: isSelected
+                    ? KineticTheme.primary
+                    : KineticTheme.onSurfaceVariant,
                 fontSize: 15,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               ),
@@ -543,7 +565,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   controller: _searchController,
                   decoration: const InputDecoration(
                     hintText: 'Filtruj po nazwie, opisie lub tagach...',
-                    prefixIcon: Icon(Icons.search_rounded, color: KineticTheme.onSurfaceVariant),
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: KineticTheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
@@ -561,7 +586,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ProjectDetailsScreen(project: project),
+                          builder: (context) =>
+                              ProjectDetailsScreen(project: project),
                         ),
                       ).then((_) => _filterProjects());
                     },
@@ -569,61 +595,60 @@ class _HomeScreenState extends State<HomeScreen> {
                     onProjectDelete: _deleteProject,
                   )
                 : _filteredProjects.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.folder_open_rounded,
-                              size: 64,
-                              color: KineticTheme.onSurfaceVariant.withAlpha(60),
-                            ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Brak projektów spełniających kryteria.',
-                              style: TextStyle(color: KineticTheme.onSurfaceVariant, fontSize: 16),
-                            ),
-                            const SizedBox(height: 16),
-                            Wrap(
-                              spacing: 16,
-                              runSpacing: 16,
-                              alignment: WrapAlignment.center,
-                              children: [
-                                ElevatedButton.icon(
-                                  onPressed: _showAddProjectDialog,
-                                  icon: const Icon(Icons.add),
-                                  label: const Text('NOWY PROJEKT'),
-                                ),
-                                if (_searchController.text.isNotEmpty || _selectedFilterTags.isNotEmpty)
-                                  ElevatedButton.icon(
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      setState(() {
-                                        _selectedFilterTags.clear();
-                                      });
-                                      _filterProjects();
-                                    },
-                                    icon: const Icon(Icons.clear),
-                                    label: const Text('Wyczyść filtry'),
-                                  ),
-                              ],
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.folder_open_rounded,
+                          size: 64,
+                          color: KineticTheme.onSurfaceVariant.withAlpha(60),
                         ),
-                      )
-                    : GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Brak projektów spełniających kryteria.',
+                          style: TextStyle(
+                            color: KineticTheme.onSurfaceVariant,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        if (_searchController.text.isNotEmpty ||
+                            _selectedFilterTags.isNotEmpty)
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _selectedFilterTags.clear();
+                              });
+                              _filterProjects();
+                            },
+                            icon: const Icon(Icons.clear),
+                            label: const Text('Wyczyść filtry'),
+                          )
+                        else
+                          ElevatedButton.icon(
+                            onPressed: _showAddProjectDialog,
+                            icon: const Icon(Icons.add),
+                            label: const Text('NOWY PROJEKT'),
+                          ),
+                      ],
+                    ),
+                  )
+                : GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 400,
                           childAspectRatio: 0.8,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                         ),
-                        itemCount: _filteredProjects.length,
-                        itemBuilder: (context, index) {
-                          final project = _filteredProjects[index];
-                          return _buildProjectTile(project);
-                        },
-                      ),
+                    itemCount: _filteredProjects.length,
+                    itemBuilder: (context, index) {
+                      final project = _filteredProjects[index];
+                      return _buildProjectTile(project);
+                    },
+                  ),
           ),
         ],
       ),
@@ -631,7 +656,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProjectTile(ProjectModel project) {
-    final dateStr = '${project.createdAt.day.toString().padLeft(2, '0')}.${project.createdAt.month.toString().padLeft(2, '0')}.${project.createdAt.year}';
+    final dateStr =
+        '${project.createdAt.day.toString().padLeft(2, '0')}.${project.createdAt.month.toString().padLeft(2, '0')}.${project.createdAt.year}';
     return Card(
       color: KineticTheme.surfaceContainerLow,
       child: InkWell(
@@ -654,10 +680,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     color: KineticTheme.surfaceContainer,
                     child: project.imagePath != null
-                        ? Image.network(
-                            project.imagePath!,
-                            fit: BoxFit.cover,
-                          )
+                        ? Image.network(project.imagePath!, fit: BoxFit.cover)
                         : const Icon(
                             Icons.folder_open_rounded,
                             size: 64,
@@ -677,7 +700,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.edit_rounded, color: KineticTheme.secondary, size: 16),
+                            icon: const Icon(
+                              Icons.edit_rounded,
+                              color: KineticTheme.secondary,
+                              size: 16,
+                            ),
                             constraints: const BoxConstraints(),
                             padding: const EdgeInsets.all(8),
                             tooltip: 'Edytuj projekt',
@@ -685,7 +712,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(width: 2),
                           IconButton(
-                            icon: const Icon(Icons.delete_outline_rounded, color: KineticTheme.tertiary, size: 16),
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              color: KineticTheme.tertiary,
+                              size: 16,
+                            ),
                             constraints: const BoxConstraints(),
                             padding: const EdgeInsets.all(8),
                             tooltip: 'Usuń projekt',
@@ -726,7 +757,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 8),
                     Expanded(
                       child: Text(
-                        project.description.isNotEmpty ? project.description : 'Brak opisu.',
+                        project.description.isNotEmpty
+                            ? project.description
+                            : 'Brak opisu.',
                         style: KineticTheme.getDisplayFont(
                           fontSize: 13,
                           color: KineticTheme.onSurfaceVariant,
@@ -743,15 +776,23 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: project.tags.map((tag) {
                             return Container(
                               margin: const EdgeInsets.only(right: 6),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: KineticTheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: KineticTheme.outlineVariant),
+                                border: Border.all(
+                                  color: KineticTheme.outlineVariant,
+                                ),
                               ),
                               child: Text(
                                 tag,
-                                style: KineticTheme.getDisplayFont(fontSize: 10, color: KineticTheme.onSurface),
+                                style: KineticTheme.getDisplayFont(
+                                  fontSize: 10,
+                                  color: KineticTheme.onSurface,
+                                ),
                               ),
                             );
                           }).toList(),

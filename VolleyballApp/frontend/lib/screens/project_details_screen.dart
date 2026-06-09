@@ -805,34 +805,32 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                           style: TextStyle(color: Colors.white54),
                         ),
                         const SizedBox(height: 24),
-                        Wrap(
-                          spacing: 16,
-                          runSpacing: 16,
-                          alignment: WrapAlignment.center,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _importVideoArtifact,
-                              icon: const Icon(Icons.add_to_drive),
-                              label: const Text('Importuj wideo'),
-                            ),
-                            ElevatedButton.icon(
-                              onPressed: _linkExistingArtifactDialog,
-                              icon: const Icon(Icons.link),
-                              label: const Text('Podepnij artefakt'),
-                            ),
-                            if (_searchController.text.isNotEmpty) ...[
-                              const SizedBox(width: 16),
+                        if (_searchController.text.isNotEmpty)
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _searchController.clear();
+                            },
+                            icon: const Icon(Icons.clear),
+                            label: const Text('Wyczyść filtry'),
+                          )
+                        else
+                          Wrap(
+                            spacing: 16,
+                            runSpacing: 16,
+                            alignment: WrapAlignment.center,
+                            children: [
                               ElevatedButton.icon(
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _filterArtifacts();
-                                },
-                                icon: const Icon(Icons.clear),
-                                label: const Text('Wyczyść filtry'),
+                                onPressed: _importVideoArtifact,
+                                icon: const Icon(Icons.add_to_drive),
+                                label: const Text('Importuj wideo'),
                               ),
-                            ]
-                          ],
-                        ),
+                              ElevatedButton.icon(
+                                onPressed: _linkExistingArtifactDialog,
+                                icon: const Icon(Icons.link),
+                                label: const Text('Podepnij artefakt'),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   )
