@@ -101,9 +101,8 @@ class AnalysisFileService {
     final Map<String, dynamic> payload = {
       'actions': actions.map((a) => a.toJson()).toList(),
     }..addAll({'total_frames': ?totalFrames, 'fps': ?fps});
-    await File(
-      path,
-    ).writeAsString(const JsonEncoder.withIndent('  ').convert(payload));
+    // ⚡ Bolt Optimization: Use raw jsonEncode instead of JsonEncoder.withIndent to reduce CPU overhead and file size bloat when saving large analysis payloads.
+    await File(path).writeAsString(jsonEncode(payload));
   }
 
   // ─── Odczyt ───────────────────────────────────────────────────────────────
