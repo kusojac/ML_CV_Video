@@ -97,3 +97,7 @@
 ## 2024-05-29 - Virtualization of Long Lists in Action Sidebar
 **Learning:** In Flutter, wrapping a dynamically mapped `Column` of list items inside a `SingleChildScrollView` triggers synchronous instantiation and layout of every element simultaneously, causing severe O(n) rendering overhead and jank when dealing with long `filteredActions` lists in `action_sidebar.dart`.
 **Action:** Always prefer `ListView.builder` over `SingleChildScrollView` + `Column` for any dynamically sizable lists to guarantee proper lazy loading (virtualization) and maintain fluid 60fps rendering.
+
+## 2024-05-18 - Avoid synchronous list mapping in Flutter Widgets
+**Learning:** In Flutter, mapping large collections directly within the `children` property of a `ListView` or `Column` (e.g., `children: items.map((e) => buildWidget(e)).toList()`) executes synchronously. This blocks the main UI thread during layout and build, especially causing jank when dealing with deeply nested or long lists of UI components like `selectedAction.playerFocuses`.
+**Action:** Always replace `ListView(children: ...)` with `ListView.builder` for potentially long or dynamically changing lists to ensure virtualized, lazy rendering that preserves smooth 60fps scrolling and UI responsiveness.
