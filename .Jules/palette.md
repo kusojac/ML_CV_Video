@@ -19,3 +19,6 @@
 ## 2026-05-24 - Actionable Empty States for Filtered Lists
 **Learning:** Providing a dead-end empty state (like 'Brak projektów spełniających kryteria.') when a search/filter yields no results forces the user to manually seek out the search bar or clear filters button elsewhere.
 **Action:** When an empty state is explicitly triggered by an active search query (e.g., `_searchController.text.isNotEmpty`), immediately provide a 'Clear filters' ('Wyczyść filtry') CTA within the empty state layout to allow users to quickly recover to the full list view. Ensure to re-invoke the filtering logic upon clearing the controller.
+## 2025-06-14 - Empty State Contextual CTAs
+**Learning:** Generic empty states without context or specific calls to action create user friction, particularly when the view is empty due to active filters.
+**Action:** Always replace plain generic text fallbacks with structured empty states that include explicit Call-To-Action (CTA) buttons relevant to the user's workflow (e.g., 'Clear filters' if triggered by filters, or 'Add' if genuinely empty).
