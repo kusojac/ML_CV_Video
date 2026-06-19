@@ -97,3 +97,7 @@
 ## 2024-05-29 - Virtualization of Long Lists in Action Sidebar
 **Learning:** In Flutter, wrapping a dynamically mapped `Column` of list items inside a `SingleChildScrollView` triggers synchronous instantiation and layout of every element simultaneously, causing severe O(n) rendering overhead and jank when dealing with long `filteredActions` lists in `action_sidebar.dart`.
 **Action:** Always prefer `ListView.builder` over `SingleChildScrollView` + `Column` for any dynamically sizable lists to guarantee proper lazy loading (virtualization) and maintain fluid 60fps rendering.
+
+## 2024-05-30 - Flutter JSON Serialization Overhead
+**Learning:** In Dart/Flutter, saving large JSON payloads using `const JsonEncoder.withIndent('  ').convert()` introduces significant CPU overhead and file size bloat.
+**Action:** Use `jsonEncode()` directly for machine-readable JSON files to avoid unnecessarily blocking the main thread.
