@@ -103,7 +103,8 @@ class AnalysisFileService {
     }..addAll({'total_frames': ?totalFrames, 'fps': ?fps});
     await File(
       path,
-    ).writeAsString(const JsonEncoder.withIndent('  ').convert(payload));
+    // ⚡ Bolt Optimization: Replace JsonEncoder.withIndent with jsonEncode to reduce CPU overhead and file bloat
+    ).writeAsString(jsonEncode(payload));
   }
 
   // ─── Odczyt ───────────────────────────────────────────────────────────────
