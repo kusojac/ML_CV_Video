@@ -80,6 +80,8 @@ def secure_path(file_path: str) -> str:
     """Validates that the given path does not contain directory traversal characters."""
     if ".." in file_path:
         raise HTTPException(status_code=400, detail="Invalid path provided.")
+    if os.path.isabs(file_path):
+        raise HTTPException(status_code=400, detail="Invalid path provided.")
     if "\x00" in file_path:
         raise HTTPException(status_code=400, detail="Invalid path provided.")
     return file_path

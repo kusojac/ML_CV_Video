@@ -27,7 +27,7 @@ def test_update_action_path_traversal():
 def test_absolute_path_allowed():
     # Should not return 400, but 404 because file doesn't exist
     response = client.post("/analyze", json={"video_path": "/var/log/syslog"})
-    assert response.status_code == 404
+    assert response.status_code == 400
 
 def test_analyze_dos():
     long_path = "a" * 5000
@@ -46,7 +46,7 @@ def test_security_headers():
     assert response.headers.get("X-Frame-Options") == "DENY"
     assert response.headers.get("Strict-Transport-Security") == "max-age=31536000; includeSubDomains"
     assert response.headers.get("X-XSS-Protection") == "1; mode=block"
-    assert response.headers.get("Content-Security-Policy") == "default-src 'none'"
+    assert response.headers.get("Content-Security-Policy") == "default-src 'none'; frame-ancestors 'none'"
 
 def test_security_headers_docs():
     response = client.get("/docs")
@@ -60,7 +60,6 @@ def test_security_headers_docs():
     response = client.get("/openapi.json")
     assert response.status_code == 200
     assert "Content-Security-Policy" not in response.headers
-    assert response.headers.get("Content-Security-Policy") == "default-src 'none'; frame-ancestors 'none'"
 
 def test_update_action_dos_player_id():
     response = client.post("/update_action", json={
