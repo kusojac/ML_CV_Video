@@ -887,6 +887,16 @@ class ActionSidebarState extends State<ActionSidebar> {
                                 ),
                                 textAlign: TextAlign.center,
                               ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: widget.onLoadPlaylist,
+                                icon: const Icon(Icons.folder_open),
+                                label: const Text('Wczytaj playlistę'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white10,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
                             ],
                           ),
                         ),
