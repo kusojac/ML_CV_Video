@@ -72,11 +72,19 @@ from fastapi import HTTPException
 client = TestClient(app)
 
 def test_validate_safe_path_valid():
-    assert secure_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
     assert secure_path("video.mp4") == "video.mp4"
+
+def test_validate_safe_path_absolute():
+    with pytest.raises(HTTPException) as excinfo:
+        secure_path("/etc/passwd")
+    assert excinfo.value.status_code == 400
 def test_secure_path_valid():
-    assert secure_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
     assert secure_path("video.mp4") == "video.mp4"
+
+def test_secure_path_absolute():
+    with pytest.raises(HTTPException) as excinfo:
+        secure_path("/etc/passwd")
+    assert excinfo.value.status_code == 400
 
 def test_secure_path_invalid():
     with pytest.raises(HTTPException) as excinfo:
