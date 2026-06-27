@@ -180,3 +180,24 @@ def test_max_length_validation_job_id():
 def test_max_length_validation_get_results():
     response = client.get(f"/results?video_path={'a' * 2049}")
     assert response.status_code == 422
+
+def test_max_length_validation_lists():
+    response = client.post("/update_action", json={
+        "video_path": "a.mp4",
+        "action_id": "123",
+        "new_type": "Serve",
+        "new_start_ms": 1.0,
+        "new_end_ms": 2.0,
+        "new_sub_actions": [{}] * 101
+    })
+    assert response.status_code == 422
+
+    response = client.post("/update_action", json={
+        "video_path": "a.mp4",
+        "action_id": "123",
+        "new_type": "Serve",
+        "new_start_ms": 1.0,
+        "new_end_ms": 2.0,
+        "new_player_box": [1.0, 2.0, 3.0, 4.0, 5.0]
+    })
+    assert response.status_code == 422
