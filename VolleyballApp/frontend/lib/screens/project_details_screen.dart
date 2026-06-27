@@ -838,10 +838,12 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
-                              Icons.videocam_off,
+                            Icon(
+                              Icons.folder_open_rounded,
                               size: 64,
-                              color: Colors.white30,
+                              color: KineticTheme.onSurfaceVariant.withAlpha(
+                                60,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             const Text(
