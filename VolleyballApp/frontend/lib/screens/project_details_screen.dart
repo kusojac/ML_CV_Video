@@ -827,7 +827,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                   _filterArtifacts();
                                 },
                                 icon: const Icon(Icons.clear_all),
-                                label: const Text('Wyczyścić filtry'),
+                                label: const Text('Wyczyść filtry'),
                               ),
                             ],
                           ),
