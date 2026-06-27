@@ -98,6 +98,6 @@
 **Learning:** In Flutter, wrapping a dynamically mapped `Column` of list items inside a `SingleChildScrollView` triggers synchronous instantiation and layout of every element simultaneously, causing severe O(n) rendering overhead and jank when dealing with long `filteredActions` lists in `action_sidebar.dart`.
 **Action:** Always prefer `ListView.builder` over `SingleChildScrollView` + `Column` for any dynamically sizable lists to guarantee proper lazy loading (virtualization) and maintain fluid 60fps rendering.
 
-## 2024-05-18 - Avoid synchronous list mapping in Flutter Widgets
-**Learning:** In Flutter, mapping large collections directly within the `children` property of a `ListView` or `Column` (e.g., `children: items.map((e) => buildWidget(e)).toList()`) executes synchronously. This blocks the main UI thread during layout and build, especially causing jank when dealing with deeply nested or long lists of UI components like `selectedAction.playerFocuses`.
-**Action:** Always replace `ListView(children: ...)` with `ListView.builder` for potentially long or dynamically changing lists to ensure virtualized, lazy rendering that preserves smooth 60fps scrolling and UI responsiveness.
+## 2024-06-11 - Bypass Indented JSON Formatting in Flutter
+**Learning:** In Dart/Flutter, saving large JSON payloads using `const JsonEncoder.withIndent('  ').convert(payload)` introduces significant CPU overhead and file size bloat compared to `jsonEncode(payload)`. For massive files (like large analysis data sets), this blocks the main thread noticeably.
+**Action:** When saving large machine-readable JSON data where human readability is not critical, always use `jsonEncode()` directly instead of using a pretty-printing JSON encoder.
