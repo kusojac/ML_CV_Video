@@ -839,13 +839,13 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Icon(
-                              Icons.video_library_outlined,
+                              Icons.videocam_off,
                               size: 64,
                               color: Colors.white30,
                             ),
                             const SizedBox(height: 16),
                             const Text(
-                              'Brak artefaktów',
+                              'Brak powiązanych artefaktów',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,

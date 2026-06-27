@@ -2342,9 +2342,11 @@ class ActionSidebarState extends State<ActionSidebar> {
           // Focuses List with Max Height
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 150),
-            child: ListView(
+            child: ListView.builder(
               shrinkWrap: true,
-              children: selectedAction.playerFocuses.map((focus) {
+              itemCount: selectedAction.playerFocuses.length,
+              itemBuilder: (context, index) {
+                final focus = selectedAction.playerFocuses[index];
                 final isActive = focus.id == selectedAction.activeFocusId;
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 4),
@@ -2486,7 +2488,7 @@ class ActionSidebarState extends State<ActionSidebar> {
                     ],
                   ),
                 );
-              }).toList(),
+              },
             ),
           ),
         ],
