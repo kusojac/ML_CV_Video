@@ -838,6 +838,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+<<<<<<< HEAD
                             Icon(
                               Icons.folder_open_rounded,
                               size: 64,
@@ -846,11 +847,29 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                               ),
                             ),
                             const SizedBox(height: 16),
+=======
+                            const Icon(
+                              Icons.videocam_off,
+                              size: 64,
+                              color: Colors.white30,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Brak powiązanych artefaktów',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white70,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+>>>>>>> main
                             const Text(
                               'Podepnij lub zaimportuj artefakt, aby go przeanalizować.',
                               style: TextStyle(color: Colors.white54),
                             ),
                             const SizedBox(height: 24),
+<<<<<<< HEAD
                             if (_searchController.text.isNotEmpty)
                               ElevatedButton.icon(
                                 onPressed: () {
@@ -878,6 +897,25 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                                   ),
                                 ],
                               ),
+=======
+                            Wrap(
+                              spacing: 16,
+                              runSpacing: 16,
+                              alignment: WrapAlignment.center,
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: _importVideoArtifact,
+                                  icon: const Icon(Icons.add_to_drive),
+                                  label: const Text('Importuj wideo'),
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: _linkExistingArtifactDialog,
+                                  icon: const Icon(Icons.link),
+                                  label: const Text('Podepnij artefakt'),
+                                ),
+                              ],
+                            ),
+>>>>>>> main
                           ],
                         ),
                       );
