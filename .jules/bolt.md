@@ -98,6 +98,6 @@
 **Learning:** In Flutter, wrapping a dynamically mapped `Column` of list items inside a `SingleChildScrollView` triggers synchronous instantiation and layout of every element simultaneously, causing severe O(n) rendering overhead and jank when dealing with long `filteredActions` lists in `action_sidebar.dart`.
 **Action:** Always prefer `ListView.builder` over `SingleChildScrollView` + `Column` for any dynamically sizable lists to guarantee proper lazy loading (virtualization) and maintain fluid 60fps rendering.
 
-## 2026-06-20 - Dart JSON Encoder Performance Bottleneck
-**Learning:** Using `JsonEncoder.withIndent` (e.g., `const JsonEncoder.withIndent('  ').convert(payload)`) in Dart for large JSON structures introduces measurable CPU overhead and creates bloated file sizes compared to using `jsonEncode()`. Because Dart executes synchronously on the main isolate by default, this extra serialization formatting can contribute to UI jank and takes up more storage without providing any functional benefit for machine-read files.
-**Action:** Always prefer `jsonEncode(payload)` over `JsonEncoder.withIndent` for serialization in Dart when saving data to files or network payloads, unless human readability for debugging is strictly required.
+## 2024-06-11 - Bypass Indented JSON Formatting in Flutter
+**Learning:** In Dart/Flutter, saving large JSON payloads using `const JsonEncoder.withIndent('  ').convert(payload)` introduces significant CPU overhead and file size bloat compared to `jsonEncode(payload)`. For massive files (like large analysis data sets), this blocks the main thread noticeably.
+**Action:** When saving large machine-readable JSON data where human readability is not critical, always use `jsonEncode()` directly instead of using a pretty-printing JSON encoder.
