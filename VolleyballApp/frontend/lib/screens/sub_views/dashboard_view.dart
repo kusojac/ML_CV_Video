@@ -71,8 +71,12 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   Widget build(BuildContext context) {
     final projects = _dataService.projects;
-    final videos = _dataService.artifacts.where((a) => a.type == ArtifactType.video).toList();
-    final playlists = _dataService.artifacts.where((a) => a.type == ArtifactType.playlist).toList();
+    final videos = _dataService.artifacts
+        .where((a) => a.type == ArtifactType.video)
+        .toList();
+    final playlists = _dataService.artifacts
+        .where((a) => a.type == ArtifactType.playlist)
+        .toList();
     final recentProjects = projects.toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final displayRecent = recentProjects.take(4).toList();
@@ -83,8 +87,11 @@ class _DashboardViewState extends State<DashboardView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Nagłówek powitalny
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 16,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,12 +118,18 @@ class _DashboardViewState extends State<DashboardView> {
               ),
               ElevatedButton.icon(
                 onPressed: widget.onNewSessionTap,
-                icon: const Icon(Icons.add_circle_outline, color: KineticTheme.onPrimaryContainer),
+                icon: const Icon(
+                  Icons.add_circle_outline,
+                  color: KineticTheme.onPrimaryContainer,
+                ),
                 label: const Text('NOWA SESJA'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: KineticTheme.primary,
                   foregroundColor: KineticTheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 18,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -130,7 +143,9 @@ class _DashboardViewState extends State<DashboardView> {
           LayoutBuilder(
             builder: (context, constraints) {
               final double width = constraints.maxWidth;
-              final int crossAxisCount = width > 1100 ? 4 : (width > 600 ? 2 : 1);
+              final int crossAxisCount = width > 1100
+                  ? 4
+                  : (width > 600 ? 2 : 1);
               return GridView.count(
                 crossAxisCount: crossAxisCount,
                 crossAxisSpacing: 16,
@@ -162,7 +177,9 @@ class _DashboardViewState extends State<DashboardView> {
                   ),
                   _buildStatCard(
                     title: 'OZNACZONE ZDARZENIA',
-                    value: _loadingActions ? '...' : _totalActionsCount.toString(),
+                    value: _loadingActions
+                        ? '...'
+                        : _totalActionsCount.toString(),
                     icon: Icons.bolt_rounded,
                     accentColor: KineticTheme.tertiary,
                     onTap: widget.onBrowseStatsTap,
@@ -201,7 +218,8 @@ class _DashboardViewState extends State<DashboardView> {
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
                                 itemCount: displayRecent.length,
-                                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                                separatorBuilder: (context, index) =>
+                                    const SizedBox(height: 12),
                                 itemBuilder: (context, index) {
                                   final proj = displayRecent[index];
                                   return _buildRecentProjectRow(proj);
@@ -251,14 +269,20 @@ class _DashboardViewState extends State<DashboardView> {
                             decoration: BoxDecoration(
                               color: KineticTheme.surfaceContainerLow,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: KineticTheme.outlineVariant),
+                              border: Border.all(
+                                color: KineticTheme.outlineVariant,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.lightbulb_outline_rounded, color: KineticTheme.secondary, size: 18),
+                                    Icon(
+                                      Icons.lightbulb_outline_rounded,
+                                      color: KineticTheme.secondary,
+                                      size: 18,
+                                    ),
                                     const SizedBox(width: 8),
                                     Text(
                                       'Porada analityczna',
@@ -364,16 +388,26 @@ class _DashboardViewState extends State<DashboardView> {
       decoration: BoxDecoration(
         color: KineticTheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: KineticTheme.outlineVariant, style: BorderStyle.solid),
+        border: Border.all(
+          color: KineticTheme.outlineVariant,
+          style: BorderStyle.solid,
+        ),
       ),
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.folder_open_rounded, color: KineticTheme.onSurfaceVariant.withAlpha(100), size: 48),
+            Icon(
+              Icons.folder_open_rounded,
+              color: KineticTheme.onSurfaceVariant.withAlpha(100),
+              size: 48,
+            ),
             const SizedBox(height: 12),
             Text(
               'Brak projektów w systemie',
-              style: KineticTheme.getDisplayFont(color: KineticTheme.onSurfaceVariant, fontSize: 14),
+              style: KineticTheme.getDisplayFont(
+                color: KineticTheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 12),
             OutlinedButton(
@@ -425,7 +459,11 @@ class _DashboardViewState extends State<DashboardView> {
                           fit: BoxFit.cover,
                         ),
                       )
-                    : const Icon(Icons.folder_special, color: KineticTheme.primary, size: 24),
+                    : const Icon(
+                        Icons.folder_special,
+                        color: KineticTheme.primary,
+                        size: 24,
+                      ),
               ),
               const SizedBox(width: 16),
               // Informacje
@@ -445,7 +483,9 @@ class _DashboardViewState extends State<DashboardView> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      project.description.isNotEmpty ? project.description : 'Brak opisu.',
+                      project.description.isNotEmpty
+                          ? project.description
+                          : 'Brak opisu.',
                       style: KineticTheme.getDisplayFont(
                         fontSize: 12,
                         color: KineticTheme.onSurfaceVariant,
@@ -462,7 +502,10 @@ class _DashboardViewState extends State<DashboardView> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: KineticTheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
@@ -502,9 +545,7 @@ class _DashboardViewState extends State<DashboardView> {
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         side: const BorderSide(color: KineticTheme.outlineVariant),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         backgroundColor: KineticTheme.surfaceContainerLow,
       ),
       onPressed: onTap,
