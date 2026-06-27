@@ -72,11 +72,19 @@ from fastapi import HTTPException
 client = TestClient(app)
 
 def test_validate_safe_path_valid():
-    assert secure_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
     assert secure_path("video.mp4") == "video.mp4"
+
+def test_validate_safe_path_absolute():
+    with pytest.raises(HTTPException) as excinfo:
+        secure_path("/etc/passwd")
+    assert excinfo.value.status_code == 400
 def test_secure_path_valid():
-    assert secure_path("C:/Users/test/video.mp4") == "C:/Users/test/video.mp4"
     assert secure_path("video.mp4") == "video.mp4"
+
+def test_secure_path_absolute():
+    with pytest.raises(HTTPException) as excinfo:
+        secure_path("/etc/passwd")
+    assert excinfo.value.status_code == 400
 
 def test_secure_path_invalid():
     with pytest.raises(HTTPException) as excinfo:
@@ -179,4 +187,25 @@ def test_max_length_validation_job_id():
 
 def test_max_length_validation_get_results():
     response = client.get(f"/results?video_path={'a' * 2049}")
+    assert response.status_code == 422
+
+def test_max_length_validation_lists():
+    response = client.post("/update_action", json={
+        "video_path": "a.mp4",
+        "action_id": "123",
+        "new_type": "Serve",
+        "new_start_ms": 1.0,
+        "new_end_ms": 2.0,
+        "new_sub_actions": [{}] * 101
+    })
+    assert response.status_code == 422
+
+    response = client.post("/update_action", json={
+        "video_path": "a.mp4",
+        "action_id": "123",
+        "new_type": "Serve",
+        "new_start_ms": 1.0,
+        "new_end_ms": 2.0,
+        "new_player_box": [1.0, 2.0, 3.0, 4.0, 5.0]
+    })
     assert response.status_code == 422

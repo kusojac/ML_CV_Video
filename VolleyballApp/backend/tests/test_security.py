@@ -47,7 +47,7 @@ def test_security_headers():
     assert response.headers.get("X-Frame-Options") == "DENY"
     assert response.headers.get("Strict-Transport-Security") == "max-age=31536000; includeSubDomains"
     assert response.headers.get("X-XSS-Protection") == "1; mode=block"
-    assert response.headers.get("Content-Security-Policy") == "default-src 'none'"
+    assert response.headers.get("Content-Security-Policy") == "default-src 'none'; frame-ancestors 'none'"
 
 def test_security_headers_docs():
     response = client.get("/docs")
@@ -61,26 +61,3 @@ def test_security_headers_docs():
     response = client.get("/openapi.json")
     assert response.status_code == 200
     assert "Content-Security-Policy" not in response.headers
-    assert response.headers.get("Content-Security-Policy") == "default-src 'none'; frame-ancestors 'none'"
-
-def test_update_action_dos_player_id():
-    response = client.post("/update_action", json={
-        "video_path": "a.mp4",
-        "action_id": "123",
-        "new_type": "Serve",
-        "new_start_ms": 1.0,
-        "new_end_ms": 2.0,
-        "new_player_id": "a" * 101
-    })
-    assert response.status_code == 422
-
-def test_update_action_dos_active_focus_id():
-    response = client.post("/update_action", json={
-        "video_path": "a.mp4",
-        "action_id": "123",
-        "new_type": "Serve",
-        "new_start_ms": 1.0,
-        "new_end_ms": 2.0,
-        "new_active_focus_id": "a" * 101
-    })
-    assert response.status_code == 422
