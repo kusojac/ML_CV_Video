@@ -264,3 +264,13 @@ def test_job_persistence():
     finally:
         if os.path.exists(db_path):
             os.remove(db_path)
+
+def test_analyze_video_absolute_path():
+    """Test absolute path is blocked in analyze endpoint"""
+    response = client.post("/analyze", json={"video_path": "/etc/passwd"})
+    assert response.status_code == 400
+
+def test_get_results_absolute_path():
+    """Test absolute path is blocked in results endpoint"""
+    response = client.get("/results?video_path=/etc/passwd")
+    assert response.status_code == 400
