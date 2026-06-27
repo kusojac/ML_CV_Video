@@ -27,7 +27,7 @@ Backend ładuje modele uczenia maszynowego w formatach ONNX i TFLite. Uruchomien
 1. Otwórz terminal (PowerShell lub CMD).
 2. Przejdź do folderu `backend`:
    ```powershell
-   cd C:\Users\kusoj\Desktop\Projekty\GoGoShawk\VideoMobile4Sport\ML_CV_Video\VolleyballApp\backend
+   cd backend
    ```
 3. Aktywuj wbudowane środowisko wirtualne (venv):
    ```powershell
@@ -52,7 +52,7 @@ Backend ładuje modele uczenia maszynowego w formatach ONNX i TFLite. Uruchomien
 1. Otwórz **drugie** okno terminala.
 2. Przejdź do folderu `frontend`:
    ```powershell
-   cd C:\Users\kusoj\Desktop\Projekty\GoGoShawk\VideoMobile4Sport\ML_CV_Video\VolleyballApp\frontend
+   cd frontend
    ```
 3. Pobierz pakiety i skompiluj aplikację natywnie dla systemu Windows:
    ```powershell

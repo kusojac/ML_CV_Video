@@ -24,7 +24,7 @@ The backend handles the heavyweight Computer Vision models (YOLO, MediaPipe, Sci
 1. Open a new Terminal (PowerShell or CMD).
 2. Navigate to the `backend` folder:
    ```bash
-   cd C:\Users\kusoj\Desktop\Projekty\GoGoShawk\VideoMobile4Sport\ML_CV_Video\VolleyballApp\backend
+   cd backend
    ```
 3. Activate the **backend** virtual environment (located inside `backend\venv\`):
    ```powershell
@@ -45,9 +45,9 @@ The backend handles the heavyweight Computer Vision models (YOLO, MediaPipe, Sci
 >
 > **Troubleshooting 2 — `Error loading ASGI app. Could not import module "main"`:** 
 > Oznacza to, że znajdujesz się w niewłaściwym folderze (prawdopodobnie wewnątrz `backend\venv\Scripts`). Serwer musi zostać uruchomiony z głównego folderu `backend`. 
-> Zanim uruchomisz uvicorn, wpisz:
+> Zanim uruchomisz uvicorn, wróć do głównego folderu `backend`:
 > ```powershell
-> cd C:\Users\kusoj\Desktop\Projekty\GoGoShawk\VideoMobile4Sport\ML_CV_Video\VolleyballApp\backend
+> cd ../..
 > ```
 >
 > If `Activate.ps1` doesn't work in your terminal (e.g. non-interactive PowerShell), use this alternative that calls the venv's Python directly — **no activation needed** (make sure you are in the `backend` folder):
@@ -62,7 +62,7 @@ The frontend presents a project manager interface where you can browse and play 
 1. Open a **second**, separate Terminal.
 2. Navigate to the `frontend` directory:
    ```bash
-   cd C:\Users\kusoj\Desktop\Projekty\GoGoShawk\VideoMobile4Sport\ML_CV_Video\VolleyballApp\frontend
+   cd frontend
    ```
 3. Fetch the plugins and build the desktop app natively:
    ```bash
@@ -98,7 +98,7 @@ Bonus: komórka do **masowego testowania** N klatek z tabela wyników.
 
 ```powershell
 # 1. Przejdź do folderu backend (z aktywnym venv)
-cd VolleyballApp\backend
+cd backend
 .\venv\Scripts\Activate.ps1
 
 # 2. Zainstaluj zależności (jeśli jeszcze nie)
