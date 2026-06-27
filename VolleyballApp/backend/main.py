@@ -77,7 +77,9 @@ class UpdateActionRequest(BaseModel):
     new_active_focus_id: Optional[str] = Field(None, max_length=100)
 
 def secure_path(file_path: str) -> str:
-    """Validates that the given path does not contain directory traversal characters."""
+    """Validates that the given path does not contain absolute paths or directory traversal characters."""
+    if os.path.isabs(file_path):
+        raise HTTPException(status_code=400, detail="Invalid path provided.")
     if ".." in file_path:
         raise HTTPException(status_code=400, detail="Invalid path provided.")
     if os.path.isabs(file_path):
@@ -87,7 +89,6 @@ def secure_path(file_path: str) -> str:
     if os.path.isabs(file_path):
         raise HTTPException(status_code=400, detail="Invalid path provided.")
     return file_path
-
 def get_json_path(video_path: str) -> str:
     """Returns the associated json path for the given video file."""
     base, _ = os.path.splitext(video_path)
