@@ -18,6 +18,7 @@ class VideoAnalysisScreen extends StatefulWidget {
   final AnalyticsService? analyticsService;
   final String? projectId;
   final String? initialPlaylistPath;
+  final String? initialFocusPath;
 
   const VideoAnalysisScreen({
     super.key,
@@ -25,6 +26,7 @@ class VideoAnalysisScreen extends StatefulWidget {
     this.analyticsService,
     this.projectId,
     this.initialPlaylistPath,
+    this.initialFocusPath,
   });
 
   @override
@@ -65,6 +67,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   bool _isolateSelected = false;
 
   List<ActionModel> get _filteredActions {
+    if (widget.initialFocusPath != null && _selectedAction != null) {
+      return [_selectedAction!];
+    }
     return _actions.where((a) {
       if (_isEditMode && _isolateSelected && _selectedAction != null) {
         if (a.id != _selectedAction!.id) return false;
@@ -114,12 +119,18 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     super.initState();
     _analyticsService = widget.analyticsService ?? AnalyticsService();
     HardwareKeyboard.instance.addHandler(_handleGlobalKeyEvent);
+    if (widget.initialPlaylistPath != null || widget.initialFocusPath != null) {
+      _videoLoaded = true;
+    }
     // Check existing analysis in background
     Future.microtask(() async {
       await _loadAvailablePlaylists();
-      _checkExistingAnalysis();
+      await _checkExistingAnalysis();
       if (widget.initialPlaylistPath != null) {
         _loadInitialPlaylist(widget.initialPlaylistPath!);
+      }
+      if (widget.initialFocusPath != null) {
+        await _loadInitialFocus(widget.initialFocusPath!);
       }
     });
   }
@@ -177,8 +188,163 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     }
   }
 
+  Future<void> _loadInitialFocus(String path) async {
+    try {
+      final data = await AnalysisFileService.loadFocusPlayer(path);
+      if (data == null) return;
+
+      final String? actionId = data['actionId'];
+      final Map<String, dynamic>? focusJson = data['focus'];
+      if (actionId == null || focusJson == null) return;
+
+      final focus = PlayerFocusModel.fromJson(focusJson);
+
+      if (mounted) {
+        setState(() {
+          final matchIdx = _actions.indexWhere((a) => a.id == actionId);
+          if (matchIdx != -1) {
+            final action = _actions[matchIdx];
+            final focusExists = action.playerFocuses.any((f) => f.id == focus.id);
+            if (!focusExists) {
+              action.playerFocuses.add(focus);
+            }
+            action.activeFocusId = focus.id;
+            _selectedAction = action;
+            if (_videoController != null) {
+              _videoController!.player.seek(
+                Duration(milliseconds: action.startMs.round()),
+              );
+            }
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Błąd wczytywania Focus Player: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveFocusAsArtifact(ActionModel action, PlayerFocusModel focus) async {
+    final titleController = TextEditingController(text: focus.name);
+    final descController = TextEditingController();
+
+    final bool? shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: KineticTheme.surfaceContainerLow,
+          title: const Text('Zapisz jako artefakt Focus Player', style: TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Nazwa artefaktu',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.purpleAccent)),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Opis (opcjonalnie)',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
+                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.purpleAccent)),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Anuluj', style: TextStyle(color: Colors.white70)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+              child: const Text('Zapisz', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldSave == true && titleController.text.trim().isNotEmpty) {
+      final name = titleController.text.trim();
+      final desc = descController.text.trim();
+      final focusId = focus.id;
+      final path = AnalysisFileService.defaultFocusJsonPath(widget.videoPath, focusId);
+
+      try {
+        await AnalysisFileService.saveFocusPlayer(
+          filePath: path,
+          focus: focus,
+          sourceVideoPath: widget.videoPath,
+          actionId: action.id,
+        );
+
+        final artifact = ArtifactModel(
+          type: ArtifactType.focusPlayer,
+          title: name,
+          description: desc.isNotEmpty ? desc : 'Kadr Focus Player dla zawodnika ${focus.name}',
+          filePath: path,
+          sourceVideoPath: widget.videoPath,
+        );
+
+        await ProjectDataService().createArtifact(artifact);
+        if (widget.projectId != null) {
+          await ProjectDataService().linkArtifactToProject(
+            widget.projectId!,
+            artifact.id,
+          );
+        }
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Zapisano Focus Player: "$name" jako artefakt.'),
+            backgroundColor: Colors.purple,
+          ),
+        );
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Błąd zapisu Focus Player: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   void _onPositionChanged(Duration pos) {
     _currentPosition = pos;
+    
+    if (widget.initialFocusPath != null && _selectedAction != null) {
+      if (pos.inMilliseconds >= _selectedAction!.endMs) {
+        _videoController?.player.seek(
+          Duration(milliseconds: _selectedAction!.startMs.round()),
+        );
+        return;
+      } else if (pos.inMilliseconds < _selectedAction!.startMs - 500) {
+        _videoController?.player.seek(
+          Duration(milliseconds: _selectedAction!.startMs.round()),
+        );
+        return;
+      }
+    }
+
     if (_isPlayingPlaylist && _playlist.isNotEmpty) {
       if (_currentPlaylistIndex < _playlist.length) {
         final currentAction = _playlist[_currentPlaylistIndex];
@@ -1242,9 +1408,16 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                     selectedKeyPoint: _selectedKeyPoint,
                                     playlistActions: _playlist,
                                     isEditMode: _isEditMode,
+                                    isFocusPlayerMode: widget.initialFocusPath != null,
                                     onPositionChanged: _onPositionChanged,
-                                    onControllerReady: (controller) =>
-                                        _videoController = controller,
+                                    onControllerReady: (controller) {
+                                      _videoController = controller;
+                                      if (_selectedAction != null) {
+                                        controller.player.seek(
+                                          Duration(milliseconds: _selectedAction!.startMs.round()),
+                                        );
+                                      }
+                                    },
                                     onActionPlaylistToggled: (action) {
                                       setState(() {
                                         if (_playlist.any(
@@ -1326,7 +1499,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                           ),
                         ),
                         // Focus mode picture-in-picture
-                        if (_selectedAction != null)
+                        if (_selectedAction != null && _videoController != null && widget.initialFocusPath == null)
                           ..._selectedAction!.playerFocuses.asMap().entries.map((entry) {
                             final index = entry.key;
                             final focus = entry.value;
@@ -1408,6 +1581,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               onSavePlaylist: _savePlaylist,
               onSavePlaylistAs: _savePlaylistAs,
               onLoadPlaylist: _loadPlaylist,
+              onSaveFocusAsArtifact: _saveFocusAsArtifact,
               onActionAdded: _onActionAdded,
               initialTabIndex: widget.initialPlaylistPath != null ? 1 : 0,
               availablePlaylists: _availablePlaylists,

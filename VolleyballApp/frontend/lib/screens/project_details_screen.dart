@@ -197,7 +197,14 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                 return ListTile(
                   leading: Icon(_getIconForArtifact(a.type)),
                   title: Text(a.title),
-                  subtitle: Text(a.type.name),
+                  subtitle: Text(() {
+                    switch (a.type) {
+                      case ArtifactType.video: return 'Wideo';
+                      case ArtifactType.playlist: return 'Playlista';
+                      case ArtifactType.action: return 'Akcja';
+                      case ArtifactType.focusPlayer: return 'Focus Player';
+                    }
+                  }()),
                   onTap: () => Navigator.pop(context, a),
                 );
               },
@@ -227,6 +234,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
         return Icons.playlist_play;
       case ArtifactType.action:
         return Icons.flash_on;
+      case ArtifactType.focusPlayer:
+        return Icons.center_focus_strong;
     }
   }
 
@@ -238,6 +247,8 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
         return const Color(0xFF00C853);
       case ArtifactType.action:
         return KineticTheme.primary;
+      case ArtifactType.focusPlayer:
+        return const Color(0xFFE040FB);
     }
   }
 
@@ -367,14 +378,19 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
     // Dla playlist / akcji powinniśmy przekazać context
     String videoToOpen = artifact.filePath;
     String? playlistToOpen;
+    String? focusToOpen;
+
     if (artifact.type == ArtifactType.playlist ||
-        artifact.type == ArtifactType.action) {
+        artifact.type == ArtifactType.action ||
+        artifact.type == ArtifactType.focusPlayer) {
       if (artifact.sourceVideoPath != null &&
           artifact.sourceVideoPath!.isNotEmpty) {
         videoToOpen = artifact.sourceVideoPath!;
       }
       if (artifact.type == ArtifactType.playlist) {
         playlistToOpen = artifact.filePath;
+      } else if (artifact.type == ArtifactType.focusPlayer) {
+        focusToOpen = artifact.filePath;
       }
     }
 
@@ -385,6 +401,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
           videoPath: videoToOpen,
           projectId: widget.project.id,
           initialPlaylistPath: playlistToOpen,
+          initialFocusPath: focusToOpen,
         ),
       ),
     ).then((_) => _loadArtifacts());
@@ -677,7 +694,14 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                             _filterArtifacts();
                           });
                         },
-                        (type) => type.name,
+                        (type) {
+                          switch (type) {
+                            case ArtifactType.video: return 'Wideo';
+                            case ArtifactType.playlist: return 'Playlista';
+                            case ArtifactType.action: return 'Akcja';
+                            case ArtifactType.focusPlayer: return 'Focus Player';
+                          }
+                        },
                       ),
                       const SizedBox(width: 8),
                       _buildFilterDropdown<String>(
@@ -740,12 +764,19 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                         runSpacing: 4.0,
                         children: [
                           ..._selectedTypes.map(
-                            (t) => _buildFilterChip('Typ: ${t.name}', () {
-                              setState(() {
-                                _selectedTypes.remove(t);
-                                _filterArtifacts();
-                              });
-                            }),
+                            (t) {
+                               String display = t.name;
+                               if (t == ArtifactType.video) display = 'Wideo';
+                               if (t == ArtifactType.playlist) display = 'Playlista';
+                               if (t == ArtifactType.action) display = 'Akcja';
+                               if (t == ArtifactType.focusPlayer) display = 'Focus Player';
+                               return _buildFilterChip('Typ: $display', () {
+                                 setState(() {
+                                   _selectedTypes.remove(t);
+                                   _filterArtifacts();
+                                 });
+                               });
+                             },
                           ),
                           ..._selectedCategories.map(
                             (c) => _buildFilterChip('Kat: $c', () {
@@ -965,7 +996,7 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        artifact.type.name.toUpperCase(),
+                        (artifact.type == ArtifactType.focusPlayer ? 'Focus Player' : artifact.type.name).toUpperCase(),
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,

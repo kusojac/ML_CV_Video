@@ -1,0 +1,10 @@
+{
+  "focus": {
+    "id": "focus_1",
+    "name": "Zawodnik 1 - Przyjęcie",
+    "player_box": [15.0, 359.48, 703.11, 856.28],
+    "player_id": "1"
+  },
+  "sourceVideoPath": "C:\\Users\\kusoj\\Desktop\\Projekty\\GoGoShawk\\VideoMobile4Sport\\ML_CV_Video\\MLCV test.mp4",
+  "actionId": "action_1"
+}

@@ -77,6 +77,9 @@ class _DashboardViewState extends State<DashboardView> {
     final playlists = _dataService.artifacts
         .where((a) => a.type == ArtifactType.playlist)
         .toList();
+    final focusPlayers = _dataService.artifacts
+        .where((a) => a.type == ArtifactType.focusPlayer)
+        .toList();
     final recentProjects = projects.toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final displayRecent = recentProjects.take(4).toList();
@@ -143,9 +146,9 @@ class _DashboardViewState extends State<DashboardView> {
           LayoutBuilder(
             builder: (context, constraints) {
               final double width = constraints.maxWidth;
-              final int crossAxisCount = width > 1100
-                  ? 4
-                  : (width > 600 ? 2 : 1);
+              final int crossAxisCount = width > 1200
+                  ? 5
+                  : (width > 800 ? 3 : (width > 500 ? 2 : 1));
               return GridView.count(
                 crossAxisCount: crossAxisCount,
                 crossAxisSpacing: 16,
@@ -176,13 +179,20 @@ class _DashboardViewState extends State<DashboardView> {
                     onTap: widget.onBrowsePlaylistsTap,
                   ),
                   _buildStatCard(
+                    title: 'FOCUS PLAYER',
+                    value: focusPlayers.length.toString(),
+                    icon: Icons.center_focus_strong_rounded,
+                    accentColor: const Color(0xFFE040FB),
+                    onTap: widget.onBrowseProjectsTap,
+                  ),
+                  _buildStatCard(
                     title: 'OZNACZONE ZDARZENIA',
                     value: _loadingActions
                         ? '...'
                         : _totalActionsCount.toString(),
                     icon: Icons.bolt_rounded,
                     accentColor: KineticTheme.tertiary,
-                    onTap: widget.onBrowseStatsTap,
+                    onTap: widget.onBrowseProjectsTap,
                   ),
                 ],
               );

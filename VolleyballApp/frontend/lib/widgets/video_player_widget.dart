@@ -49,6 +49,7 @@ class VideoPlayerWidget extends StatefulWidget {
   final ActionKeyPointModel? selectedKeyPoint;
   final ValueChanged<ActionKeyPointModel?>? onKeyPointSelected;
   final ValueChanged<ActionKeyPointModel>? onKeyPointUpdated;
+  final bool isFocusPlayerMode;
 
   const VideoPlayerWidget({
     super.key,
@@ -66,6 +67,7 @@ class VideoPlayerWidget extends StatefulWidget {
     this.selectedKeyPoint,
     this.onKeyPointSelected,
     this.onKeyPointUpdated,
+    this.isFocusPlayerMode = false,
   });
 
   @override
@@ -2107,6 +2109,14 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     );
   }
 
+  PlayerFocusModel? get _activeFocus {
+    if (widget.selectedAction == null) return null;
+    final activeId = widget.selectedAction!.activeFocusId;
+    if (activeId == null) return null;
+    final match = widget.selectedAction!.playerFocuses.where((f) => f.id == activeId);
+    return match.isNotEmpty ? match.first : null;
+  }
+
   // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
@@ -2134,6 +2144,44 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
                   _controller.player.state.width?.toDouble() ?? 1920.0;
               final videoH =
                   _controller.player.state.height?.toDouble() ?? 1080.0;
+
+              final focus = widget.isFocusPlayerMode ? _activeFocus : null;
+              if (focus != null && focus.playerBox.length == 4) {
+                final bxMin = focus.playerBox[0];
+                final byMin = focus.playerBox[1];
+                final bxMax = focus.playerBox[2];
+                final byMax = focus.playerBox[3];
+
+                final bw = (bxMax - bxMin).clamp(1.0, videoW);
+                final bh = (byMax - byMin).clamp(1.0, videoH);
+
+                return Center(
+                  child: AspectRatio(
+                    aspectRatio: bw / bh,
+                    child: LayoutBuilder(
+                      builder: (context, box) {
+                        final size = Size(box.maxWidth, box.maxHeight);
+                        return Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Stack(
+                              children: [
+                                Positioned(
+                                  left: -(bxMin / bw) * size.width,
+                                  top: -(byMin / bh) * size.height,
+                                  width: (videoW / bw) * size.width,
+                                  height: (videoH / bh) * size.height,
+                                  child: Video(controller: _controller),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                );
+              }
 
               return Center(
                 child: AspectRatio(

@@ -92,6 +92,36 @@ class AnalysisFileService {
     return savePath;
   }
 
+  static String defaultFocusJsonPath(String videoPath, String focusId) {
+    final base = p.withoutExtension(videoPath);
+    return '${base}_focus_$focusId.json';
+  }
+
+  static Future<void> saveFocusPlayer({
+    required String filePath,
+    required PlayerFocusModel focus,
+    required String sourceVideoPath,
+    required String actionId,
+  }) async {
+    final Map<String, dynamic> payload = {
+      'focus': focus.toJson(),
+      'sourceVideoPath': sourceVideoPath,
+      'actionId': actionId,
+    };
+    await File(filePath).writeAsString(jsonEncode(payload));
+  }
+
+  static Future<Map<String, dynamic>?> loadFocusPlayer(String filePath) async {
+    final file = File(filePath);
+    if (!file.existsSync()) return null;
+    try {
+      final contents = await file.readAsString();
+      return jsonDecode(contents) as Map<String, dynamic>;
+    } catch (e) {
+      return null;
+    }
+  }
+
   static Future<void> _writeJson(
     String path,
     List<ActionModel> actions, {

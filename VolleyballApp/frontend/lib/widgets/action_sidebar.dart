@@ -73,7 +73,10 @@ class ActionSidebar extends StatefulWidget {
     this.currentPlaylistId,
     this.onPlaylistSelected,
     this.onCreateNewPlaylist,
+    this.onSaveFocusAsArtifact,
   });
+
+  final void Function(ActionModel action, PlayerFocusModel focus)? onSaveFocusAsArtifact;
 
   @override
   State<ActionSidebar> createState() => ActionSidebarState();
@@ -2455,6 +2458,23 @@ class ActionSidebarState extends State<ActionSidebar> {
                           ),
                         ),
                       ),
+                      if (widget.onSaveFocusAsArtifact != null) ...[
+                        IconButton(
+                          icon: const Icon(
+                            Icons.bookmark_add,
+                            size: 14,
+                            color: Colors.white30,
+                          ),
+                          tooltip: 'Zapisz jako artefakt Focus Player',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => widget.onSaveFocusAsArtifact!(
+                            selectedAction,
+                            focus,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
                       if (widget.isEditMode) ...[
                         IconButton(
                           icon: const Icon(

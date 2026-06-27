@@ -44,6 +44,7 @@ Color _colorForArtifact(ArtifactType type) {
     case ArtifactType.video:    return const Color(0xFF2979FF);
     case ArtifactType.playlist: return const Color(0xFF00C853);
     case ArtifactType.action:   return const Color(0xFFE53935);
+    case ArtifactType.focusPlayer: return const Color(0xFFE040FB);
   }
 }
 
@@ -52,6 +53,7 @@ IconData _iconForArtifact(ArtifactType type) {
     case ArtifactType.video:    return Icons.videocam;
     case ArtifactType.playlist: return Icons.playlist_play;
     case ArtifactType.action:   return Icons.bolt;
+    case ArtifactType.focusPlayer: return Icons.center_focus_strong;
   }
 }
 
@@ -352,6 +354,7 @@ class _GraphViewState extends State<GraphView> {
       case ArtifactType.video:    return a.videoCategory ?? 'Wideo';
       case ArtifactType.playlist: return 'Playlista';
       case ArtifactType.action:   return 'Akcja';
+      case ArtifactType.focusPlayer: return 'Focus Player';
     }
   }
 

@@ -1,7 +1,7 @@
 import 'package:uuid/uuid.dart';
 import 'team_metadata.dart';
 
-enum ArtifactType { video, playlist, action }
+enum ArtifactType { video, playlist, action, focusPlayer }
 
 class ArtifactModel {
   String id;
