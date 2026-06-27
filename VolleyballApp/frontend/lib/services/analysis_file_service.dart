@@ -103,8 +103,8 @@ class AnalysisFileService {
     }..addAll({'total_frames': ?totalFrames, 'fps': ?fps});
     await File(
       path,
-      // ⚡ Bolt Optimization: Use jsonEncode directly instead of JsonEncoder.withIndent
-      // Using indentation adds significant CPU overhead and file bloat for large arrays.
+      // ⚡ Bolt Optimization: Using jsonEncode instead of JsonEncoder.withIndent
+    // bypassing indentation formatting saves significant CPU overhead and file size.
     ).writeAsString(jsonEncode(payload));
   }
 
