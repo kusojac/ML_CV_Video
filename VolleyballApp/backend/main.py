@@ -69,11 +69,11 @@ class UpdateActionRequest(BaseModel):
     new_type: str = Field(..., max_length=100)
     new_start_ms: float
     new_end_ms: float
-    new_sub_actions: Optional[List[Dict[str, Any]]] = None
-    new_key_points: Optional[List[Dict[str, Any]]] = None
-    new_player_box: Optional[List[float]] = None
+    new_sub_actions: Optional[List[Dict[str, Any]]] = Field(None, max_length=100)
+    new_key_points: Optional[List[Dict[str, Any]]] = Field(None, max_length=100)
+    new_player_box: Optional[List[float]] = Field(None, max_length=4)
     new_player_id: Optional[str] = Field(None, max_length=100)
-    new_player_focuses: Optional[List[Dict[str, Any]]] = None
+    new_player_focuses: Optional[List[Dict[str, Any]]] = Field(None, max_length=100)
     new_active_focus_id: Optional[str] = Field(None, max_length=100)
 
 def secure_path(file_path: str) -> str:
@@ -82,7 +82,11 @@ def secure_path(file_path: str) -> str:
         raise HTTPException(status_code=400, detail="Invalid path provided.")
     if ".." in file_path:
         raise HTTPException(status_code=400, detail="Invalid path provided.")
+    if os.path.isabs(file_path):
+        raise HTTPException(status_code=400, detail="Invalid path provided.")
     if "\x00" in file_path:
+        raise HTTPException(status_code=400, detail="Invalid path provided.")
+    if os.path.isabs(file_path):
         raise HTTPException(status_code=400, detail="Invalid path provided.")
     return file_path
 def get_json_path(video_path: str) -> str:

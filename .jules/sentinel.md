@@ -103,7 +103,8 @@
 **Vulnerability:** The application was missing a Content-Security-Policy (CSP) header, leaving it vulnerable to XSS attacks if an API response is rendered as HTML.
 **Learning:** Default framework configurations (like bare FastAPI) do not typically add fundamental security headers automatically. Relying solely on CORS middleware leaves gaps in defense-in-depth protection. Furthermore, strictly applying `default-src 'none'` to all paths can break documentation pages like Swagger UI and ReDoc which rely on external scripts and styles.
 **Prevention:** Implement a global middleware that automatically injects a `Content-Security-Policy: default-src 'none'` header for API endpoints, while explicitly bypassing documentation paths (`/docs`, `/redoc`, `/openapi.json`).
-## 2026-06-23 - Fix Arbitrary File Write/Read via Absolute Paths
-**Vulnerability:** The `secure_path` validation only checked for directory traversal (`..`) and null bytes but allowed absolute paths (e.g., `/etc/passwd`). This allowed attackers to specify absolute paths to write analysis JSON files to arbitrary locations or read arbitrary JSON files.
-**Learning:** When implementing path validation or sanitization in Python backends, always check for and block absolute paths in addition to relative directory traversal characters to prevent arbitrary file read/write vulnerabilities.
-**Prevention:** Always enforce `os.path.isabs(file_path)` checks when validating user-provided file paths.
+
+## 2026-05-24 - Prevent DoS via Memory Exhaustion in Optional List Fields
+**Vulnerability:** Optional list fields in Pydantic models (e.g., `new_sub_actions: Optional[List[Dict[str, Any]]]`) were missing `max_length` constraints, allowing attackers to send arbitrarily large lists that could cause memory exhaustion (DoS).
+**Learning:** By default, Pydantic `Optional[List[...]]` fields do not enforce any limits on the length of list input unless explicitly specified. Because FastAPI parses incoming request JSON payloads directly, unbounded list parameters pose a memory exhaustion risk at the API boundary.
+**Prevention:** Always specify strict boundaries such as `max_length` using `pydantic.Field(None, max_length=...)` on list parameters within Pydantic models—including `Optional` ones—to guarantee a 422 Unprocessable Entity and gracefully limit payload size.
