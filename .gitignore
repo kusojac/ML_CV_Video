@@ -20,6 +20,7 @@ ATJSW_Volley_Concept_Katowice_MlodzikSet2_VID20260110123022.mp4
 **/__pycache__/
 **/.venv/
 **/.pytest_cache/
+**/.jules/
 venv/
 MLCV test_playlist.json
 20260328_094545_analysis.json
