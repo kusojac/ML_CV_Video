@@ -77,10 +77,12 @@ class UpdateActionRequest(BaseModel):
     new_active_focus_id: Optional[str] = Field(None, max_length=100)
 
 def secure_path(file_path: str) -> str:
-    """Validates that the given path does not contain directory traversal characters."""
+    """Validates that the given path does not contain directory traversal characters or absolute paths."""
     if ".." in file_path:
         raise HTTPException(status_code=400, detail="Invalid path provided.")
     if "\x00" in file_path:
+        raise HTTPException(status_code=400, detail="Invalid path provided.")
+    if os.path.isabs(file_path):
         raise HTTPException(status_code=400, detail="Invalid path provided.")
     return file_path
 

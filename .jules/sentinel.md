@@ -103,3 +103,8 @@
 **Vulnerability:** The application was missing a Content-Security-Policy (CSP) header, leaving it vulnerable to XSS attacks if an API response is rendered as HTML.
 **Learning:** Default framework configurations (like bare FastAPI) do not typically add fundamental security headers automatically. Relying solely on CORS middleware leaves gaps in defense-in-depth protection. Furthermore, strictly applying `default-src 'none'` to all paths can break documentation pages like Swagger UI and ReDoc which rely on external scripts and styles.
 **Prevention:** Implement a global middleware that automatically injects a `Content-Security-Policy: default-src 'none'` header for API endpoints, while explicitly bypassing documentation paths (`/docs`, `/redoc`, `/openapi.json`).
+
+## 2026-06-27 - Fix Arbitrary File Overwrite via Absolute Paths
+**Vulnerability:** The `secure_path` validation function in the FastAPI backend only checked for directory traversal (`..`) and null bytes (`\x00`), missing checks for absolute paths (e.g., `/var/log/syslog`).
+**Learning:** In Python, passing an absolute path to `os.path.join()` or opening it directly bypasses the intended base directory completely, allowing an attacker to read or write arbitrary files on the host filesystem if they supply a full absolute path instead of a relative directory traversal.
+**Prevention:** Always explicitly check for and block absolute paths (e.g., using `os.path.isabs(path)`) in addition to directory traversal characters when validating user-supplied file paths in backend APIs.
