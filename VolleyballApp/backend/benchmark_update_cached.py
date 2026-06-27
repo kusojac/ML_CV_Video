@@ -67,7 +67,8 @@ def run_cached_benchmark():
     # Dump
     start = time.time()
     with open(json_path, 'w') as f:
-        json.dump(data, f, indent=4)
+        # ⚡ Bolt Optimization: Removed indent=4 for faster serialization
+        json.dump(data, f)
     print(f"JSON Dump: {time.time() - start:.6f}s")
 
     os.remove(json_path)

@@ -336,44 +336,82 @@ class ActionSidebarState extends State<ActionSidebar> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(
-                                Icons.search_off,
-                                size: 48,
-                                color: Colors.white30,
-                              ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Brak akcji',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                              if (_filterType != 'All' ||
+                                  _filterPlayer != 'All') ...[
+                                const Icon(
+                                  Icons.search_off,
+                                  size: 48,
+                                  color: Colors.white30,
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Zmień filtry lub dodaj nowe akcje.',
-                                style: TextStyle(
-                                  color: Colors.white54,
-                                  fontSize: 13,
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Brak wyników wyszukiwania',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                onPressed: () {
-                                  setState(() {
-                                    _filterType = 'All';
-                                    _filterPlayer = 'All';
-                                  });
-                                },
-                                icon: const Icon(Icons.clear_all),
-                                label: const Text('Wyczyść filtry'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white10,
-                                  foregroundColor: Colors.white,
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Żadna akcja nie pasuje do wybranych filtrów.',
+                                  style: TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 13,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                              ),
+                                const SizedBox(height: 16),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      _filterType = 'All';
+                                      _filterPlayer = 'All';
+                                    });
+                                  },
+                                  icon: const Icon(Icons.clear_all),
+                                  label: const Text('Wyczyść filtry'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white10,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
+                              ] else ...[
+                                const Icon(
+                                  Icons.list_alt,
+                                  size: 48,
+                                  color: Colors.white30,
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Brak akcji',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Dodaj nową akcję aby rozpocząć analizę.',
+                                  style: TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 13,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                if (widget.isEditMode)
+                                  ElevatedButton.icon(
+                                    onPressed: () => widget.onActionAdded?.call(),
+                                    icon: const Icon(Icons.add),
+                                    label: const Text('Dodaj akcję'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white10,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                              ],
                             ],
                           ),
                         ),
@@ -886,6 +924,16 @@ class ActionSidebarState extends State<ActionSidebar> {
                                   fontSize: 13,
                                 ),
                                 textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: widget.onLoadPlaylist,
+                                icon: const Icon(Icons.folder_open),
+                                label: const Text('Wczytaj playlistę'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white10,
+                                  foregroundColor: Colors.white,
+                                ),
                               ),
                             ],
                           ),
@@ -2304,9 +2352,11 @@ class ActionSidebarState extends State<ActionSidebar> {
           // Focuses List with Max Height
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 150),
-            child: ListView(
+            child: ListView.builder(
               shrinkWrap: true,
-              children: selectedAction.playerFocuses.map((focus) {
+              itemCount: selectedAction.playerFocuses.length,
+              itemBuilder: (context, index) {
+                final focus = selectedAction.playerFocuses[index];
                 final isActive = focus.id == selectedAction.activeFocusId;
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 4),
@@ -2448,7 +2498,7 @@ class ActionSidebarState extends State<ActionSidebar> {
                     ],
                   ),
                 );
-              }).toList(),
+              },
             ),
           ),
         ],

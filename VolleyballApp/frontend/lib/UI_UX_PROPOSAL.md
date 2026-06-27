@@ -32,7 +32,7 @@ Projekt wprowadził opcję "Focus", ale na tle rynkowych standardów można ją 
 Obecnie aplikacja posiada już niektóre "empty states", ale należy upewnić się, że *każda* pusta lista w systemie (brak playlist, brak projektów) posiada ilustrację graficzną oraz wyraźne Call To Action (przycisk wywołujący akcję). Stany puste dla `_filteredArtifacts.isEmpty` lub pustych projektów na ekranie domowym powinny mieć estetyczne wektorowe obrazki lub bardziej rozbudowane ikony oraz przyciski takie jak "Utwórz projekt" zamiast tylko suchej wiadomości.
 
 ### 4. Spójność nazewnictwa i ikonek (Dostępność / Accessibility)
-Jak wynika z zapisów `.Jules/palette.md`, wszystkie `IconButton` muszą mieć właściwość `tooltip`. Należy zapewnić pełną nawigację klawiaturową po najważniejszych elementach ekranu VideoAnalysis.
+Jak wynika z zapisów `.jules/palette.md`, wszystkie `IconButton` muszą mieć właściwość `tooltip`. Należy zapewnić pełną nawigację klawiaturową po najważniejszych elementach ekranu VideoAnalysis.
 
 ### 5. Skróty klawiaturowe (Keybindings)
 Dodanie obsługi zdarzeń klawiatury dla całego ekranu `VideoAnalysisScreen`. W programach jak Nacsport używa się:
@@ -43,4 +43,4 @@ Dodanie obsługi zdarzeń klawiatury dla całego ekranu `VideoAnalysisScreen`. W
 ## Wdrożone szybkie usprawnienia UX/A11Y (Dostępność)
 W ramach tej iteracji wprowadzono również drobne, ale istotne naprawy:
 - **Tłumaczenia interfejsu (I18n):** Przycisk z tekstem "Analyze Video" został przetłumaczony na "Analizuj wideo" w `video_analysis_screen.dart`, ujednolicając interfejs, który w większości używa języka polskiego.
-- **Dodanie Tooltipów na przyciskach:** Zgodnie z dobrymi praktykami UX oraz logami w `.Jules/palette.md`, na interaktywnych ikonach bez tekstu wymagane są etykiety dla screen-readerów. Dodano właściwość `tooltip` do `PopupMenuButton` w oknie projektu oraz `IconButton` przy usuwaniu zawodnika. Pomaga to zrozumieć dostępne akcje osobom z mniejszym doświadczeniem w obsłudze aplikacji.
+- **Dodanie Tooltipów na przyciskach:** Zgodnie z dobrymi praktykami UX oraz logami w `.jules/palette.md`, na interaktywnych ikonach bez tekstu wymagane są etykiety dla screen-readerów. Dodano właściwość `tooltip` do `PopupMenuButton` w oknie projektu oraz `IconButton` przy usuwaniu zawodnika. Pomaga to zrozumieć dostępne akcje osobom z mniejszym doświadczeniem w obsłudze aplikacji.

@@ -489,14 +489,17 @@ class _HomeScreenState extends State<HomeScreen> {
               size: 20,
             ),
             const SizedBox(width: 16),
-            Text(
-              label,
-              style: KineticTheme.getDisplayFont(
-                color: isSelected
-                    ? KineticTheme.primary
-                    : KineticTheme.onSurfaceVariant,
-                fontSize: 15,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            Expanded(
+              child: Text(
+                label,
+                style: KineticTheme.getDisplayFont(
+                  color: isSelected
+                      ? KineticTheme.primary
+                      : KineticTheme.onSurfaceVariant,
+                  fontSize: 15,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -595,45 +598,96 @@ class _HomeScreenState extends State<HomeScreen> {
                     onProjectDelete: _deleteProject,
                   )
                 : _filteredProjects.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.folder_open_rounded,
-                          size: 64,
-                          color: KineticTheme.onSurfaceVariant.withAlpha(60),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Brak projektów spełniających kryteria.',
-                          style: TextStyle(
-                            color: KineticTheme.onSurfaceVariant,
-                            fontSize: 16,
+                ? Builder(
+                    builder: (context) {
+                      final hasFilters =
+                          _searchController.text.isNotEmpty ||
+                          _selectedFilterTags.isNotEmpty;
+
+                      if (hasFilters) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off,
+                                size: 64,
+                                color: KineticTheme.onSurfaceVariant.withAlpha(
+                                  60,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'Brak wyników wyszukiwania',
+                                style: TextStyle(
+                                  color: KineticTheme.onSurfaceVariant,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Żaden projekt nie pasuje do wybranych filtrów.',
+                                style: TextStyle(
+                                  color: KineticTheme.onSurfaceVariant,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {
+                                    _selectedFilterTags.clear();
+                                  });
+                                  _filterProjects();
+                                },
+                                icon: const Icon(Icons.clear),
+                                label: const Text('Wyczyść filtry'),
+                              ),
+                            ],
                           ),
+                        );
+                      }
+
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.folder_open_rounded,
+                              size: 64,
+                              color: KineticTheme.onSurfaceVariant.withAlpha(
+                                60,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Brak projektów',
+                              style: TextStyle(
+                                color: KineticTheme.onSurfaceVariant,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Kliknij poniżej, aby utworzyć nowy projekt.',
+                              style: TextStyle(
+                                color: KineticTheme.onSurfaceVariant,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            ElevatedButton.icon(
+                              onPressed: _showAddProjectDialog,
+                              icon: const Icon(Icons.add),
+                              label: const Text('NOWY PROJEKT'),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        if (_searchController.text.isNotEmpty ||
-                            _selectedFilterTags.isNotEmpty)
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {
-                                _selectedFilterTags.clear();
-                              });
-                              _filterProjects();
-                            },
-                            icon: const Icon(Icons.clear),
-                            label: const Text('Wyczyść filtry'),
-                          )
-                        else
-                          ElevatedButton.icon(
-                            onPressed: _showAddProjectDialog,
-                            icon: const Icon(Icons.add),
-                            label: const Text('NOWY PROJEKT'),
-                          ),
-                      ],
-                    ),
+                      );
+                    },
                   )
                 : GridView.builder(
                     gridDelegate:
