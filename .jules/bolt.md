@@ -97,6 +97,7 @@
 ## 2024-05-29 - Virtualization of Long Lists in Action Sidebar
 **Learning:** In Flutter, wrapping a dynamically mapped `Column` of list items inside a `SingleChildScrollView` triggers synchronous instantiation and layout of every element simultaneously, causing severe O(n) rendering overhead and jank when dealing with long `filteredActions` lists in `action_sidebar.dart`.
 **Action:** Always prefer `ListView.builder` over `SingleChildScrollView` + `Column` for any dynamically sizable lists to guarantee proper lazy loading (virtualization) and maintain fluid 60fps rendering.
-## 2024-06-26 - Dart JSON Serialization Overhead
-**Learning:** Using `JsonEncoder.withIndent('  ')` when saving large JSON payloads in Dart/Flutter introduces significant CPU overhead and bloats the file size compared to using `jsonEncode()` directly. This can block the main thread and degrade performance unnecessarily.
-**Action:** Always prefer `jsonEncode()` directly for machine-readable JSON files, especially for large payloads, to avoid formatting overhead and minimize file I/O time.
+
+## 2024-06-11 - Bypass Indented JSON Formatting in Flutter
+**Learning:** In Dart/Flutter, saving large JSON payloads using `const JsonEncoder.withIndent('  ').convert(payload)` introduces significant CPU overhead and file size bloat compared to `jsonEncode(payload)`. For massive files (like large analysis data sets), this blocks the main thread noticeably.
+**Action:** When saving large machine-readable JSON data where human readability is not critical, always use `jsonEncode()` directly instead of using a pretty-printing JSON encoder.
