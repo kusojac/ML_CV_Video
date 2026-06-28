@@ -231,7 +231,7 @@ def get_results(video_path: str = Query(..., max_length=2048)):
                 _action_dict_cache[json_path] = {
                     action["id"]: action for action in data.get("actions", [])
                 }
-            except FileNotFoundError:
+            except OSError:
                 raise HTTPException(status_code=404, detail="Analysis results not found.")
             except json.JSONDecodeError:
                 raise HTTPException(status_code=500, detail="Invalid JSON format in analysis results.")
@@ -256,7 +256,7 @@ def update_action(req: UpdateActionRequest):
                 _action_dict_cache[json_path] = {
                     action["id"]: action for action in data.get("actions", [])
                 }
-            except FileNotFoundError:
+            except OSError:
                 raise HTTPException(status_code=404, detail="Analysis results not found.")
             except json.JSONDecodeError:
                 raise HTTPException(status_code=500, detail="Invalid JSON format in analysis results.")
