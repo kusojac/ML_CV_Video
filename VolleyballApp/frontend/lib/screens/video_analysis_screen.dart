@@ -51,7 +51,8 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
   bool _hasUnsavedChanges = false;
   String? _loadedFromPath; // null = default path obok wideo
 
-  final GlobalKey<ActionSidebarState> _sidebarKey = GlobalKey<ActionSidebarState>();
+  final GlobalKey<ActionSidebarState> _sidebarKey =
+      GlobalKey<ActionSidebarState>();
 
   // Playlist state
   List<ActionModel> _playlist = [];
@@ -204,7 +205,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           final matchIdx = _actions.indexWhere((a) => a.id == actionId);
           if (matchIdx != -1) {
             final action = _actions[matchIdx];
-            final focusExists = action.playerFocuses.any((f) => f.id == focus.id);
+            final focusExists = action.playerFocuses.any(
+              (f) => f.id == focus.id,
+            );
             if (!focusExists) {
               action.playerFocuses.add(focus);
             }
@@ -227,7 +230,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     }
   }
 
-  Future<void> _saveFocusAsArtifact(ActionModel action, PlayerFocusModel focus) async {
+  Future<void> _saveFocusAsArtifact(
+    ActionModel action,
+    PlayerFocusModel focus,
+  ) async {
     final titleController = TextEditingController(text: focus.name);
     final descController = TextEditingController();
 
@@ -236,7 +242,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: KineticTheme.surfaceContainerLow,
-          title: const Text('Zapisz jako artefakt Focus Player', style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Zapisz jako artefakt Focus Player',
+            style: TextStyle(color: Colors.white),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -246,8 +255,12 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Nazwa artefaktu',
                   labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
-                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.purpleAccent)),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white30),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purpleAccent),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -257,8 +270,12 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Opis (opcjonalnie)',
                   labelStyle: TextStyle(color: Colors.white70),
-                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)),
-                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.purpleAccent)),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white30),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purpleAccent),
+                  ),
                 ),
               ),
             ],
@@ -266,12 +283,18 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Anuluj', style: TextStyle(color: Colors.white70)),
+              child: const Text(
+                'Anuluj',
+                style: TextStyle(color: Colors.white70),
+              ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-              child: const Text('Zapisz', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Zapisz',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -282,7 +305,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
       final name = titleController.text.trim();
       final desc = descController.text.trim();
       final focusId = focus.id;
-      final path = AnalysisFileService.defaultFocusJsonPath(widget.videoPath, focusId);
+      final path = AnalysisFileService.defaultFocusJsonPath(
+        widget.videoPath,
+        focusId,
+      );
 
       try {
         await AnalysisFileService.saveFocusPlayer(
@@ -295,7 +321,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         final artifact = ArtifactModel(
           type: ArtifactType.focusPlayer,
           title: name,
-          description: desc.isNotEmpty ? desc : 'Kadr Focus Player dla zawodnika ${focus.name}',
+          description: desc.isNotEmpty
+              ? desc
+              : 'Kadr Focus Player dla zawodnika ${focus.name}',
           filePath: path,
           sourceVideoPath: widget.videoPath,
         );
@@ -330,7 +358,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
 
   void _onPositionChanged(Duration pos) {
     _currentPosition = pos;
-    
+
     if (widget.initialFocusPath != null && _selectedAction != null) {
       if (pos.inMilliseconds >= _selectedAction!.endMs) {
         _videoController?.player.seek(
@@ -497,7 +525,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     }
   }
 
-  Future<void> _handleActionUpdated(ActionModel action, {bool updateBackend = false}) async {
+  Future<void> _handleActionUpdated(
+    ActionModel action, {
+    bool updateBackend = false,
+  }) async {
     // Determine if it is a parent action or a sub-action
     int parentIdx = _actions.indexWhere((a) => a.id == action.id);
     ActionModel? parentToUpdate;
@@ -510,7 +541,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           _selectedAction = action;
         } else if (_selectedAction != null) {
           // If a sub-action of this parent is currently selected, update it to keep the UI in sync
-          final subIdx = action.subActions.indexWhere((sub) => sub.id == _selectedAction!.id);
+          final subIdx = action.subActions.indexWhere(
+            (sub) => sub.id == _selectedAction!.id,
+          );
           if (subIdx != -1) {
             _selectedAction = action.subActions[subIdx];
           }
@@ -521,7 +554,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     } else {
       // It is a sub-action, find its parent
       for (int i = 0; i < _actions.length; i++) {
-        final subIdx = _actions[i].subActions.indexWhere((sub) => sub.id == action.id);
+        final subIdx = _actions[i].subActions.indexWhere(
+          (sub) => sub.id == action.id,
+        );
         if (subIdx != -1) {
           setState(() {
             _actions[i].subActions[subIdx] = action;
@@ -542,10 +577,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
 
     if (updateBackend && parentToUpdate != null) {
       try {
-        await _analyticsService.updateAction(
-          widget.videoPath,
-          parentToUpdate,
-        );
+        await _analyticsService.updateAction(widget.videoPath, parentToUpdate);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -567,16 +599,21 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     }
   }
 
-  Future<void> _handleKeyPointUpdated(ActionKeyPointModel keyPoint, {bool updateBackend = true}) async {
+  Future<void> _handleKeyPointUpdated(
+    ActionKeyPointModel keyPoint, {
+    bool updateBackend = true,
+  }) async {
     for (int i = 0; i < _actions.length; i++) {
       final action = _actions[i];
       final kpIdx = action.keyPoints.indexWhere((kp) => kp.id == keyPoint.id);
       if (kpIdx != -1) {
-        final updatedKeyPoints = List<ActionKeyPointModel>.from(action.keyPoints);
+        final updatedKeyPoints = List<ActionKeyPointModel>.from(
+          action.keyPoints,
+        );
         updatedKeyPoints[kpIdx] = keyPoint;
         final updatedAction = action.copyWith(keyPoints: updatedKeyPoints);
         await _handleActionUpdated(updatedAction, updateBackend: updateBackend);
-        
+
         if (_selectedKeyPoint?.id == keyPoint.id) {
           setState(() {
             _selectedKeyPoint = keyPoint;
@@ -584,21 +621,26 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
         }
         return;
       }
-      
+
       for (int j = 0; j < action.subActions.length; j++) {
         final sub = action.subActions[j];
         final subKpIdx = sub.keyPoints.indexWhere((kp) => kp.id == keyPoint.id);
         if (subKpIdx != -1) {
-          final updatedSubKeyPoints = List<ActionKeyPointModel>.from(sub.keyPoints);
+          final updatedSubKeyPoints = List<ActionKeyPointModel>.from(
+            sub.keyPoints,
+          );
           updatedSubKeyPoints[subKpIdx] = keyPoint;
           final updatedSub = sub.copyWith(keyPoints: updatedSubKeyPoints);
-          
+
           final updatedSubActions = List<ActionModel>.from(action.subActions);
           updatedSubActions[j] = updatedSub;
-          
+
           final updatedAction = action.copyWith(subActions: updatedSubActions);
-          await _handleActionUpdated(updatedAction, updateBackend: updateBackend);
-          
+          await _handleActionUpdated(
+            updatedAction,
+            updateBackend: updateBackend,
+          );
+
           if (_selectedKeyPoint?.id == keyPoint.id) {
             setState(() {
               _selectedKeyPoint = keyPoint;
@@ -1053,7 +1095,8 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
     }
 
     // A or N: Add manual action at current position
-    if (event.logicalKey == LogicalKeyboardKey.keyA || event.logicalKey == LogicalKeyboardKey.keyN) {
+    if (event.logicalKey == LogicalKeyboardKey.keyA ||
+        event.logicalKey == LogicalKeyboardKey.keyN) {
       if (!_isEditMode) {
         setState(() {
           _isEditMode = true;
@@ -1098,14 +1141,18 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           }
         }
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _sidebarKey.currentState?.triggerAddKeyPointDialog(_selectedAction!, parentAction: parentAction);
+          _sidebarKey.currentState?.triggerAddKeyPointDialog(
+            _selectedAction!,
+            parentAction: parentAction,
+          );
         });
       }
       return true;
     }
 
     // Delete or Backspace: delete currently selected element
-    if (event.logicalKey == LogicalKeyboardKey.delete || event.logicalKey == LogicalKeyboardKey.backspace) {
+    if (event.logicalKey == LogicalKeyboardKey.delete ||
+        event.logicalKey == LogicalKeyboardKey.backspace) {
       if (!_isEditMode) {
         return false;
       }
@@ -1126,7 +1173,11 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
           }
         }
         if (ownerAction != null) {
-          _sidebarKey.currentState?.triggerDeleteKeyPoint(ownerAction, _selectedKeyPoint!, parentAction: parentAction);
+          _sidebarKey.currentState?.triggerDeleteKeyPoint(
+            ownerAction,
+            _selectedKeyPoint!,
+            parentAction: parentAction,
+          );
         }
       } else if (_selectedAction != null) {
         int parentIdx = _actions.indexWhere((a) => a.id == _selectedAction!.id);
@@ -1141,7 +1192,10 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
             }
           }
           if (parent != null) {
-            _sidebarKey.currentState?.triggerDeleteSubAction(parent, _selectedAction!);
+            _sidebarKey.currentState?.triggerDeleteSubAction(
+              parent,
+              _selectedAction!,
+            );
           }
         }
       }
@@ -1150,20 +1204,26 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
 
     // Arrow Left: seek backward 500ms (or 5s if Shift is held)
     if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-      final duration = _videoController?.player.state.duration.inMilliseconds ?? 0;
+      final duration =
+          _videoController?.player.state.duration.inMilliseconds ?? 0;
       final step = HardwareKeyboard.instance.isShiftPressed ? 5000 : 500;
       final newPos = _currentPosition.inMilliseconds - step;
-      final clampedPos = duration > 0 ? newPos.clamp(0, duration) : newPos.clamp(0, 99999999);
+      final clampedPos = duration > 0
+          ? newPos.clamp(0, duration)
+          : newPos.clamp(0, 99999999);
       _videoController?.player.seek(Duration(milliseconds: clampedPos));
       return true;
     }
 
     // Arrow Right: seek forward 500ms (or 5s if Shift is held)
     if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-      final duration = _videoController?.player.state.duration.inMilliseconds ?? 0;
+      final duration =
+          _videoController?.player.state.duration.inMilliseconds ?? 0;
       final step = HardwareKeyboard.instance.isShiftPressed ? 5000 : 500;
       final newPos = _currentPosition.inMilliseconds + step;
-      final clampedPos = duration > 0 ? newPos.clamp(0, duration) : newPos.clamp(0, 99999999);
+      final clampedPos = duration > 0
+          ? newPos.clamp(0, duration)
+          : newPos.clamp(0, 99999999);
       _videoController?.player.seek(Duration(milliseconds: clampedPos));
       return true;
     }
@@ -1363,11 +1423,21 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
               ),
             )
           else if (_actions.isEmpty)
-            TextButton.icon(
-              icon: const Icon(Icons.analytics, color: Colors.purpleAccent),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.analytics, color: Colors.white),
               label: const Text(
-                'Analyze Video',
-                style: TextStyle(color: Colors.white),
+                'Analizuj wideo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purpleAccent,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
               onPressed: _startAnalysis,
             ),
@@ -1408,13 +1478,18 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                     selectedKeyPoint: _selectedKeyPoint,
                                     playlistActions: _playlist,
                                     isEditMode: _isEditMode,
-                                    isFocusPlayerMode: widget.initialFocusPath != null,
+                                    isFocusPlayerMode:
+                                        widget.initialFocusPath != null,
                                     onPositionChanged: _onPositionChanged,
                                     onControllerReady: (controller) {
                                       _videoController = controller;
                                       if (_selectedAction != null) {
                                         controller.player.seek(
-                                          Duration(milliseconds: _selectedAction!.startMs.round()),
+                                          Duration(
+                                            milliseconds: _selectedAction!
+                                                .startMs
+                                                .round(),
+                                          ),
                                         );
                                       }
                                     },
@@ -1499,13 +1574,18 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                           ),
                         ),
                         // Focus mode picture-in-picture
-                        if (_selectedAction != null && _videoController != null && widget.initialFocusPath == null)
-                          ..._selectedAction!.playerFocuses.asMap().entries.map((entry) {
+                        if (_selectedAction != null &&
+                            _videoController != null &&
+                            widget.initialFocusPath == null)
+                          ..._selectedAction!.playerFocuses.asMap().entries.map((
+                            entry,
+                          ) {
                             final index = entry.key;
                             final focus = entry.value;
                             final focusId = focus.id;
-                            final isFocusActive = focusId == _selectedAction!.activeFocusId;
-                            
+                            final isFocusActive =
+                                focusId == _selectedAction!.activeFocusId;
+
                             final top = _getFocusPlayerTop(focusId, index);
                             final right = _getFocusPlayerRight(focusId);
                             final width = _getFocusPlayerWidth(focusId);
@@ -1529,7 +1609,8 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                                 focus: focus,
                                 isActive: isFocusActive,
                                 mainPosition: _currentPosition,
-                                isUpdatingFocus: _isUpdatingFocus && isFocusActive,
+                                isUpdatingFocus:
+                                    _isUpdatingFocus && isFocusActive,
                                 onResetFocus: _isEditMode && isFocusActive
                                     ? () {
                                         // Start updating focus mode instead of resetting action to 0
@@ -1553,7 +1634,9 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
             width: 350,
             decoration: const BoxDecoration(
               color: KineticTheme.surfaceContainerLow,
-              border: Border(left: BorderSide(color: KineticTheme.outlineVariant)),
+              border: Border(
+                left: BorderSide(color: KineticTheme.outlineVariant),
+              ),
             ),
             child: ActionSidebar(
               key: _sidebarKey,
@@ -1620,9 +1703,11 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
                 setState(() => _isEditMode = val);
               },
               onActionSelected: _onActionSelected,
-              onActionUpdated: (updatedAction) => _handleActionUpdated(updatedAction, updateBackend: true),
+              onActionUpdated: (updatedAction) =>
+                  _handleActionUpdated(updatedAction, updateBackend: true),
               onKeyPointSelected: _handleKeyPointSelected,
-              onKeyPointUpdated: (updatedKeyPoint) => _handleKeyPointUpdated(updatedKeyPoint, updateBackend: true),
+              onKeyPointUpdated: (updatedKeyPoint) =>
+                  _handleKeyPointUpdated(updatedKeyPoint, updateBackend: true),
             ),
           ),
         ],
@@ -1656,10 +1741,12 @@ class PositionedFocusPlayerWrapper extends StatefulWidget {
   });
 
   @override
-  State<PositionedFocusPlayerWrapper> createState() => _PositionedFocusPlayerWrapperState();
+  State<PositionedFocusPlayerWrapper> createState() =>
+      _PositionedFocusPlayerWrapperState();
 }
 
-class _PositionedFocusPlayerWrapperState extends State<PositionedFocusPlayerWrapper> {
+class _PositionedFocusPlayerWrapperState
+    extends State<PositionedFocusPlayerWrapper> {
   late double _top;
   late double _right;
   late double _width;
@@ -1723,13 +1810,12 @@ class _PositionedFocusPlayerWrapperState extends State<PositionedFocusPlayerWrap
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: widget.isFocusActive ? Colors.purpleAccent : Colors.grey,
+                    color: widget.isFocusActive
+                        ? Colors.purpleAccent
+                        : Colors.grey,
                     shape: BoxShape.circle,
                     boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black54,
-                        blurRadius: 4,
-                      ),
+                      BoxShadow(color: Colors.black54, blurRadius: 4),
                     ],
                   ),
                   child: const Icon(

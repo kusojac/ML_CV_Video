@@ -35,3 +35,6 @@
 **Learning:** Dead-end empty states (like generic 'Brak zawodników' texts) create friction. Replacing them with structured Call-To-Action buttons (e.g., 'Dodaj zawodnika') guides users directly to the next logical step.
 **Action:** Scan for  list conditionals and replace plain generic text fallbacks with structured layouts featuring explicit  CTAs.
 >>>>>>> main:.jules/palette.md
+## 2024-05-18 - Improve Empty State Call-To-Action (CTA) Prominence
+**Learning:** Generic text buttons in empty states (e.g., `TextButton.icon` for "Analyze Video" when no actions exist) lack visual weight, making the primary workflow less intuitive for users. Additionally, hardcoded English strings in a primarily localized interface degrade accessibility and consistency.
+**Action:** Always upgrade primary actions in empty states to prominent CTA buttons (e.g., `ElevatedButton.icon` with brand colors) to guide the user, and ensure all user-facing text is correctly localized to the application's primary language (e.g., Polish).
