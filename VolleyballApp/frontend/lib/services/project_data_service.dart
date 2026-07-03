@@ -49,7 +49,8 @@ class ProjectDataService {
       final pFile = await _projectsFile;
       if (await pFile.exists()) {
         final String contents = await pFile.readAsString();
-        final List<dynamic> jsonList = jsonDecode(contents);
+        // ⚡ Bolt Optimization: Offload JSON parsing to a background isolate to prevent blocking the UI thread.
+        final List<dynamic> jsonList = await compute((String c) => jsonDecode(c) as List<dynamic>, contents);
         _projects = jsonList
             .map((json) => ProjectModel.fromJson(json))
             .toList();
@@ -58,7 +59,8 @@ class ProjectDataService {
       final aFile = await _artifactsFile;
       if (await aFile.exists()) {
         final String contents = await aFile.readAsString();
-        final List<dynamic> jsonList = jsonDecode(contents);
+        // ⚡ Bolt Optimization: Offload JSON parsing to a background isolate to prevent blocking the UI thread.
+        final List<dynamic> jsonList = await compute((String c) => jsonDecode(c) as List<dynamic>, contents);
         _artifacts = jsonList
             .map((json) => ArtifactModel.fromJson(json))
             .toList();
@@ -71,13 +73,17 @@ class ProjectDataService {
   Future<void> _saveData() async {
     try {
       final pFile = await _projectsFile;
-      final String pContents = jsonEncode(
+      // ⚡ Bolt Optimization: Offload JSON serialization to a background isolate to prevent blocking the UI thread.
+      final String pContents = await compute(
+        jsonEncode,
         _projects.map((p) => p.toJson()).toList(),
       );
       await pFile.writeAsString(pContents);
 
       final aFile = await _artifactsFile;
-      final String aContents = jsonEncode(
+      // ⚡ Bolt Optimization: Offload JSON serialization to a background isolate to prevent blocking the UI thread.
+      final String aContents = await compute(
+        jsonEncode,
         _artifacts.map((a) => a.toJson()).toList(),
       );
       await aFile.writeAsString(aContents);
