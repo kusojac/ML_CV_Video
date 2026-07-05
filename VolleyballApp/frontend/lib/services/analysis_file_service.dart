@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
+import 'package:flutter/foundation.dart';
 import '../models/action_model.dart';
 
 /// Serwis odpowiedzialny za odczyt i zapis pliku _analysis.json
@@ -108,7 +109,9 @@ class AnalysisFileService {
       'sourceVideoPath': sourceVideoPath,
       'actionId': actionId,
     };
-    await File(filePath).writeAsString(jsonEncode(payload));
+    // ⚡ Bolt Optimization: Offload large JSON encoding to compute isolate to prevent UI jank
+    final encoded = await compute((dynamic obj) => jsonEncode(obj), payload);
+    await File(filePath).writeAsString(encoded);
   }
 
   static Future<Map<String, dynamic>?> loadFocusPlayer(String filePath) async {
@@ -116,7 +119,11 @@ class AnalysisFileService {
     if (!file.existsSync()) return null;
     try {
       final contents = await file.readAsString();
-      return jsonDecode(contents) as Map<String, dynamic>;
+      // ⚡ Bolt Optimization: Offload large JSON parsing to compute isolate to prevent UI jank
+      return await compute(
+        (String c) => jsonDecode(c) as Map<String, dynamic>,
+        contents,
+      );
     } catch (e) {
       return null;
     }
@@ -131,11 +138,11 @@ class AnalysisFileService {
     final Map<String, dynamic> payload = {
       'actions': actions.map((a) => a.toJson()).toList(),
     }..addAll({'total_frames': ?totalFrames, 'fps': ?fps});
-    await File(
-      path,
-      // ⚡ Bolt Optimization: Using jsonEncode instead of JsonEncoder.withIndent
-    // bypassing indentation formatting saves significant CPU overhead and file size.
-    ).writeAsString(jsonEncode(payload));
+
+    // ⚡ Bolt Optimization: Offload large JSON encoding to compute isolate to prevent UI jank
+    final encoded = await compute((dynamic obj) => jsonEncode(obj), payload);
+
+    await File(path).writeAsString(encoded);
   }
 
   // ─── Odczyt ───────────────────────────────────────────────────────────────
@@ -189,7 +196,11 @@ class AnalysisFileService {
 
   static Future<AnalysisLoadResult> _parseFile(File file) async {
     final contents = await file.readAsString();
-    final json = jsonDecode(contents) as Map<String, dynamic>;
+    // ⚡ Bolt Optimization: Offload large JSON parsing to compute isolate to prevent UI jank
+    final json = await compute(
+      (String c) => jsonDecode(c) as Map<String, dynamic>,
+      contents,
+    );
     final actionsList = (json['actions'] as List<dynamic>)
         .map((e) => ActionModel.fromJson(e as Map<String, dynamic>))
         .toList();

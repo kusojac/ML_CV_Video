@@ -49,7 +49,11 @@ class ProjectDataService {
       final pFile = await _projectsFile;
       if (await pFile.exists()) {
         final String contents = await pFile.readAsString();
-        final List<dynamic> jsonList = jsonDecode(contents);
+        // ⚡ Bolt Optimization: Offload large JSON parsing to compute isolate to prevent UI jank
+        final List<dynamic> jsonList = await compute(
+          (String c) => jsonDecode(c) as List<dynamic>,
+          contents,
+        );
         _projects = jsonList
             .map((json) => ProjectModel.fromJson(json))
             .toList();
@@ -58,7 +62,11 @@ class ProjectDataService {
       final aFile = await _artifactsFile;
       if (await aFile.exists()) {
         final String contents = await aFile.readAsString();
-        final List<dynamic> jsonList = jsonDecode(contents);
+        // ⚡ Bolt Optimization: Offload large JSON parsing to compute isolate to prevent UI jank
+        final List<dynamic> jsonList = await compute(
+          (String c) => jsonDecode(c) as List<dynamic>,
+          contents,
+        );
         _artifacts = jsonList
             .map((json) => ArtifactModel.fromJson(json))
             .toList();
@@ -71,14 +79,20 @@ class ProjectDataService {
   Future<void> _saveData() async {
     try {
       final pFile = await _projectsFile;
-      final String pContents = jsonEncode(
-        _projects.map((p) => p.toJson()).toList(),
+      final projectsList = _projects.map((p) => p.toJson()).toList();
+      // ⚡ Bolt Optimization: Offload large JSON encoding to compute isolate to prevent UI jank
+      final String pContents = await compute(
+        (dynamic obj) => jsonEncode(obj),
+        projectsList,
       );
       await pFile.writeAsString(pContents);
 
       final aFile = await _artifactsFile;
-      final String aContents = jsonEncode(
-        _artifacts.map((a) => a.toJson()).toList(),
+      final artifactsList = _artifacts.map((a) => a.toJson()).toList();
+      // ⚡ Bolt Optimization: Offload large JSON encoding to compute isolate to prevent UI jank
+      final String aContents = await compute(
+        (dynamic obj) => jsonEncode(obj),
+        artifactsList,
       );
       await aFile.writeAsString(aContents);
     } catch (e) {
