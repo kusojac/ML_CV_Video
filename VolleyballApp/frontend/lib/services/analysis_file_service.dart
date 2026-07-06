@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
+import 'package:flutter/foundation.dart';
 import '../models/action_model.dart';
 
 /// Serwis odpowiedzialny za odczyt i zapis pliku _analysis.json
@@ -108,7 +109,7 @@ class AnalysisFileService {
       'sourceVideoPath': sourceVideoPath,
       'actionId': actionId,
     };
-    await File(filePath).writeAsString(jsonEncode(payload));
+    await File(filePath).writeAsString(await compute((dynamic obj) => jsonEncode(obj), payload));
   }
 
   static Future<Map<String, dynamic>?> loadFocusPlayer(String filePath) async {
@@ -116,7 +117,7 @@ class AnalysisFileService {
     if (!file.existsSync()) return null;
     try {
       final contents = await file.readAsString();
-      return jsonDecode(contents) as Map<String, dynamic>;
+      return await compute((String c) => jsonDecode(c) as Map<String, dynamic>, contents);
     } catch (e) {
       return null;
     }
@@ -135,7 +136,7 @@ class AnalysisFileService {
       path,
       // ⚡ Bolt Optimization: Using jsonEncode instead of JsonEncoder.withIndent
     // bypassing indentation formatting saves significant CPU overhead and file size.
-    ).writeAsString(jsonEncode(payload));
+    ).writeAsString(await compute((dynamic obj) => jsonEncode(obj), payload));
   }
 
   // ─── Odczyt ───────────────────────────────────────────────────────────────
@@ -189,7 +190,7 @@ class AnalysisFileService {
 
   static Future<AnalysisLoadResult> _parseFile(File file) async {
     final contents = await file.readAsString();
-    final json = jsonDecode(contents) as Map<String, dynamic>;
+    final json = await compute((String c) => jsonDecode(c) as Map<String, dynamic>, contents);
     final actionsList = (json['actions'] as List<dynamic>)
         .map((e) => ActionModel.fromJson(e as Map<String, dynamic>))
         .toList();
