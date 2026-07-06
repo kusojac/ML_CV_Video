@@ -35,3 +35,7 @@
 **Learning:** Dead-end empty states (like generic 'Brak zawodników' texts) create friction. Replacing them with structured Call-To-Action buttons (e.g., 'Dodaj zawodnika') guides users directly to the next logical step.
 **Action:** Scan for  list conditionals and replace plain generic text fallbacks with structured layouts featuring explicit  CTAs.
 >>>>>>> main:.jules/palette.md
+
+## 2026-07-06 - Dead-end Empty States on Initial Load
+**Learning:** Initial empty screens without data (like Team Stats) should not strand the user. If they require the user to perform actions elsewhere (like analyzing a video in projects), a Call-To-Action navigating to that specific area significantly reduces friction compared to static instructional text.
+**Action:** When designing root-level tab views that may be initially empty, always include an explicit navigation CTA button (e.g., 'Go to Projects') rather than relying solely on instructional text.
