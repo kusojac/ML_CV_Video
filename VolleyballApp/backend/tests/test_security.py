@@ -47,6 +47,9 @@ def test_security_headers():
     assert response.headers.get("X-Frame-Options") == "DENY"
     assert response.headers.get("Strict-Transport-Security") == "max-age=31536000; includeSubDomains"
     assert response.headers.get("X-XSS-Protection") == "1; mode=block"
+    assert response.headers.get("Cache-Control") == "no-store, no-cache, must-revalidate, max-age=0"
+    assert response.headers.get("Pragma") == "no-cache"
+    assert response.headers.get("Referrer-Policy") == "no-referrer"
     assert response.headers.get("Content-Security-Policy") == "default-src 'none'; frame-ancestors 'none'"
 
 def test_security_headers_docs():

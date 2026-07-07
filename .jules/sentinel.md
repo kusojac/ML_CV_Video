@@ -108,3 +108,8 @@
 **Vulnerability:** Optional list fields in Pydantic models (e.g., `new_sub_actions: Optional[List[Dict[str, Any]]]`) were missing `max_length` constraints, allowing attackers to send arbitrarily large lists that could cause memory exhaustion (DoS).
 **Learning:** By default, Pydantic `Optional[List[...]]` fields do not enforce any limits on the length of list input unless explicitly specified. Because FastAPI parses incoming request JSON payloads directly, unbounded list parameters pose a memory exhaustion risk at the API boundary.
 **Prevention:** Always specify strict boundaries such as `max_length` using `pydantic.Field(None, max_length=...)` on list parameters within Pydantic models—including `Optional` ones—to guarantee a 422 Unprocessable Entity and gracefully limit payload size.
+
+## 2026-06-03 - Add Defense-in-Depth Caching and Referrer Headers
+**Vulnerability:** The FastAPI backend was missing `Cache-Control`, `Pragma`, and `Referrer-Policy` headers.
+**Learning:** To provide defense-in-depth, APIs should prevent sensitive responses from being cached by intermediaries or browsers and prevent referrer URL leakage.
+**Prevention:** Implement `Cache-Control: no-store, no-cache, must-revalidate, max-age=0`, `Pragma: no-cache`, and `Referrer-Policy: no-referrer` within the global HTTP middleware.
