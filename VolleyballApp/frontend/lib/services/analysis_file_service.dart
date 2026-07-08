@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import '../models/action_model.dart';
@@ -131,11 +132,14 @@ class AnalysisFileService {
     final Map<String, dynamic> payload = {
       'actions': actions.map((a) => a.toJson()).toList(),
     }..addAll({'total_frames': ?totalFrames, 'fps': ?fps});
+    // ⚡ Bolt Optimization: Offload jsonEncode to background isolate with compute
+    // to prevent blocking the UI thread on large data sets
+    final jsonString = await compute((dynamic obj) => jsonEncode(obj), payload);
     await File(
       path,
       // ⚡ Bolt Optimization: Using jsonEncode instead of JsonEncoder.withIndent
-    // bypassing indentation formatting saves significant CPU overhead and file size.
-    ).writeAsString(jsonEncode(payload));
+      // bypassing indentation formatting saves significant CPU overhead and file size.
+    ).writeAsString(jsonString);
   }
 
   // ─── Odczyt ───────────────────────────────────────────────────────────────
@@ -189,7 +193,12 @@ class AnalysisFileService {
 
   static Future<AnalysisLoadResult> _parseFile(File file) async {
     final contents = await file.readAsString();
-    final json = jsonDecode(contents) as Map<String, dynamic>;
+    // ⚡ Bolt Optimization: Offload jsonDecode to background isolate with compute
+    // to prevent blocking the UI thread on large files
+    final json = await compute(
+      (String c) => jsonDecode(c) as Map<String, dynamic>,
+      contents,
+    );
     final actionsList = (json['actions'] as List<dynamic>)
         .map((e) => ActionModel.fromJson(e as Map<String, dynamic>))
         .toList();

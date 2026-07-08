@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/action_model.dart';
 import 'dart:io';
@@ -54,7 +55,12 @@ class AnalyticsService {
         )
         .timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) {
-      final jsonResponse = jsonDecode(response.body);
+      // ⚡ Bolt Optimization: Offload jsonDecode to background isolate with compute
+      // to prevent blocking the UI thread on large API responses
+      final jsonResponse = await compute(
+        (String c) => jsonDecode(c) as Map<String, dynamic>,
+        response.body,
+      );
       final actions = jsonResponse['actions'] as List;
       return actions.map((v) => ActionModel.fromJson(v)).toList();
     }
@@ -63,7 +69,12 @@ class AnalyticsService {
         '${videoPath.substring(0, videoPath.lastIndexOf('.'))}_analysis.json';
     if (File(path).existsSync()) {
       final contents = await File(path).readAsString();
-      final jsonResponse = jsonDecode(contents);
+      // ⚡ Bolt Optimization: Offload jsonDecode to background isolate with compute
+      // to prevent blocking the UI thread on large files
+      final jsonResponse = await compute(
+        (String c) => jsonDecode(c) as Map<String, dynamic>,
+        contents,
+      );
       final actions = jsonResponse['actions'] as List;
       return actions.map((v) => ActionModel.fromJson(v)).toList();
     }
