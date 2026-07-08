@@ -61,3 +61,28 @@ def test_security_headers_docs():
     response = client.get("/openapi.json")
     assert response.status_code == 200
     assert "Content-Security-Policy" not in response.headers
+
+def test_concurrency_limit(tmp_path):
+    from main import analysis_jobs
+
+    # Store previous state to avoid pollution
+    original_jobs = analysis_jobs.copy()
+
+    try:
+        # Clear existing jobs
+        analysis_jobs.clear()
+
+        # Add dummy active jobs
+        analysis_jobs["1"] = {"status": "processing"}
+        analysis_jobs["2"] = {"status": "pending"}
+
+        dummy_video = tmp_path / "dummy_video.mp4"
+        dummy_video.write_text("test")
+
+        response = client.post("/analyze", json={"video_path": str(dummy_video)})
+
+        assert response.status_code == 429
+        assert response.json() == {"detail": "Too many requests"}
+    finally:
+        analysis_jobs.clear()
+        analysis_jobs.update(original_jobs)
