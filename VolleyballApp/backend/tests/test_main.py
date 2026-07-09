@@ -209,3 +209,20 @@ def test_max_length_validation_lists():
         "new_player_box": [1.0, 2.0, 3.0, 4.0, 5.0]
     })
     assert response.status_code == 422
+
+def test_analyze_rate_limit():
+    from main import analysis_jobs
+    # Setup dummy jobs
+    analysis_jobs["job1"] = {"status": "processing"}
+    analysis_jobs["job2"] = {"status": "pending"}
+
+    with open("dummy.mp4", "w") as f:
+        f.write("dummy")
+
+    response = client.post("/analyze", json={"video_path": "dummy.mp4"})
+    assert response.status_code == 429
+    assert response.json()["detail"] == "Too many concurrent analysis jobs. Please try again later."
+
+    analysis_jobs.clear()
+    import os
+    os.remove("dummy.mp4")
