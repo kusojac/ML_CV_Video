@@ -35,3 +35,7 @@
 **Learning:** Dead-end empty states (like generic 'Brak zawodników' texts) create friction. Replacing them with structured Call-To-Action buttons (e.g., 'Dodaj zawodnika') guides users directly to the next logical step.
 **Action:** Scan for  list conditionals and replace plain generic text fallbacks with structured layouts featuring explicit  CTAs.
 >>>>>>> main:.jules/palette.md
+
+## 2024-05-27 - Root-Level Empty States
+**Learning:** Root-level tab views (like TeamStatsView) that may be initially empty can strand the user if they rely solely on instructional text.
+**Action:** When designing root-level tab views that may be initially empty, always include an explicit navigation CTA button (e.g., 'PRZEJDŹ DO PROJEKTÓW') to prevent stranding the user and reduce friction.
