@@ -7,7 +7,9 @@ import '../../services/project_data_service.dart';
 import '../../theme/kinetic_theme.dart';
 
 class TeamStatsView extends StatefulWidget {
-  const TeamStatsView({super.key});
+  final VoidCallback onGoToProjectsTap;
+
+  const TeamStatsView({super.key, required this.onGoToProjectsTap});
 
   @override
   State<TeamStatsView> createState() => _TeamStatsViewState();
@@ -341,6 +343,12 @@ class _TeamStatsViewState extends State<TeamStatsView> {
               fontSize: 14,
               color: KineticTheme.onSurfaceVariant,
             ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: widget.onGoToProjectsTap,
+            icon: const Icon(Icons.folder_open_rounded),
+            label: const Text('PRZEJDŹ DO PROJEKTÓW'),
           ),
         ],
       ),
