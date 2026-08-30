@@ -35,3 +35,7 @@
 **Learning:** Dead-end empty states (like generic 'Brak zawodników' texts) create friction. Replacing them with structured Call-To-Action buttons (e.g., 'Dodaj zawodnika') guides users directly to the next logical step.
 **Action:** Scan for  list conditionals and replace plain generic text fallbacks with structured layouts featuring explicit  CTAs.
 >>>>>>> main:.jules/palette.md
+
+## 2026-05-27 - Localization of Empty State CTAs
+**Learning:** Inconsistent localization (e.g., using English text like 'Analyze Video' in a Polish-localized app) creates cognitive friction. Users expect all action buttons in empty states to match the native context.
+**Action:** Always ensure that Call-To-Action labels in empty states (and other UI elements) are translated to the target language (e.g., Polish) to maintain consistent UX.

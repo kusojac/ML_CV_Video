@@ -1366,7 +1366,7 @@ class _VideoAnalysisScreenState extends State<VideoAnalysisScreen> {
             TextButton.icon(
               icon: const Icon(Icons.analytics, color: Colors.purpleAccent),
               label: const Text(
-                'Analyze Video',
+                'Analizuj wideo',
                 style: TextStyle(color: Colors.white),
               ),
               onPressed: _startAnalysis,
