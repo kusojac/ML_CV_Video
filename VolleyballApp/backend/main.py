@@ -180,6 +180,11 @@ def process_video_task(job_id: str, video_path: str):
 
 @app.post("/analyze")
 async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTasks):
+    # 🛡️ Sentinel: Prevent DoS via resource exhaustion by enforcing concurrency limits
+    active_jobs = sum(1 for job in analysis_jobs.values() if job.get("status") in ["pending", "processing"])
+    if active_jobs >= 2:
+        raise HTTPException(status_code=429, detail="Too many requests")
+
     safe_video_path = secure_path(request.video_path)
     if not os.path.exists(safe_video_path):
         raise HTTPException(status_code=404, detail="Video file not found.")
