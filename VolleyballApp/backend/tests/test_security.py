@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from main import app
+from main import app, analysis_jobs, MAX_ACTIVE_JOBS
 
 client = TestClient(app)
 
@@ -23,6 +23,18 @@ def test_update_action_path_traversal():
     })
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid path provided."}
+
+def test_analyze_concurrency_limit():
+    for i in range(MAX_ACTIVE_JOBS):
+        analysis_jobs[f"fake_job_{i}"] = {"status": "processing"}
+
+    try:
+        response = client.post("/analyze", json={"video_path": "fake.mp4"})
+        assert response.status_code == 429
+        assert response.json() == {"detail": "Too many active analysis jobs. Please try again later."}
+    finally:
+        for i in range(MAX_ACTIVE_JOBS):
+            del analysis_jobs[f"fake_job_{i}"]
 
 def test_absolute_path_blocked():
     # Should return 400 to prevent absolute path access
