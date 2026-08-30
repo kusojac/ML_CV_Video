@@ -61,3 +61,15 @@ def test_security_headers_docs():
     response = client.get("/openapi.json")
     assert response.status_code == 200
     assert "Content-Security-Policy" not in response.headers
+
+def test_dos_limit():
+    from main import analysis_jobs
+    analysis_jobs.clear()
+    analysis_jobs["1"] = {"status": "processing"}
+    analysis_jobs["2"] = {"status": "processing"}
+
+    with open("dummy.mp4", "w") as f:
+        f.write("test")
+
+    response = client.post("/analyze", json={"video_path": "dummy.mp4"})
+    assert response.status_code == 429
