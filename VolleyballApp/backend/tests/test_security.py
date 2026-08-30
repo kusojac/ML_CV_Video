@@ -61,3 +61,28 @@ def test_security_headers_docs():
     response = client.get("/openapi.json")
     assert response.status_code == 200
     assert "Content-Security-Policy" not in response.headers
+
+import os
+def test_results_is_a_directory():
+    os.makedirs("test_dir_analysis.json", exist_ok=True)
+    try:
+        response = client.get("/results?video_path=test_dir.mp4")
+        assert response.status_code == 404
+        assert response.json() == {"detail": "Analysis results not found."}
+    finally:
+        os.rmdir("test_dir_analysis.json")
+
+def test_update_action_is_a_directory():
+    os.makedirs("test_update_dir_analysis.json", exist_ok=True)
+    try:
+        response = client.post("/update_action", json={
+            "video_path": "test_update_dir.mp4",
+            "action_id": "test",
+            "new_type": "test",
+            "new_start_ms": 0.0,
+            "new_end_ms": 1.0
+        })
+        assert response.status_code == 404
+        assert response.json() == {"detail": "Analysis results not found."}
+    finally:
+        os.rmdir("test_update_dir_analysis.json")
