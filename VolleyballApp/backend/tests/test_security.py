@@ -61,3 +61,19 @@ def test_security_headers_docs():
     response = client.get("/openapi.json")
     assert response.status_code == 200
     assert "Content-Security-Policy" not in response.headers
+
+def test_analyze_rate_limiting(mocker):
+    # Mock os.path.exists to pass secure_path check but fail the cache check
+    mocker.patch("os.path.exists", side_effect=lambda p: False if "_analysis.json" in p else True)
+    # Mock analysis_jobs
+    from main import analysis_jobs
+    analysis_jobs.clear()
+    analysis_jobs["1"] = {"status": "processing"}
+    analysis_jobs["2"] = {"status": "pending"}
+
+    response = client.post("/analyze", json={"video_path": "test.mp4"})
+    assert response.status_code == 429
+    assert response.json() == {"detail": "Too many active analysis jobs. Please try again later."}
+
+    # Clean up
+    analysis_jobs.clear()

@@ -108,3 +108,8 @@
 **Vulnerability:** Optional list fields in Pydantic models (e.g., `new_sub_actions: Optional[List[Dict[str, Any]]]`) were missing `max_length` constraints, allowing attackers to send arbitrarily large lists that could cause memory exhaustion (DoS).
 **Learning:** By default, Pydantic `Optional[List[...]]` fields do not enforce any limits on the length of list input unless explicitly specified. Because FastAPI parses incoming request JSON payloads directly, unbounded list parameters pose a memory exhaustion risk at the API boundary.
 **Prevention:** Always specify strict boundaries such as `max_length` using `pydantic.Field(None, max_length=...)` on list parameters within Pydantic models—including `Optional` ones—to guarantee a 422 Unprocessable Entity and gracefully limit payload size.
+
+## 2026-05-25 - Prevent DoS via Unbounded Background Jobs
+**Vulnerability:** The `/analyze` endpoint lacked limits on the number of concurrent video analysis jobs. An attacker could flood the endpoint with valid or large video paths, overwhelming CPU and memory resources with unbounded background task execution (Denial of Service).
+**Learning:** Heavy operations like ML video processing must be strictly rate-limited or bounded by a queue size at the API gateway layer to prevent resource starvation. Relying solely on `BackgroundTasks` without concurrency limits is unsafe for resource-intensive workloads.
+**Prevention:** Always limit the number of active background jobs in resource-heavy endpoints (e.g., rejecting new requests with a 429 status code if `active_jobs >= MAX_CONCURRENT_JOBS`).

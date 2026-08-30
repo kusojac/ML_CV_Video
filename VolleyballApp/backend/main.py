@@ -190,6 +190,11 @@ async def analyze_video(request: AnalyzeRequest, background_tasks: BackgroundTas
     if await asyncio.to_thread(os.path.exists, json_path):
         return {"status": "completed", "json_path": json_path}
 
+    # 🛡️ Sentinel: Prevent DoS by limiting concurrent analysis jobs
+    active_jobs = sum(1 for job in analysis_jobs.values() if job.get("status") in ("pending", "processing"))
+    if active_jobs >= 2:
+        raise HTTPException(status_code=429, detail="Too many active analysis jobs. Please try again later.")
+
     job_id = str(uuid.uuid4())
     job_data = {
         "status": "pending",
