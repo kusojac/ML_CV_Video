@@ -1,8 +1,6 @@
-<<<<<<< HEAD:.Jules/palette.md
 ## 2024-05-24 - Consistent Empty State Empty Filters CTA
 **Learning:** Some lists show 'Clear filters' natively on the empty state when filters are active, but incorrectly show generic fallbacks or misaligned code structures without clearing filters correctly.
 **Action:** When creating empty states, standardizing clear filter actions is important.
-=======
 ## 2024-05-19 - Empty State Structure
 **Learning:** Generic text fallbacks for empty states increase user friction. Using structured empty states with descriptive icons, text, and specific CTA buttons corresponding to standard user actions (e.g. adding items or clearing filters) significantly improves discoverability.
 **Action:** When creating lists or grids that may be empty, always conditionally render a structured widget providing context and clear actionable steps rather than relying on generic 'Empty list' text.
@@ -34,4 +32,7 @@
 ## 2026-05-26 - Actionable Empty States in Project Artifacts
 **Learning:** Dead-end empty states (like generic 'Brak zawodników' texts) create friction. Replacing them with structured Call-To-Action buttons (e.g., 'Dodaj zawodnika') guides users directly to the next logical step.
 **Action:** Scan for  list conditionals and replace plain generic text fallbacks with structured layouts featuring explicit  CTAs.
->>>>>>> main:.jules/palette.md
+
+## 2024-07-08 - Explicit Navigation CTA in Root Views
+**Learning:** Empty states in root-level views (like TeamStatsView) that only have instructional text strand the user without an immediate path forward.
+**Action:** When designing root-level tab views that may be initially empty, always include an explicit navigation CTA button (e.g., 'PRZEJDŹ DO PROJEKTÓW') to prevent stranding the user.
