@@ -101,3 +101,7 @@
 ## 2024-06-11 - Bypass Indented JSON Formatting in Flutter
 **Learning:** In Dart/Flutter, saving large JSON payloads using `const JsonEncoder.withIndent('  ').convert(payload)` introduces significant CPU overhead and file size bloat compared to `jsonEncode(payload)`. For massive files (like large analysis data sets), this blocks the main thread noticeably.
 **Action:** When saving large machine-readable JSON data where human readability is not critical, always use `jsonEncode()` directly instead of using a pretty-printing JSON encoder.
+
+## 2026-05-30 - Offload JSON parsing/encoding to compute isolate
+**Learning:** Synchronously parsing or encoding large JSON payloads on the main thread in Dart/Flutter causes UI jank and blocks the main thread.
+**Action:** Offload `jsonDecode` and `jsonEncode` to a background isolate using the `compute()` function to avoid blocking the main thread.
