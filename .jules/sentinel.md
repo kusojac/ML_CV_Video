@@ -108,3 +108,7 @@
 **Vulnerability:** Optional list fields in Pydantic models (e.g., `new_sub_actions: Optional[List[Dict[str, Any]]]`) were missing `max_length` constraints, allowing attackers to send arbitrarily large lists that could cause memory exhaustion (DoS).
 **Learning:** By default, Pydantic `Optional[List[...]]` fields do not enforce any limits on the length of list input unless explicitly specified. Because FastAPI parses incoming request JSON payloads directly, unbounded list parameters pose a memory exhaustion risk at the API boundary.
 **Prevention:** Always specify strict boundaries such as `max_length` using `pydantic.Field(None, max_length=...)` on list parameters within Pydantic models—including `Optional` ones—to guarantee a 422 Unprocessable Entity and gracefully limit payload size.
+## 2026-06-29 - Prevent Information Leakage via Unhandled OSError Exceptions
+**Vulnerability:** The `/results` and `/update_action` endpoints caught `FileNotFoundError` explicitly, but let broader `OSError`s (like `IsADirectoryError` or `PermissionError`) go unhandled, potentially crashing the request thread or exposing internal system paths through unhandled 500 error responses.
+**Learning:** Catching specific OS exceptions like `FileNotFoundError` without handling generic `OSError`s leaves the system exposed to unintended states if user input manipulates path traversal logic incorrectly.
+**Prevention:** Rather than catching `FileNotFoundError`, use the broader `OSError` base class. This ensures all filesystem-related failures are caught and handled securely.
