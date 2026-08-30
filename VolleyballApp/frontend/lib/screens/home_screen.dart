@@ -324,7 +324,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   PlaylistsView(
                     onGoToProjectsTap: () => setState(() => _currentTab = 1),
                   ),
-                  const TeamStatsView(),
+                  TeamStatsView(
+                    onGoToProjectsTap: () => setState(() => _currentTab = 1),
+                  ),
                 ],
               ),
             ),
